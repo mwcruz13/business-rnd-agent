@@ -1,0 +1,634 @@
+{
+  "metadata": {
+    "title": "Testing Business Ideas — 44 Experiment Card Library",
+    "scope": "Canonical experiment card reference for Step 8 (PDSA Experiment Designer) and cross-referenced by precoil-emt (Phase 3) and cxif-bmi-coach (Phase 5 Part C)",
+    "card_count": 44,
+    "updated": "2026-03-20",
+    "methodology": "Testing Business Ideas by David J. Bland and Alexander Osterwalder",
+    "sources": [
+      {
+        "type": "workspace_document",
+        "path": "assistant/docs/experiment-matrix-decision-prompt-table.md",
+        "verified": ["card_names", "dfv_categories", "evidence_strength", "decision_tree"]
+      },
+      {
+        "type": "workspace_document",
+        "path": "assistant/docs/experiments-worksheet.md",
+        "verified": ["sequencing_transitions", "sequencing_rules"]
+      },
+      {
+        "type": "workspace_document",
+        "path": "assistant/docs/architecture-recommendation-testing-business-ideas.md",
+        "verified": ["responsibility_split", "quality_principle"]
+      }
+    ],
+    "quality_note": "Card names normalized from consultant-friendly version. Duplicates from the original source (Search Trends at row 37/44, Ad Campaign at row 7/45) have been resolved to exactly 44 unique entries."
+  },
+  "evidence_strength_levels": ["Weak", "Medium", "Strong"],
+  "sequencing_rules": [
+    "Move from opinion to behavior",
+    "Move from cheap evidence to expensive evidence",
+    "Move from simulated value to real value",
+    "Move from interest to commitment",
+    "Move from first use to repeat use"
+  ],
+  "experiments": [
+    {
+      "id": 1,
+      "name": "Desk Research",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Existing market facts, customer context, baseline assumptions",
+      "best_used_when": "You need a fast baseline before fieldwork",
+      "usually_runs_after": [],
+      "usually_runs_next": ["Search Trends", "Keyword Research", "Problem Interviews"]
+    },
+    {
+      "id": 2,
+      "name": "Search Trends",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Interest over time, demand signals, language people use",
+      "best_used_when": "You need directional interest evidence",
+      "usually_runs_after": ["Desk Research"],
+      "usually_runs_next": ["Keyword Research", "Problem Interviews", "Landing Page"]
+    },
+    {
+      "id": 3,
+      "name": "Keyword Research",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Search intent, problem awareness, demand phrasing",
+      "best_used_when": "You need search-intent evidence",
+      "usually_runs_after": ["Desk Research", "Search Trends"],
+      "usually_runs_next": ["Ad Campaign", "Landing Page", "Problem Interviews"]
+    },
+    {
+      "id": 4,
+      "name": "Patent Search",
+      "category": "Feasibility",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Technical novelty, solution space, IP barriers",
+      "best_used_when": "You need to understand IP or technical space",
+      "usually_runs_after": ["Desk Research"],
+      "usually_runs_next": ["Expert Interviews", "Throwaway Prototype"]
+    },
+    {
+      "id": 5,
+      "name": "Competitor Analysis",
+      "category": "Viability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Alternatives, market structure, positioning pressure",
+      "best_used_when": "You need baseline market structure understanding",
+      "usually_runs_after": ["Desk Research"],
+      "usually_runs_next": ["Analogous Markets", "Mock Sale", "Revenue Model Test"]
+    },
+    {
+      "id": 6,
+      "name": "Analogous Markets",
+      "category": "Viability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Comparable models, adoption patterns, transferability",
+      "best_used_when": "You want to infer patterns from similar spaces",
+      "usually_runs_after": ["Desk Research", "Competitor Analysis"],
+      "usually_runs_next": ["Revenue Model Test", "Channel Test"]
+    },
+    {
+      "id": 7,
+      "name": "Expert Interviews",
+      "category": "Feasibility",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Industry constraints, technical or regulatory insight",
+      "best_used_when": "You need specialist input on technical constraints",
+      "usually_runs_after": ["Desk Research", "Patent Search"],
+      "usually_runs_next": ["Throwaway Prototype", "Concierge Test", "Paid Pilot"]
+    },
+    {
+      "id": 8,
+      "name": "Problem Interviews",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Whether the problem is real, frequent, painful",
+      "best_used_when": "You need to confirm whether a problem is real and painful",
+      "usually_runs_after": ["Desk Research", "Search Trends"],
+      "usually_runs_next": ["Customer Observation", "Solution Interviews", "Landing Page"]
+    },
+    {
+      "id": 9,
+      "name": "Solution Interviews",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Initial reaction to a proposed solution",
+      "best_used_when": "You want early reaction to a concept",
+      "usually_runs_after": ["Problem Interviews"],
+      "usually_runs_next": ["Storyboard", "Explainer Video", "Landing Page"]
+    },
+    {
+      "id": 10,
+      "name": "Customer Observation",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Real behavior in context, workarounds, unmet needs",
+      "best_used_when": "You need real behavior, not opinions",
+      "usually_runs_after": ["Problem Interviews"],
+      "usually_runs_next": ["Contextual Inquiry", "Journey Mapping", "Concierge Test"]
+    },
+    {
+      "id": 11,
+      "name": "Ethnographic Field Study",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Deep context, latent jobs, environmental constraints",
+      "best_used_when": "Behavior is complex and embedded in context",
+      "usually_runs_after": ["Problem Interviews"],
+      "usually_runs_next": ["Contextual Inquiry", "Journey Mapping", "Storyboard"]
+    },
+    {
+      "id": 12,
+      "name": "Contextual Inquiry",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Workflow details, edge cases, actual task execution",
+      "best_used_when": "You need to understand task execution in context",
+      "usually_runs_after": ["Problem Interviews", "Customer Observation"],
+      "usually_runs_next": ["Paper Prototype", "Wireframe Prototype", "Journey Mapping"]
+    },
+    {
+      "id": 13,
+      "name": "Diary Study",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Repeated behaviors, recurring pains, time-based patterns",
+      "best_used_when": "The behavior unfolds over time",
+      "usually_runs_after": ["Problem Interviews"],
+      "usually_runs_next": ["Journey Mapping", "Landing Page", "Cohort / Retention Analysis"]
+    },
+    {
+      "id": 14,
+      "name": "Journey Mapping",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Friction points, handoffs, service gaps",
+      "best_used_when": "You need a clear view of end-to-end friction",
+      "usually_runs_after": ["Customer Observation", "Contextual Inquiry", "Diary Study"],
+      "usually_runs_next": ["Storyboard", "Paper Prototype", "Concierge Test"]
+    },
+    {
+      "id": 15,
+      "name": "Focus Groups",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Group reactions, language, themes, objections",
+      "best_used_when": "You want rapid group reaction and language",
+      "usually_runs_after": ["Desk Research", "Problem Interviews"],
+      "usually_runs_next": ["Surveys / Questionnaires", "Storyboard", "Explainer Video"]
+    },
+    {
+      "id": 16,
+      "name": "Surveys / Questionnaires",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Pattern detection at scale, stated preferences",
+      "best_used_when": "You need pattern detection at scale",
+      "usually_runs_after": ["Problem Interviews", "Focus Groups"],
+      "usually_runs_next": ["Forced Ranking", "Landing Page", "Price Testing"]
+    },
+    {
+      "id": 17,
+      "name": "Forced Ranking",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Priority among features, pains, gains, alternatives",
+      "best_used_when": "You need prioritization across options",
+      "usually_runs_after": ["Surveys / Questionnaires", "Problem Interviews"],
+      "usually_runs_next": ["Card Sorting", "Landing Page", "Single-Feature MVP"]
+    },
+    {
+      "id": 18,
+      "name": "Card Sorting",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Mental models, classification logic, usability structure",
+      "best_used_when": "You need to understand mental models",
+      "usually_runs_after": ["Problem Interviews", "Forced Ranking"],
+      "usually_runs_next": ["Wireframe Prototype", "Storyboard"]
+    },
+    {
+      "id": 19,
+      "name": "Storyboard",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Whether users understand and relate to the scenario",
+      "best_used_when": "You need to test comprehension of a scenario",
+      "usually_runs_after": ["Solution Interviews", "Journey Mapping"],
+      "usually_runs_next": ["Explainer Video", "Paper Prototype", "Landing Page"]
+    },
+    {
+      "id": 20,
+      "name": "Paper Prototype",
+      "category": "Feasibility",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Early usability and workflow assumptions",
+      "best_used_when": "You want to test a flow cheaply",
+      "usually_runs_after": ["Contextual Inquiry", "Journey Mapping", "Storyboard"],
+      "usually_runs_next": ["Wireframe Prototype", "Usability Testing"]
+    },
+    {
+      "id": 21,
+      "name": "Wireframe Prototype",
+      "category": "Feasibility",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Interaction logic, navigation, flow clarity",
+      "best_used_when": "You need better fidelity without building",
+      "usually_runs_after": ["Paper Prototype", "Card Sorting"],
+      "usually_runs_next": ["Usability Testing", "Fake Door"]
+    },
+    {
+      "id": 22,
+      "name": "Throwaway Prototype",
+      "category": "Feasibility",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Functional assumptions without building the real thing",
+      "best_used_when": "You want to simulate functionality quickly",
+      "usually_runs_after": ["Expert Interviews", "Patent Search"],
+      "usually_runs_next": ["Wizard of Oz", "Concierge Test", "Single-Feature MVP"]
+    },
+    {
+      "id": 23,
+      "name": "3D Prototype",
+      "category": "Feasibility",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Physical interaction, ergonomics, form-factor assumptions",
+      "best_used_when": "Physical form matters",
+      "usually_runs_after": ["Expert Interviews", "Storyboard"],
+      "usually_runs_next": ["Usability Testing", "Concierge Test"]
+    },
+    {
+      "id": 24,
+      "name": "Usability Testing",
+      "category": "Feasibility",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Whether users can successfully use the solution",
+      "best_used_when": "You want to know if users can complete tasks",
+      "usually_runs_after": ["Paper Prototype", "Wireframe Prototype", "3D Prototype"],
+      "usually_runs_next": ["Fake Door", "Wizard of Oz", "Single-Feature MVP"]
+    },
+    {
+      "id": 25,
+      "name": "Explainer Video",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Comprehension, resonance, initial interest",
+      "best_used_when": "You need to test whether people understand the idea",
+      "usually_runs_after": ["Solution Interviews", "Storyboard"],
+      "usually_runs_next": ["Ad Campaign", "Landing Page"]
+    },
+    {
+      "id": 26,
+      "name": "Ad Campaign",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Click-through interest, audience targeting, message pull",
+      "best_used_when": "You want quick paid traffic evidence",
+      "usually_runs_after": ["Keyword Research", "Explainer Video"],
+      "usually_runs_next": ["Landing Page", "Fake Door"]
+    },
+    {
+      "id": 27,
+      "name": "Landing Page",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Interest, sign-up intent, value proposition pull",
+      "best_used_when": "You want behavioral evidence of interest",
+      "usually_runs_after": ["Keyword Research", "Ad Campaign", "Problem Interviews"],
+      "usually_runs_next": ["Fake Door", "Mock Sale", "Pre-Order Test"]
+    },
+    {
+      "id": 28,
+      "name": "Fake Door",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Behavioral interest in a feature or offer before building",
+      "best_used_when": "You want to test interest before building",
+      "usually_runs_after": ["Landing Page", "Usability Testing"],
+      "usually_runs_next": ["Wizard of Oz", "Single-Feature MVP"]
+    },
+    {
+      "id": 29,
+      "name": "Mock Sale",
+      "category": "Viability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Real purchase intent before full delivery exists",
+      "best_used_when": "You want to test commercial intent before delivery",
+      "usually_runs_after": ["Landing Page", "Solution Interviews"],
+      "usually_runs_next": ["Price Testing", "Letter of Intent", "Pre-Order Test"]
+    },
+    {
+      "id": 30,
+      "name": "Pre-Order Test",
+      "category": "Viability",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Commitment to buy before the full product exists",
+      "best_used_when": "You need real commitment before build",
+      "usually_runs_after": ["Mock Sale", "Landing Page"],
+      "usually_runs_next": ["Presales", "Paid Pilot", "Minimum Viable Product"]
+    },
+    {
+      "id": 31,
+      "name": "Letter of Intent",
+      "category": "Viability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Commercial seriousness, buying intent, stakeholder alignment",
+      "best_used_when": "You need a stronger buying signal in B2B",
+      "usually_runs_after": ["Mock Sale", "Expert Interviews"],
+      "usually_runs_next": ["Paid Pilot", "Presales"]
+    },
+    {
+      "id": 32,
+      "name": "Crowdfunding",
+      "category": "Viability",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Market pull plus willingness to pay in public",
+      "best_used_when": "You want public proof of demand and payment",
+      "usually_runs_after": ["Landing Page", "Explainer Video", "Ad Campaign"],
+      "usually_runs_next": ["Pre-Order Test", "Minimum Viable Product"]
+    },
+    {
+      "id": 33,
+      "name": "Concierge Test",
+      "category": "Feasibility",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Whether the value can be delivered manually before automating",
+      "best_used_when": "You want to manually deliver value before automating",
+      "usually_runs_after": ["Customer Observation", "Expert Interviews", "Throwaway Prototype"],
+      "usually_runs_next": ["Wizard of Oz", "Piecemeal MVP", "Paid Pilot"]
+    },
+    {
+      "id": 34,
+      "name": "Wizard of Oz",
+      "category": "Feasibility",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Whether users value the output before the backend is built",
+      "best_used_when": "You want users to experience automation before building it",
+      "usually_runs_after": ["Throwaway Prototype", "Usability Testing", "Fake Door"],
+      "usually_runs_next": ["Single-Feature MVP", "Piecemeal MVP"]
+    },
+    {
+      "id": 35,
+      "name": "Single-Feature MVP",
+      "category": "Feasibility",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Whether one core capability creates enough value",
+      "best_used_when": "One feature is the core bet",
+      "usually_runs_after": ["Wizard of Oz", "Fake Door", "Forced Ranking"],
+      "usually_runs_next": ["Minimum Viable Product", "Paid Pilot"]
+    },
+    {
+      "id": 36,
+      "name": "Piecemeal MVP",
+      "category": "Feasibility",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Whether the offer works using stitched-together tools/manual ops",
+      "best_used_when": "You can stitch existing tools together",
+      "usually_runs_after": ["Concierge Test", "Wizard of Oz"],
+      "usually_runs_next": ["Minimum Viable Product", "Paid Pilot"]
+    },
+    {
+      "id": 37,
+      "name": "Minimum Viable Product",
+      "category": "Feasibility",
+      "evidence_strength": "Strong",
+      "what_it_tests": "End-to-end usage, value capture, operational viability",
+      "best_used_when": "You need real usage evidence",
+      "usually_runs_after": ["Single-Feature MVP", "Piecemeal MVP"],
+      "usually_runs_next": ["Paid Pilot", "Cohort / Retention Analysis"]
+    },
+    {
+      "id": 38,
+      "name": "Paid Pilot",
+      "category": "Viability",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Whether customers will pay for real-world trial usage",
+      "best_used_when": "You want real usage with payment",
+      "usually_runs_after": ["Letter of Intent", "Concierge Test", "Minimum Viable Product"],
+      "usually_runs_next": ["Presales", "Cohort / Retention Analysis"]
+    },
+    {
+      "id": 39,
+      "name": "Presales",
+      "category": "Viability",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Actual commercial commitment before full scale-up",
+      "best_used_when": "You want actual sales conversations and commitments",
+      "usually_runs_after": ["Pre-Order Test", "Letter of Intent"],
+      "usually_runs_next": ["Paid Pilot", "Minimum Viable Product"]
+    },
+    {
+      "id": 40,
+      "name": "Price Testing",
+      "category": "Viability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Price sensitivity, acceptable range, pricing objections",
+      "best_used_when": "Pricing is uncertain",
+      "usually_runs_after": ["Mock Sale", "Surveys / Questionnaires"],
+      "usually_runs_next": ["Pre-Order Test", "Revenue Model Test"]
+    },
+    {
+      "id": 41,
+      "name": "Revenue Model Test",
+      "category": "Viability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Subscription vs usage vs license vs service logic",
+      "best_used_when": "Business model is uncertain",
+      "usually_runs_after": ["Competitor Analysis", "Analogous Markets", "Price Testing"],
+      "usually_runs_next": ["Channel Test", "Paid Pilot"]
+    },
+    {
+      "id": 42,
+      "name": "Channel Test",
+      "category": "Viability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Whether acquisition/distribution channels actually work",
+      "best_used_when": "Go-to-market route is uncertain",
+      "usually_runs_after": ["Revenue Model Test", "Competitor Analysis"],
+      "usually_runs_next": ["Paid Pilot", "Presales"]
+    },
+    {
+      "id": 43,
+      "name": "A/B Testing",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Message, offer, design, or flow optimization",
+      "best_used_when": "You are optimizing a live message or flow",
+      "usually_runs_after": ["Landing Page", "Ad Campaign", "Fake Door"],
+      "usually_runs_next": ["Pre-Order Test", "Minimum Viable Product", "Channel Test"]
+    },
+    {
+      "id": 44,
+      "name": "Cohort / Retention Analysis",
+      "category": "Viability",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Whether value persists and users keep coming back",
+      "best_used_when": "You need evidence users stay and return",
+      "usually_runs_after": ["Minimum Viable Product", "Paid Pilot"],
+      "usually_runs_next": ["Revenue Model Test"]
+    }
+  ],
+  "matrix_by_evidence_and_category": {
+    "Weak": {
+      "Desirability": ["Desk Research", "Search Trends", "Keyword Research", "Problem Interviews", "Solution Interviews", "Journey Mapping", "Focus Groups", "Surveys / Questionnaires", "Forced Ranking", "Card Sorting", "Storyboard", "Explainer Video", "Ad Campaign"],
+      "Feasibility": ["Patent Search", "Expert Interviews", "Paper Prototype", "Wireframe Prototype"],
+      "Viability": ["Competitor Analysis", "Analogous Markets"]
+    },
+    "Medium": {
+      "Desirability": ["Customer Observation", "Ethnographic Field Study", "Contextual Inquiry", "Diary Study", "Landing Page", "Fake Door", "A/B Testing"],
+      "Feasibility": ["Throwaway Prototype", "3D Prototype", "Usability Testing"],
+      "Viability": ["Mock Sale", "Letter of Intent", "Price Testing", "Revenue Model Test", "Channel Test"]
+    },
+    "Strong": {
+      "Desirability": [],
+      "Feasibility": ["Concierge Test", "Wizard of Oz", "Single-Feature MVP", "Piecemeal MVP", "Minimum Viable Product"],
+      "Viability": ["Pre-Order Test", "Crowdfunding", "Paid Pilot", "Presales", "Cohort / Retention Analysis"]
+    }
+  },
+  "decision_tree": {
+    "branches": [
+      {
+        "question": "Do customers really have this problem or want this?",
+        "category": "Desirability",
+        "sub_branches": [
+          {
+            "context": "You know very little about the customer/problem",
+            "cards": ["Problem Interviews", "Customer Observation", "Contextual Inquiry", "Ethnographic Field Study"]
+          },
+          {
+            "context": "You want to test reaction to a solution or message",
+            "cards": ["Solution Interviews", "Storyboard", "Explainer Video", "Landing Page", "Ad Campaign"]
+          },
+          {
+            "context": "You want behavioral evidence, not opinions",
+            "cards": ["Fake Door", "Landing Page", "A/B Testing"]
+          },
+          {
+            "context": "You want prioritization among options",
+            "cards": ["Forced Ranking", "Card Sorting", "Surveys / Questionnaires"]
+          }
+        ]
+      },
+      {
+        "question": "Can we actually build and deliver this?",
+        "category": "Feasibility",
+        "sub_branches": [
+          {
+            "context": "You want to test usability or flow cheaply",
+            "cards": ["Paper Prototype", "Wireframe Prototype", "Usability Testing"]
+          },
+          {
+            "context": "You want to simulate the experience before building",
+            "cards": ["Throwaway Prototype", "Wizard of Oz", "Concierge Test"]
+          },
+          {
+            "context": "You want to test physical interaction",
+            "cards": ["3D Prototype"]
+          },
+          {
+            "context": "You want to test end-to-end delivery",
+            "cards": ["Single-Feature MVP", "Piecemeal MVP", "Minimum Viable Product"]
+          }
+        ]
+      },
+      {
+        "question": "Will people pay, and can this become a business?",
+        "category": "Viability",
+        "sub_branches": [
+          {
+            "context": "You want to test willingness to pay early",
+            "cards": ["Mock Sale", "Price Testing", "Letter of Intent"]
+          },
+          {
+            "context": "You want stronger commercial commitment",
+            "cards": ["Pre-Order Test", "Presales", "Paid Pilot", "Crowdfunding"]
+          },
+          {
+            "context": "You want to test how money will be made",
+            "cards": ["Revenue Model Test"]
+          },
+          {
+            "context": "You want to test how the offer reaches customers",
+            "cards": ["Channel Test"]
+          },
+          {
+            "context": "You want to test whether value persists over time",
+            "cards": ["Cohort / Retention Analysis"]
+          }
+        ]
+      },
+      {
+        "question": "You need background evidence before any field test",
+        "category": "Discovery",
+        "sub_branches": [
+          {
+            "context": "Baseline research",
+            "cards": ["Desk Research", "Search Trends", "Keyword Research", "Competitor Analysis", "Analogous Markets", "Patent Search", "Expert Interviews"]
+          }
+        ]
+      }
+    ]
+  },
+  "quick_selection_rules": [
+    {
+      "question": "Do they care?",
+      "start_with": ["Problem Interviews", "Customer Observation", "Search Trends"],
+      "move_next_to": ["Landing Page", "Fake Door", "A/B Testing"]
+    },
+    {
+      "question": "Can they use it?",
+      "start_with": ["Paper Prototype", "Wireframe Prototype", "Usability Testing"],
+      "move_next_to": ["Wizard of Oz", "Concierge Test", "Minimum Viable Product"]
+    },
+    {
+      "question": "Will they pay?",
+      "start_with": ["Price Testing", "Mock Sale", "Letter of Intent"],
+      "move_next_to": ["Pre-Order Test", "Paid Pilot", "Presales"]
+    },
+    {
+      "question": "Can this scale as a business?",
+      "start_with": ["Revenue Model Test", "Channel Test"],
+      "move_next_to": ["Paid Pilot", "Cohort / Retention Analysis"]
+    },
+    {
+      "question": "Is this technically realistic?",
+      "start_with": ["Expert Interviews", "Patent Search", "Throwaway Prototype"],
+      "move_next_to": ["Wizard of Oz", "Single-Feature MVP"]
+    }
+  ],
+  "suggested_sequence_paths": {
+    "desirability": {
+      "primary": ["Desk Research", "Search Trends", "Keyword Research", "Problem Interviews", "Customer Observation", "Contextual Inquiry", "Journey Mapping", "Solution Interviews", "Storyboard", "Explainer Video", "Ad Campaign", "Landing Page", "Fake Door", "A/B Testing"],
+      "discovery_alternative": ["Problem Interviews", "Ethnographic Field Study", "Diary Study", "Journey Mapping", "Storyboard"],
+      "prioritization_alternative": ["Problem Interviews", "Surveys / Questionnaires", "Forced Ranking", "Card Sorting", "Wireframe Prototype"]
+    },
+    "feasibility": {
+      "primary": ["Patent Search", "Expert Interviews", "Throwaway Prototype", "Paper Prototype", "Wireframe Prototype", "Usability Testing", "Wizard of Oz", "Concierge Test", "Single-Feature MVP", "Piecemeal MVP", "Minimum Viable Product"],
+      "physical_product": ["Expert Interviews", "Storyboard", "3D Prototype", "Usability Testing", "Concierge Test"]
+    },
+    "viability": {
+      "primary": ["Competitor Analysis", "Analogous Markets", "Mock Sale", "Price Testing", "Letter of Intent", "Pre-Order Test", "Presales", "Paid Pilot", "Revenue Model Test", "Channel Test", "Cohort / Retention Analysis"],
+      "consumer_payment": ["Explainer Video", "Ad Campaign", "Landing Page", "Crowdfunding", "Pre-Order Test", "Minimum Viable Product"]
+    }
+  },
+  "agent_usage_guidance": {
+    "step_8_behavior": [
+      "Use only the 44 canonical experiment card names defined in this file — never invent new ones.",
+      "Match cards to assumptions by DVF category first, then by evidence strength appropriate to current confidence level.",
+      "Recommend evidence strength progression: Weak → Medium → Strong. Never recommend Strong evidence experiments when no prior evidence exists.",
+      "Use the sequencing transitions (usually_runs_after, usually_runs_next) to recommend experiment order.",
+      "Use the decision tree to help users select experiments when they describe what they're unsure about.",
+      "When recommending cards for precoil-emt Phase 3, include 1-3 cards with evidence strength ratings and one sentence on why each fits the assumption."
+    ],
+    "cross_agent_integration": {
+      "precoil_emt_phase_3": "After generating an experiment brief, recommend 1-3 specific cards from this library matched to the assumption category and evidence level.",
+      "cxif_bmi_coach_phase_5c": "When designing PDSA experiments from canvas-derived assumptions, recommend specific cards matched to the DVF category of each assumption."
+    }
+  }
+}

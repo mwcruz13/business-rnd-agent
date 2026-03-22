@@ -1,0 +1,250 @@
+{
+  "metadata": {
+    "title": "SOC Radar Pattern Library for Step 1",
+    "scope": "Signal zone taxonomy, disruption filters, classification types, and scoring framework for the Signal Scanner node",
+    "updated": "2026-03-20",
+    "sources": [
+      {
+        "type": "book_framework",
+        "reference": "Scott D. Anthony, Clayton Christensen, Erik Roth — Seeing What's Next",
+        "verified": [
+          "signal_zones",
+          "disruption_filters",
+          "disruption_types",
+          "rpv_framework"
+        ]
+      },
+      {
+        "type": "workspace_document",
+        "path": "assistant/SOC Radar Agent - Consultants Guide.md",
+        "verified": [
+          "four_phase_workflow",
+          "scoring_dimensions",
+          "action_tiers",
+          "confidence_ratings"
+        ]
+      },
+      {
+        "type": "workspace_document",
+        "path": "Archive/disruption radar.md",
+        "verified": [
+          "signal_zones",
+          "qualification_filters",
+          "evidence_capture_fields",
+          "urgency_scoring"
+        ]
+      },
+      {
+        "type": "workspace_document",
+        "path": "Archive/Signals of Change for BMI Consultants.txt",
+        "verified": [
+          "three_primary_signal_categories",
+          "training_actions"
+        ]
+      }
+    ]
+  },
+  "signal_zones": {
+    "count": 7,
+    "zones": [
+      {
+        "name": "Nonconsumption",
+        "description": "People who need the outcome but cannot access, afford, or use today's solutions",
+        "watch_for": "Workarounds, DIY alternatives, unserved populations",
+        "status": "verified"
+      },
+      {
+        "name": "Overserved Customers",
+        "description": "Customers paying for performance they do not use or value",
+        "watch_for": "Feature fatigue, willingness-to-pay erosion, demand for simpler alternatives",
+        "status": "verified"
+      },
+      {
+        "name": "Low-End Foothold",
+        "description": "Simpler, cheaper alternatives gaining traction with less-demanding segments",
+        "watch_for": "Good-enough solutions at lower price points entering from below",
+        "status": "verified"
+      },
+      {
+        "name": "New-Market Foothold",
+        "description": "Solutions creating demand where none existed before",
+        "watch_for": "New categories, new use cases, previously non-consuming populations adopting",
+        "status": "verified"
+      },
+      {
+        "name": "Business Model Anomaly",
+        "description": "Entrants using fundamentally different cost structures, channels, or revenue models",
+        "watch_for": "SaaS vs perpetual license, marketplace vs direct, free-tier vs enterprise",
+        "status": "verified"
+      },
+      {
+        "name": "Enabling Technology",
+        "description": "Technologies that reduce barriers to entry or change the cost curve",
+        "watch_for": "Open-source releases, patent expirations, capability milestones, cost inflection points",
+        "status": "verified"
+      },
+      {
+        "name": "Regulatory / Policy Shift",
+        "description": "Rule changes that open or close access to markets",
+        "watch_for": "New compliance requirements, deregulation, standards changes, trade policy shifts",
+        "status": "verified"
+      }
+    ]
+  },
+  "disruption_filters": {
+    "count": 6,
+    "threshold_note": "A signal that passes 3+ filters warrants deeper investigation. 4+ filters indicates high disruptive potential.",
+    "filters": [
+      {
+        "name": "Asymmetric Motivation",
+        "question": "Would an incumbent choose not to respond because the opportunity looks unattractive at their scale?",
+        "status": "verified"
+      },
+      {
+        "name": "Asymmetric Skills",
+        "question": "Does the entrant possess capabilities the incumbent lacks or cannot easily replicate?",
+        "status": "verified"
+      },
+      {
+        "name": "Trajectory",
+        "question": "Is the entrant improving fast enough to eventually meet mainstream needs?",
+        "status": "verified"
+      },
+      {
+        "name": "Performance Overshoot",
+        "question": "Has the incumbent's product performance exceeded what mainstream customers actually need?",
+        "status": "verified"
+      },
+      {
+        "name": "Barrier Removal",
+        "question": "Does the entrant eliminate a skill, wealth, or access barrier that kept people from consuming?",
+        "status": "verified"
+      },
+      {
+        "name": "Business Model Conflict",
+        "question": "Would responding require the incumbent to cannibalize margins, channels, or key relationships?",
+        "status": "verified"
+      }
+    ]
+  },
+  "classification_types": [
+    {
+      "name": "Sustaining",
+      "description": "Improvements along dimensions incumbents already compete on. Incumbents are motivated and able to respond.",
+      "strategic_response": "Compete — invest, accelerate, or acquire",
+      "status": "verified"
+    },
+    {
+      "name": "Disruptive — Low-End",
+      "description": "Simpler, cheaper entrant targeting the least-profitable customers first, then moving upmarket",
+      "strategic_response": "Create separate unit, partner, or change business model",
+      "status": "verified"
+    },
+    {
+      "name": "Disruptive — New-Market",
+      "description": "Entrant serving nonconsumers or creating a new context for consumption",
+      "strategic_response": "Create separate unit, partner, or change business model",
+      "status": "verified"
+    }
+  ],
+  "scoring": {
+    "dimensions": [
+      {
+        "name": "Impact",
+        "scale": "1-3",
+        "levels": {
+          "1": "Affects a niche we do not serve",
+          "2": "Affects an adjacent segment or channel",
+          "3": "Threatens core revenue or key customer relationships"
+        }
+      },
+      {
+        "name": "Speed",
+        "scale": "1-3",
+        "levels": {
+          "1": "Improving slowly; years away from mainstream",
+          "2": "Improving steadily; could reach mainstream in 2-4 years",
+          "3": "Improving rapidly; viable for mainstream within 1-2 years"
+        }
+      }
+    ],
+    "formula": "Priority = Impact × Speed",
+    "action_tiers": [
+      {
+        "score_range": "1-3",
+        "tier": "Monitor",
+        "action": "Watch quarterly; not urgent",
+        "timeframe": "Revisit quarterly"
+      },
+      {
+        "score_range": "4-6",
+        "tier": "Investigate",
+        "action": "Gather primary evidence within 30 days",
+        "timeframe": "30 days"
+      },
+      {
+        "score_range": "7-9",
+        "tier": "Act",
+        "action": "Design and run an experiment within 60 days",
+        "timeframe": "60 days"
+      }
+    ]
+  },
+  "evidence_capture": {
+    "required_fields": [
+      "Source",
+      "Observable Behavior",
+      "Current Scale",
+      "Rate of Change",
+      "Incumbent Response",
+      "Alternative Explanations"
+    ]
+  },
+  "rpv_framework": {
+    "name": "Resources, Processes, Values",
+    "purpose": "Assess whether incumbent can structurally respond to a disruptive signal",
+    "dimensions": [
+      {
+        "name": "Resources",
+        "question": "Can the incumbent deploy the capital, talent, and technology needed?"
+      },
+      {
+        "name": "Processes",
+        "question": "Are the incumbent's ways of working optimized for this response, or would they need to operate differently?"
+      },
+      {
+        "name": "Values",
+        "question": "Does the incumbent's cost structure and margin expectations make the response attractive?"
+      }
+    ],
+    "interpretation": "If all three align, the incumbent can and probably will respond. If Values or Processes are misaligned, the incumbent faces a structural barrier even with sufficient resources."
+  },
+  "confidence_ratings": [
+    {
+      "level": "High",
+      "meaning": "Strong evidence supports the assessment",
+      "guidance": "Treat as reliable; use in client presentations"
+    },
+    {
+      "level": "Medium",
+      "meaning": "Some evidence exists but gaps remain",
+      "guidance": "Usable for prioritization; flag the gap in deliverable"
+    },
+    {
+      "level": "Low",
+      "meaning": "Assessment is based on inference, not observation",
+      "guidance": "Do not present as finding — treat as hypothesis to test"
+    }
+  ],
+  "agent_usage_guidance": {
+    "step_1_behavior": [
+      "Use the 7 signal zones as the classification taxonomy. Every detected signal must map to exactly one zone.",
+      "Apply all 6 disruption filters to each signal classified as potentially disruptive.",
+      "Classify signals as Sustaining, Disruptive — Low-End, or Disruptive — New-Market.",
+      "Score using Impact × Speed formula. Output the tier assignment.",
+      "Capture all 6 required evidence fields for each signal.",
+      "Flag signal zones with no coverage as intelligence blind spots.",
+      "Do not fabricate signal zone names or filter names — use only the set defined in this file."
+    ]
+  }
+}

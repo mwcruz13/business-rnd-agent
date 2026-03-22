@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "title": "Strategyzer Pattern Library for Step 2",
+    "scope": "Invent vs Shift pattern selection for BMI agent orchestration",
+    "updated": "2026-03-20",
+    "sources": [
+      {
+        "type": "public_blog",
+        "url": "https://www.strategyzer.com/blog/posts/business-model-patterns",
+        "verified": [
+          "invent_pattern_count",
+          "invent_pattern_names"
+        ]
+      },
+      {
+        "type": "public_book_summary",
+        "url": "https://www.strategyzer.com/library/the-invincible-company-book-summary",
+        "verified": [
+          "combined_pattern_count_across_invent_and_shift"
+        ]
+      },
+      {
+        "type": "public_image_ocr",
+        "url": "https://cdn.prod.website-files.com/64830736e7f43d491d70ef30/648310866c2f102f886c8cae_BusinessModelPatternsINVENT.001.jpeg",
+        "verified": [
+          "invent_pattern_names",
+          "some_flavor_labels"
+        ]
+      }
+    ],
+    "notes": [
+      "Strategyzer public materials confirm 9 INVENT patterns and 27 flavors.",
+      "Strategyzer public summary materials refer to 21 total patterns across invent and shift.",
+      "The SHIFT pattern names and the full 27-flavor catalog were not recoverable from public sources in this workspace session and should be added from the book or an internal capture before detailed automation."
+    ]
+  },
+  "invent": {
+    "pattern_count": 9,
+    "flavor_count": 27,
+    "patterns": [
+      {
+        "name": "Activity Scalers",
+        "status": "verified"
+      },
+      {
+        "name": "Gravity Creators",
+        "status": "verified"
+      },
+      {
+        "name": "Market Explorers",
+        "status": "verified"
+      },
+      {
+        "name": "Resource Castles",
+        "status": "verified"
+      },
+      {
+        "name": "Channel Kings",
+        "status": "verified"
+      },
+      {
+        "name": "Cost Differentiators",
+        "status": "verified"
+      },
+      {
+        "name": "Margin Masters",
+        "status": "verified"
+      },
+      {
+        "name": "Revenue Differentiators",
+        "status": "verified"
+      },
+      {
+        "name": "Unresolved lock-in pattern label",
+        "status": "partially_verified",
+        "verification_note": "The public composite image OCR captured the descriptor 'How to lock in customers' but did not recover the pattern label cleanly. Keep this placeholder until confirmed against the book or a higher-fidelity source."
+      }
+    ],
+    "publicly_recovered_flavors": [
+      {
+        "name": "Backstage Disruption",
+        "status": "ocr_recovered"
+      },
+      {
+        "name": "Frontstage Disruption",
+        "status": "ocr_recovered"
+      },
+      {
+        "name": "Profit Formula Disruption",
+        "status": "ocr_recovered"
+      }
+    ]
+  },
+  "shift": {
+    "status": "pending_source",
+    "notes": [
+      "Use this section for the established-business transformation patterns once sourced from The Invincible Company or an internal reference.",
+      "Do not infer SHIFT pattern names from Business Model Generation patterns."
+    ],
+    "patterns": []
+  },
+  "agent_usage_guidance": {
+    "step_2_behavior": [
+      "Use the INVENT pattern list in this file as the default candidate library for new-growth opportunities.",
+      "Treat SHIFT as unavailable until the pattern names are explicitly populated.",
+      "When a candidate pattern is only partially verified, surface it as a tentative recommendation and ask for consultant confirmation."
+    ]
+  }
+}

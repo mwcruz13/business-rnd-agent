@@ -1,0 +1,48 @@
+services:
+  bmi-postgres:
+    image: pgvector/pgvector:pg18
+    container_name: bmi-postgres
+    env_file:
+      - ./backend/.env
+    volumes:
+      - bmi-postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bmi-backend:
+    build:
+      context: ./backend
+    container_name: bmi-backend
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app/backend
+    working_dir: /app
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    depends_on:
+      bmi-postgres:
+        condition: service_healthy
+
+  bmi-frontend:
+    build:
+      context: ./frontend
+    container_name: bmi-frontend
+    environment:
+      BACKEND_API_BASE_URL: http://bmi-backend:8000
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend:/app/frontend
+    working_dir: /app/frontend
+    command: streamlit run streamlit_app.py --server.address 0.0.0.0 --server.port 8501
+    ports:
+      - "8501:8501"
+    depends_on:
+      - bmi-backend
+
+volumes:
+  bmi-postgres-data:

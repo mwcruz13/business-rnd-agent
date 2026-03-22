@@ -1,0 +1,202 @@
+{
+  "metadata": {
+    "title": "Precoil EMT Pattern Library for Steps 7-8",
+    "scope": "DVF category definitions, assumption format rules, EMT phase structure, mapping matrix, experiment brief template, and cross-cutting rules for Risk Mapper and PDSA Experiment Designer nodes",
+    "updated": "2026-03-20",
+    "methodology": "Extract → Map → Test (EMT) by David J. Bland, Precoil",
+    "sources": [
+      {
+        "type": "workspace_agent",
+        "path": ".github/agents/precoil-emt.agent.md",
+        "verified": [
+          "dvf_categories",
+          "assumption_format",
+          "emt_phases",
+          "experiment_brief_template",
+          "cross_cutting_rules"
+        ]
+      },
+      {
+        "type": "workspace_skill",
+        "path": "assistant/SKILL.md",
+        "verified": [
+          "emt_phases",
+          "dvf_tension_check"
+        ]
+      }
+    ]
+  },
+  "dvf_categories": {
+    "count": 3,
+    "categories": [
+      {
+        "name": "Desirability",
+        "code": "D",
+        "scope": "User needs, problem severity, perceived value, solution fit only",
+        "never_includes": "Pricing, dollar amounts, willingness to pay, or any financial assumptions",
+        "status": "verified"
+      },
+      {
+        "name": "Viability",
+        "code": "V",
+        "scope": "All financial assumptions: pricing, willingness to pay, revenue, margins, unit economics, business model sustainability",
+        "never_includes": "User-need assumptions",
+        "status": "verified"
+      },
+      {
+        "name": "Feasibility",
+        "code": "F",
+        "scope": "Operational, technical, or organizational delivery assumptions",
+        "never_includes": "User-need or financial assumptions",
+        "status": "verified"
+      }
+    ]
+  },
+  "assumption_format": {
+    "required_prefix": ["I believe", "We believe"],
+    "acceptable_abbreviations": ["IB", "IBT", "WB", "WBT"],
+    "rules": [
+      "Every assumption must start with 'I believe...' or 'We believe...'",
+      "Each assumption should describe something that could prove the idea wrong if tested",
+      "Prefer assumptions about observable behavior rather than opinions",
+      "Avoid assumptions about total market size, industry growth, or macro trends unless they directly affect early adoption or revenue",
+      "Each assumption should represent a distinct risk — do not repeat the same idea across categories"
+    ]
+  },
+  "emt_phases": {
+    "count": 3,
+    "execution_rule": "Run phases in sequence. Do not skip ahead. After each phase, ask if the user wants to continue to the next.",
+    "phases": [
+      {
+        "number": 1,
+        "name": "Extract",
+        "purpose": "Surface DVF assumptions from the idea",
+        "output": "3 assumptions per category (D, V, F) in table format + DVF tension check",
+        "output_format": {
+          "table_columns": ["Category", "Assumption", "Rationale"],
+          "assumptions_per_category": 3,
+          "dvf_tension_check": "1-2 sentence description of the most significant tension between assumptions across categories"
+        }
+      },
+      {
+        "number": 2,
+        "name": "Map",
+        "purpose": "Critique the user's assumption map on a 2×2 matrix",
+        "input": "User's assumption placement on Importance (vertical) × Evidence (horizontal) matrix",
+        "assessment_criteria": [
+          "Placement — are assumptions in sensible positions?",
+          "DVF coverage — are all three categories represented?",
+          "Format — do assumptions follow 'I believe...' format?",
+          "Misplacements — flag any assumptions in the wrong quadrant",
+          "Priority — identify 1-2 assumptions nearest high importance / low evidence",
+          "What was done well — at least one strength"
+        ]
+      },
+      {
+        "number": 3,
+        "name": "Test",
+        "purpose": "Identify what to test and how, then surface the library ceiling",
+        "input": "1-2 riskiest assumptions from high importance / low evidence quadrant",
+        "output": "Structured experiment brief per assumption + experiment card recommendations from the 44-card library"
+      }
+    ]
+  },
+  "mapping_matrix": {
+    "name": "Importance × Evidence Matrix",
+    "axes": {
+      "vertical": "Importance (how much damage if this assumption is wrong)",
+      "horizontal": "Evidence (how much we already know)"
+    },
+    "quadrants": [
+      {
+        "position": "High importance / Low evidence",
+        "label": "Test first",
+        "priority": "Highest — these are the riskiest assumptions"
+      },
+      {
+        "position": "High importance / High evidence",
+        "label": "Monitor",
+        "priority": "Already well-understood; watch for changes"
+      },
+      {
+        "position": "Low importance / Low evidence",
+        "label": "Deprioritize",
+        "priority": "Low consequence even if wrong"
+      },
+      {
+        "position": "Low importance / High evidence",
+        "label": "Safe zone",
+        "priority": "Well-known and low-impact"
+      }
+    ]
+  },
+  "experiment_brief_template": {
+    "sections": [
+      "Assumption to Test (verbatim reproduction)",
+      "Category (Desirability / Viability / Feasibility)",
+      "What You're Trying to Learn",
+      "Experiment Type",
+      "How to Run It (3 steps: preparation, execution, analysis)",
+      "How to Measure It (Metric, Success looks like, Failure looks like)",
+      "Estimated Effort (Setup, Run time, Evidence strength)",
+      "Remaining Uncertainty"
+    ],
+    "rules": [
+      "Reproduce assumption text exactly as written — do not paraphrase",
+      "Use commonly recognized experiment types — do not invent new labels",
+      "Success and failure signals must be specific enough that a reasonable observer would agree they change confidence",
+      "Do not recommend Commit, Correct, or Cut — surface risk, do not prescribe action",
+      "Do not imply that running the experiment guarantees validation or success"
+    ]
+  },
+  "cross_cutting_rules": [
+    {
+      "rule": "Terminology",
+      "requirement": "Never 'hypothesis' — always 'assumption'"
+    },
+    {
+      "rule": "Assumption format",
+      "requirement": "Always 'I believe...' or 'We believe...'"
+    },
+    {
+      "rule": "Desirability boundary",
+      "requirement": "User needs only — never financial"
+    },
+    {
+      "rule": "Viability boundary",
+      "requirement": "All financial assumptions"
+    },
+    {
+      "rule": "Feasibility boundary",
+      "requirement": "Operational, technical, organizational"
+    },
+    {
+      "rule": "Tone",
+      "requirement": "Calm, coaching-oriented, no exclamation points"
+    },
+    {
+      "rule": "Neutrality",
+      "requirement": "Never recommend Commit/Correct/Cut"
+    },
+    {
+      "rule": "Library fidelity",
+      "requirement": "Do not invent experiment names from the Precoil library"
+    }
+  ],
+  "agent_usage_guidance": {
+    "step_7_behavior": [
+      "Use the DVF categories with strict boundary rules when classifying risk assumptions.",
+      "Enforce the 'I believe...' assumption format on all generated assumptions.",
+      "Apply the Importance × Evidence matrix to prioritize assumptions.",
+      "Surface the DVF tension check to highlight cross-category conflicts.",
+      "Do not fabricate category names — use only Desirability, Viability, Feasibility."
+    ],
+    "step_8_behavior": [
+      "Generate experiment briefs using the template structure defined in this file.",
+      "Recommend specific experiment cards from the 44-card experiment library (experiment-library.json).",
+      "Enforce evidence strength sequencing: weak → medium → strong.",
+      "Do not invent experiment card names — use only those defined in experiment-library.json.",
+      "Reproduce assumption text verbatim — never paraphrase."
+    ]
+  }
+}
