@@ -14,10 +14,12 @@ logs:
 
 test:
 	docker compose up -d bmi-postgres $(BACKEND_SERVICE)
+	docker compose exec -T $(BACKEND_SERVICE) alembic -c backend/migrations/alembic.ini upgrade head
 	docker compose exec -T $(BACKEND_SERVICE) pytest
 
 test-smoke:
 	docker compose up -d bmi-postgres $(BACKEND_SERVICE)
+	docker compose exec -T $(BACKEND_SERVICE) alembic -c backend/migrations/alembic.ini upgrade head
 	docker compose exec -T $(BACKEND_SERVICE) python -m backend.tests.smoke_check
 
 cli:
@@ -25,7 +27,7 @@ cli:
 
 migrate:
 	docker compose up -d bmi-postgres $(BACKEND_SERVICE)
-	docker compose exec -T $(BACKEND_SERVICE) alembic upgrade head
+	docker compose exec -T $(BACKEND_SERVICE) alembic -c backend/migrations/alembic.ini upgrade head
 
 %:
 	@:

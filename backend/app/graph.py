@@ -24,17 +24,22 @@ WORKFLOW_STEP_ORDER = [
     "step8_pdsa",
 ]
 
+WORKFLOW_STEP_RUNNERS = {
+    "step1_signal": run_step1_signal,
+    "step2_pattern": run_step2_pattern,
+    "step3_profile": run_step3_profile,
+    "step4_vpm": run_step4_vpm,
+    "step5_define": run_step5_define,
+    "step6_design": run_step6_design,
+    "step7_risk": run_step7_risk,
+    "step8_pdsa": run_step8_pdsa,
+}
+
 
 def build_graph():
     graph = StateGraph(BMIWorkflowState)
-    graph.add_node("step1_signal", run_step1_signal)
-    graph.add_node("step2_pattern", run_step2_pattern)
-    graph.add_node("step3_profile", run_step3_profile)
-    graph.add_node("step4_vpm", run_step4_vpm)
-    graph.add_node("step5_define", run_step5_define)
-    graph.add_node("step6_design", run_step6_design)
-    graph.add_node("step7_risk", run_step7_risk)
-    graph.add_node("step8_pdsa", run_step8_pdsa)
+    for step_name, runner in WORKFLOW_STEP_RUNNERS.items():
+        graph.add_node(step_name, runner)
 
     graph.add_edge(START, WORKFLOW_STEP_ORDER[0])
     for source_step, target_step in zip(WORKFLOW_STEP_ORDER, WORKFLOW_STEP_ORDER[1:]):

@@ -35,7 +35,7 @@ def _build_assumptions(state: BMIWorkflowState, categories: set[str], quadrants:
     viability = [
         (
             "Viable",
-            "I believe the business can protect expansion revenue by accelerating activation through Cost Differentiators.",
+            f"I believe the business can protect expansion revenue by accelerating activation through {selected_patterns}.",
             "If faster activation does not improve revenue retention or expansion, the model may not justify the investment.",
         ),
         (

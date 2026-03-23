@@ -10,7 +10,9 @@ def _build_business_model_canvas(state: BMIWorkflowState) -> str:
     PromptAssetLoader().load_skill_asset("cxif-bmi-coach")
 
     if "guided onboarding experience" in value_proposition_canvas.lower():
-        customer_segments = "Operational buyers and adoption stakeholders seeking faster activation through Cost Differentiators."
+        customer_segments = (
+            f"Operational buyers and adoption stakeholders seeking faster activation through {selected_patterns}."
+        )
         value_proposition = "A lower-friction onboarding path that reduces setup complexity and accelerates time-to-value."
         channels = "Direct sales handoff, guided digital onboarding, and in-product activation support."
         customer_relationships = "Self-service guidance with targeted human support for exceptions."

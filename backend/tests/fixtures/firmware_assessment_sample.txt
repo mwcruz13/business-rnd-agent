@@ -1,0 +1,52 @@
+## HPE Perspective
+
+FW Assessment is critical for the success of Complete Care strategy. Scalability: The current firmware assessment delivery process is not scalable to meet the demands of HPE installed base. Profitability: Many customers complete firmware assessments without HPE's proactive support. Additionally, the current costs of delivering FW assessments impacts profitability. Market share: Competitors are gaining an edge by offering automated firmware assessment in self-serve business models, which might cause HPE market share erosion. Addressing these scalability, profitability and market share issues is critical to retaining our customer base and be competitive. Isolated product based firmware recommendation does not address environment wide interoperability check that Customers want
+
+## Customer Perspective
+
+Customers have a mixed experience when consuming firmware assessment. Complete Care customers require on time delivery and efficient, secure, and non-disruptive experience with firmware upgrades. Key challenges include Pricing Barriers: The cost of delivering HPE’s proactive firmware assessment limits its scalability and the ability to embed it in Complete Care Service Offer. Delivery Delays: Extended delivery times can lead to stale data, undermining HPE's credibility and causing disruptions in customers' production environments. Access Issues: Difficulty in accessing the correct firmware code (via HPESC, SPP, etc.) negatively affects the customer experience.
+
+## Root Causes & Risks
+
+Manual, repetitive tasks result in errors when presented to customers
+Process gaps – different process followed by RSS vs TAM.
+Continuous changes in data structure hinders automation.
+Need to access multiple data sources, managed between siloed organizations are the cause of data inconsistency, and lack of unified data governance.
+Lack of Firmware infrastructure expertise from SME to support DevOps team slows down delivery
+
+## Impact
+
+Failure to scale firmware assessment coverage to more than 5% of install base is consequently a missed revenue opportunity.
+High TAT (anywhere from 4-25 days) results in potentially stale data, and delayed time to value.
+Lack of data standardization & consistency results in:
+Human level performance unable to consistently reach 100% accuracy
+Increased cost of delivery
+Inefficiency - Independent tools & workstreams being developed to solve individual needs (Shadow IT).
+
+## Expected Outcomes
+
+Achieve a consistently positive and standardized Customer and Team member Experience
+Increase FW Assessment delivery efficiency
+Enable the vision of embedding FW assessment in all Complete Care offers, thus increasing Service revenue and IB coverage
+Reduced cost of delivery, thus increasing HPE margin and Customer value
+Meet or beat our competitors
+Accurate Firmware assessment recommendations delivered exactly when needed
+
+## Assumptions About Customer Segments
+
+### Complete Care Market Share Expansion
+
+15% YoY target market increase
+Reduce TAT by 80% to increase CSAT scores
+
+### Complete Care Revenue Growth
+
+15% YoY Revenue growth
+40% profit margin increase with automation vs current state
+
+## Non-consumers (SMB and Edge Workloads)
+
+Dual-sided business model:
+Lower cost self-serve option
+to drive HPESC adoption
+New business revenue >$160 Mio NPV in 3 years

@@ -4,12 +4,15 @@ from typing import TypedDict
 class BMIWorkflowState(TypedDict, total=False):
     session_id: str
     current_step: str
+    run_status: str
+    pending_checkpoint: str
     input_type: str
     llm_backend: str
     voc_data: str
     signals: list[dict[str, object]]
     interpreted_signals: list[dict[str, object]]
     priority_matrix: list[dict[str, object]]
+    coverage_gaps: list[dict[str, str]]
     agent_recommendation: str
     pattern_direction: str
     selected_patterns: list[str]

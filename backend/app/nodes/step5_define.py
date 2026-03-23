@@ -13,7 +13,7 @@ def _build_value_proposition_canvas(state: BMIWorkflowState) -> str:
     if "onboarding" in customer_profile.lower():
         product_service = f"A guided onboarding experience shaped by {selected_patterns}"
         pain_addressed = "The current setup flow is too complex and slows time-to-value"
-        gain_addressed = "A faster activation path aligned to Cost Differentiators"
+        gain_addressed = f"A faster activation path aligned to {selected_patterns}"
         customer_segment = "operational buyers"
         job = "complete onboarding quickly without expert intervention"
         pain = "reducing setup friction and delay"
