@@ -12,6 +12,7 @@ from backend.app.checkpoints import CheckpointDecision
 from backend.app.checkpoints import get_checkpoint_for_step
 from backend.app.checkpoints import validate_checkpoint_state
 from backend.app.checkpoints import validate_decision
+from backend.app.checkpoints import validate_initial_state_for_step
 from backend.app.config import get_settings
 from backend.app.db.models import CheckpointRecord
 from backend.app.db.models import StepOutput
@@ -20,6 +21,8 @@ from backend.app.db.session import DatabaseSchemaNotReadyError
 from backend.app.db.session import ensure_database_schema
 from backend.app.db.session import SessionLocal
 from backend.app.graph import build_graph
+from backend.app.graph import determine_next_step
+from backend.app.graph import steps_completed_before
 from backend.app.graph import WORKFLOW_STEP_ORDER
 from backend.app.graph import WORKFLOW_STEP_RUNNERS
 from backend.app.ingest.csv import load_csv_rows
@@ -113,6 +116,73 @@ def get_run_state(session_id: str) -> BMIWorkflowState:
         return BMIWorkflowState(run.state_json)
 
 
+def get_step_output(session_id: str, step_number: int) -> dict[str, Any]:
+    """Return the persisted output for a specific step of an existing run."""
+    ensure_database_schema()
+    with SessionLocal() as session:
+        record = session.scalar(
+            select(StepOutput)
+            .where(StepOutput.session_id == session_id, StepOutput.step_number == step_number)
+            .limit(1)
+        )
+        if record is None:
+            raise ValueError(
+                f"No output for step {step_number} in session {session_id}"
+            )
+        return {"step_number": record.step_number, "step_name": record.step_name, "output": record.output_json}
+
+
+def start_workflow_from_step(
+    step_number: int,
+    initial_state: dict[str, Any],
+    *,
+    session_id: str | None = None,
+    llm_backend: str | None = None,
+    pause_at_checkpoints: bool = True,
+) -> BMIWorkflowState:
+    """Begin execution at an arbitrary step, given pre-filled upstream state."""
+    if step_number < 1 or step_number > len(WORKFLOW_STEP_ORDER):
+        raise ValueError(f"step_number must be between 1 and {len(WORKFLOW_STEP_ORDER)}")
+
+    step_index = step_number - 1
+    step_name = WORKFLOW_STEP_ORDER[step_index]
+    settings = get_settings()
+
+    state = BMIWorkflowState(
+        session_id=session_id or str(uuid.uuid4()),
+        current_step="start_from_step",
+        input_type=initial_state.get("input_type", "text"),
+        llm_backend=llm_backend or settings.llm_backend,
+        **{k: v for k, v in initial_state.items() if k not in ("session_id", "current_step", "input_type", "llm_backend")},
+    )
+
+    validate_initial_state_for_step(step_name, state)
+    ensure_database_schema()
+
+    # Tell the orchestrator which steps are already done
+    state["completed_steps"] = steps_completed_before(step_index)
+
+    sid = str(state["session_id"])
+    with SessionLocal() as session:
+        if session.get(WorkflowRun, sid) is not None:
+            raise ValueError(f"Workflow session already exists: {sid}")
+        session.add(
+            WorkflowRun(
+                session_id=sid,
+                input_type=str(state.get("input_type", "text")),
+                status="in_progress",
+                llm_backend=str(state["llm_backend"]),
+                current_step=str(state["current_step"]),
+                pending_checkpoint=None,
+                voc_data=str(state.get("voc_data", "")),
+                state_json=dict(state),
+            )
+        )
+        session.commit()
+
+    return _execute_orchestrated(sid, state, pause_at_checkpoints=pause_at_checkpoints)
+
+
 def resume_workflow(
     session_id: str,
     *,
@@ -148,18 +218,22 @@ def resume_workflow(
 
         if validated_decision == "retry":
             state_to_resume = BMIWorkflowState(copy.deepcopy(checkpoint.state_before_json))
-            start_index = WORKFLOW_STEP_ORDER.index(checkpoint.after_step_name)
+            # Retry: re-execute the same step (completed_steps excludes it)
+            retry_index = WORKFLOW_STEP_ORDER.index(checkpoint.after_step_name)
+            state_to_resume["completed_steps"] = steps_completed_before(retry_index)
         else:
             state_to_resume = BMIWorkflowState(copy.deepcopy(checkpoint.state_after_json))
             if edit_state:
                 for key, value in edit_state.items():
                     state_to_resume[key] = value
             validate_checkpoint_state(checkpoint.checkpoint_name, state_to_resume)
-            start_index = WORKFLOW_STEP_ORDER.index(checkpoint.after_step_name) + 1
+            # Approve/edit: advance past the checkpointed step
+            advance_index = WORKFLOW_STEP_ORDER.index(checkpoint.after_step_name) + 1
+            state_to_resume["completed_steps"] = steps_completed_before(advance_index)
 
         session.commit()
 
-    return _execute_from_index(session_id, state_to_resume, start_index, pause_at_checkpoints=True)
+    return _execute_orchestrated(session_id, state_to_resume, pause_at_checkpoints=True)
 
 
 def _render_csv_rows_as_voc_data(rows: list[dict[str, str]]) -> str:
@@ -193,33 +267,39 @@ def _start_checkpointed_run(initial_state: BMIWorkflowState) -> BMIWorkflowState
         )
         session.commit()
 
-    return _execute_from_index(session_id, initial_state, 0, pause_at_checkpoints=True)
+    return _execute_orchestrated(session_id, initial_state, pause_at_checkpoints=True)
 
 
-def _execute_from_index(
+def _execute_orchestrated(
     session_id: str,
     state: BMIWorkflowState,
-    start_index: int,
     *,
     pause_at_checkpoints: bool,
 ) -> BMIWorkflowState:
     current_state = BMIWorkflowState(copy.deepcopy(state))
+    if "completed_steps" not in current_state:
+        current_state["completed_steps"] = []
 
     with SessionLocal() as session:
         run = session.get(WorkflowRun, session_id)
         if run is None:
             raise ValueError(f"Unknown workflow session: {session_id}")
 
-        for step_index in range(start_index, len(WORKFLOW_STEP_ORDER)):
-            step_name = WORKFLOW_STEP_ORDER[step_index]
+        while True:
+            step_name = determine_next_step(current_state)
+            if step_name == "__end__":
+                break
+
             step_runner = WORKFLOW_STEP_RUNNERS[step_name]
             state_before = BMIWorkflowState(copy.deepcopy(current_state))
             current_state = step_runner(BMIWorkflowState(copy.deepcopy(current_state)))
+            current_state["completed_steps"] = list(state_before.get("completed_steps", [])) + [step_name]
 
+            step_number = WORKFLOW_STEP_ORDER.index(step_name) + 1
             session.add(
                 StepOutput(
                     session_id=session_id,
-                    step_number=step_index + 1,
+                    step_number=step_number,
                     step_name=step_name,
                     input_json=dict(state_before),
                     output_json=dict(current_state),

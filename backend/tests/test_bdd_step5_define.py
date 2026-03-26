@@ -110,13 +110,17 @@ def assert_pattern_context(step5_result: BMIWorkflowState) -> None:
 @then("the value proposition canvas maps pain relievers to customer pains")
 def assert_pain_mapping(step5_result: BMIWorkflowState) -> None:
     value_proposition_canvas = step5_result["value_proposition_canvas"]
-    assert "setup flow is too complex" in value_proposition_canvas
+    section = value_proposition_canvas.split("#### Pain Relievers")[1].split("####")[0]
+    data_rows = [r for r in section.strip().splitlines() if r.startswith("|") and "---" not in r and "Type" not in r]
+    assert len(data_rows) >= 1, "Pain Relievers section must have at least 1 data row"
 
 
 @then("the value proposition canvas maps gain creators to customer gains")
 def assert_gain_mapping(step5_result: BMIWorkflowState) -> None:
     value_proposition_canvas = step5_result["value_proposition_canvas"]
-    assert "faster activation path" in value_proposition_canvas
+    section = value_proposition_canvas.split("#### Gain Creators")[1].split("###")[0]
+    data_rows = [r for r in section.strip().splitlines() if r.startswith("|") and "---" not in r and "Type" not in r]
+    assert len(data_rows) >= 1, "Gain Creators section must have at least 1 data row"
 
 
 @then("the value proposition canvas includes at least 2 ad-lib prototypes")

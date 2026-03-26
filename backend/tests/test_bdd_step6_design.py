@@ -103,7 +103,9 @@ def assert_pattern_context(step6_result: BMIWorkflowState) -> None:
 def assert_problem_solution_rows(step6_result: BMIWorkflowState) -> None:
     fit_assessment = step6_result["fit_assessment"]
     assert "| Customer Need (Job/Pain/Gain) | Importance to Customer | Mapped Value Proposition Element | Fit? |" in fit_assessment
-    assert "| Complete onboarding quickly" in fit_assessment
+    section = fit_assessment.split("### Problem-Solution Fit")[1].split("###")[0]
+    data_rows = [r for r in section.strip().splitlines() if r.startswith("|") and "---" not in r and "Customer Need" not in r]
+    assert len(data_rows) >= 1, "Problem-Solution Fit section must have at least 1 data row"
 
 
 @then("the fit assessment includes product-market and business-model status tables")

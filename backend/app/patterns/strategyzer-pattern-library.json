@@ -2,108 +2,448 @@
   "metadata": {
     "title": "Strategyzer Pattern Library for Step 2",
     "scope": "Invent vs Shift pattern selection for BMI agent orchestration",
-    "updated": "2026-03-20",
+    "updated": "2026-03-25",
     "sources": [
       {
-        "type": "public_blog",
-        "url": "https://www.strategyzer.com/blog/posts/business-model-patterns",
+        "type": "book",
+        "reference": "Osterwalder, Pigneur, Etiemble, Smith — The Invincible Company (2020)",
         "verified": [
           "invent_pattern_count",
-          "invent_pattern_names"
-        ]
-      },
-      {
-        "type": "public_book_summary",
-        "url": "https://www.strategyzer.com/library/the-invincible-company-book-summary",
-        "verified": [
-          "combined_pattern_count_across_invent_and_shift"
-        ]
-      },
-      {
-        "type": "public_image_ocr",
-        "url": "https://cdn.prod.website-files.com/64830736e7f43d491d70ef30/648310866c2f102f886c8cae_BusinessModelPatternsINVENT.001.jpeg",
-        "verified": [
           "invent_pattern_names",
-          "some_flavor_labels"
+          "invent_flavor_names",
+          "invent_trigger_questions",
+          "shift_pattern_count",
+          "shift_pattern_names",
+          "shift_strategic_reflections"
         ]
       }
     ],
     "notes": [
-      "Strategyzer public materials confirm 9 INVENT patterns and 27 flavors.",
-      "Strategyzer public summary materials refer to 21 total patterns across invent and shift.",
-      "The SHIFT pattern names and the full 27-flavor catalog were not recoverable from public sources in this workspace session and should be added from the book or an internal capture before detailed automation."
+      "9 INVENT patterns with 27 flavors, sourced from The Invincible Company.",
+      "12 SHIFT patterns, each with forward and reverse strategic reflections.",
+      "21 total patterns across INVENT (9) and SHIFT (12).",
+      "Naming reconciled on 2026-03-25: 'Activity Scalers' split into 'Activity Differentiators' + 'Scalers'; 'Unresolved lock-in pattern label' resolved as duplicate of 'Gravity Creators' and removed."
     ]
   },
   "invent": {
     "pattern_count": 9,
     "flavor_count": 27,
+    "categories": [
+      {
+        "name": "Frontstage Disruption",
+        "description": "Customer-facing business model innovations that change how value is delivered to and captured from customers."
+      },
+      {
+        "name": "Backstage Disruption",
+        "description": "Operations and resource innovations that change how value is created behind the scenes."
+      },
+      {
+        "name": "Profit Formula Disruption",
+        "description": "Revenue, cost, and margin innovations that change the financial architecture of the business model."
+      }
+    ],
     "patterns": [
       {
-        "name": "Activity Scalers",
-        "status": "verified"
-      },
-      {
-        "name": "Gravity Creators",
-        "status": "verified"
-      },
-      {
         "name": "Market Explorers",
-        "status": "verified"
-      },
-      {
-        "name": "Resource Castles",
+        "category": "Frontstage Disruption",
+        "strategic_imperative": "Unlock Markets",
+        "description": "Develop innovative value propositions that create, unleash, or unlock completely new, untapped, or underserved markets with large potential. Be a pioneer and unearth new revenue potential through market exploration.",
+        "trigger_question": "How could we tap into new, untapped, or underserved markets with large potential?",
+        "assessment_question": "How large and attractive is the untapped market potential we are going after?",
+        "flavors": [
+          {
+            "name": "Visionaries",
+            "description": "Use imagination to see a large market potential where others don't. Unleash growth by exploring unproven needs that you satisfy with a new value proposition.",
+            "trigger_question": "Which unproven needs of a large market might be worth exploring?",
+            "examples": ["Tesla", "iPhone", "Nintendo Wii"]
+          },
+          {
+            "name": "Repurposers",
+            "description": "Find innovative ways to tap into proven market demand by repurposing existing technology and infrastructure that previously served other ends.",
+            "trigger_question": "How could we repurpose an existing technology or infrastructure to unlock proven, but so far inaccessible, customer needs?",
+            "examples": ["M-Pesa", "AWS"]
+          },
+          {
+            "name": "Democratizers",
+            "description": "Find innovative ways to democratize access to products, services, and technologies that were previously only accessible to a small number of high-end customers.",
+            "trigger_question": "How could we unlock products, services, and technologies that are limited to a niche market and make them more widely available for a mass market?",
+            "examples": ["Sears", "Azuri", "M-Pesa", "AWS"]
+          }
+        ],
         "status": "verified"
       },
       {
         "name": "Channel Kings",
+        "category": "Frontstage Disruption",
+        "strategic_imperative": "Access Customers",
+        "description": "Radically change how to reach and acquire a large number of customers. Pioneer innovative new channels that haven't been used in your industry before.",
+        "trigger_question": "How could we increase market access and build strong and direct channels to our end customers?",
+        "assessment_question": "Do we have large-scale and, ideally, direct access to our end customer?",
+        "flavors": [
+          {
+            "name": "Disintermediators",
+            "description": "Establish direct channels to customers where intermediaries previously dominated market access. Replace the reach of intermediaries with your own marketing, customer acquisition activities, and strong brand.",
+            "trigger_question": "How could we cut out the middleman and create a direct access to our end-customers?",
+            "examples": ["Dollar Shave Club", "Nespresso", "Gore-Tex"]
+          },
+          {
+            "name": "Opportunity Builders",
+            "description": "Create business opportunities for others to sell the company's products and services. Help others make money and/or gain status, which is a powerful incentive to help you increase your market reach.",
+            "trigger_question": "How could we make it attractive for a large number of people or third-party businesses to sell our products and services?",
+            "examples": ["Tupperware", "Grameen Phone", "J. Hilburn"]
+          }
+        ],
         "status": "verified"
       },
       {
-        "name": "Cost Differentiators",
+        "name": "Gravity Creators",
+        "category": "Frontstage Disruption",
+        "strategic_imperative": "Lock In Customers",
+        "description": "Make it difficult for customers to leave or switch to competitors. Create switching costs where previously there were none and turn transactional industries into ones with long-term relationships.",
+        "trigger_question": "How could we make it difficult for customers to leave and increase switching costs in a positive way?",
+        "assessment_question": "How easy or difficult is it for our customers to leave or switch to another company?",
+        "flavors": [
+          {
+            "name": "Stickiness Scalers",
+            "description": "Increase stickiness by making it inconvenient for customers to leave. Inconvenience may be related to the difficulty of transferring data, steep learning curves, onerous departure procedures, or other customer pains if they decide to leave.",
+            "trigger_question": "How can we increase customer stickiness?",
+            "examples": ["Microsoft Windows"]
+          },
+          {
+            "name": "Superglue Makers",
+            "description": "Make it difficult for customers to leave by locking them in. Lock-in may occur based on multiyear contracts, upfront sunk costs, cancellation fees, elimination of alternatives, and other techniques.",
+            "trigger_question": "How can we lock in customers?",
+            "examples": ["Microsoft Xbox", "Nespresso"]
+          }
+        ],
         "status": "verified"
       },
       {
-        "name": "Margin Masters",
+        "name": "Resource Castles",
+        "category": "Backstage Disruption",
+        "strategic_imperative": "Build Moats",
+        "description": "Build a competitive advantage with key resources that are difficult or impossible for competitors to copy.",
+        "trigger_question": "How could we make difficult-to-copy resources a key pillar of our business model?",
+        "assessment_question": "Do we own key resources that are difficult or impossible to copy and which give us a significant competitive advantage?",
+        "flavors": [
+          {
+            "name": "User Base Castles",
+            "description": "Create a business model with network effects in which a large number of users equals the relative value for other users. Acquire a large user base to establish a competitive advantage that makes it hard for anybody else to catch up.",
+            "trigger_question": "How could we establish a competitive advantage rooted in a large user base and network effects in our value proposition?",
+            "examples": []
+          },
+          {
+            "name": "Platform Castles",
+            "description": "Create a business model with network effects in which a large number of users represents value to one or more other distinct sets of users, and vice versa.",
+            "trigger_question": "How could we create a multisided platform that depends on the existence of two or more large user bases?",
+            "examples": []
+          },
+          {
+            "name": "IP Castles",
+            "description": "Use protected intellectual property (IP) to outcompete others. Offer distinct value propositions that are hard or impossible to copy if you don't own the IP.",
+            "trigger_question": "How could we use protected intellectual property as a competitive advantage (in arenas where it hasn't mattered before)?",
+            "examples": []
+          },
+          {
+            "name": "Brand Castles",
+            "description": "Use a strong brand to outcompete others. Focus on value propositions in which a strong brand is an essential component.",
+            "trigger_question": "How could we make brand a relevant competitive advantage (in an area where it hasn't been so far)?",
+            "examples": []
+          }
+        ],
+        "status": "verified"
+      },
+      {
+        "name": "Activity Differentiators",
+        "category": "Backstage Disruption",
+        "strategic_imperative": "Better Configure Activities",
+        "description": "Radically change which activities you perform and how you combine them to create and deliver value to customers. Create innovative value propositions based on activity differentiation.",
+        "trigger_question": "Could we create (significantly more) value for customers by performing new activities or configuring activities in innovative ways?",
+        "assessment_question": "Do we create significant value for customers because we perform and configure activities in disruptively innovative ways?",
+        "flavors": [
+          {
+            "name": "Efficiency Disruptors",
+            "description": "Substantially change which activities you perform and how you configure them in order to become radically more efficient. Use this to create a disruptively low cost structure.",
+            "trigger_question": "How can we radically change the configuration of our activities to compete with a disruptive cost structure?",
+            "examples": []
+          },
+          {
+            "name": "Speed Masters",
+            "description": "Build radically new activity configurations focused on speed. Create new, time-critical value propositions and accelerate time to market.",
+            "trigger_question": "How might we put speed at the center of our activity configuration to develop new, time-critical value propositions?",
+            "examples": []
+          },
+          {
+            "name": "Sustainability Masters",
+            "description": "Adjust activities such that they are environmentally friendly and positively impact society, even if it may lead to higher costs.",
+            "trigger_question": "How might we reconfigure our activities to have a positive environmental and social impact?",
+            "examples": []
+          },
+          {
+            "name": "Build-to-Order",
+            "description": "Configure products or services to match the exact specifications of customers. Adjust activities such that they only go into motion when an order is received.",
+            "trigger_question": "How might we reconfigure our activities to build to order and only start building after order confirmation and payment?",
+            "examples": []
+          }
+        ],
+        "status": "verified"
+      },
+      {
+        "name": "Scalers",
+        "category": "Backstage Disruption",
+        "strategic_imperative": "Grow Faster",
+        "description": "Find radically new ways to scale where others stay stuck in conventional nonscalable business models.",
+        "trigger_question": "What could we do differently to make our business model more scalable (e.g., eliminate resource and activity bottlenecks)?",
+        "assessment_question": "How rapidly and how easily can we grow our business model without substantial additional resources and activities?",
+        "flavors": [
+          {
+            "name": "Delegators",
+            "description": "Increase scalability by getting others to do some of the key activities (for free) that you have previously performed internally yourself.",
+            "trigger_question": "In which areas could we leverage customers or third parties to help us create value for free?",
+            "examples": ["IKEA", "Facebook", "Red Hat"]
+          },
+          {
+            "name": "Licensors",
+            "description": "Increase scalability by getting licensees to perform the bulk of value-creating activities like product manufacturing and commercialization.",
+            "trigger_question": "How could we use licensing to make our business model more scalable and/or monetize intellectual property?",
+            "examples": ["ARM", "Disney"]
+          },
+          {
+            "name": "Franchisors",
+            "description": "Create scalability by licensing your business concept, trademarks, products, and services to franchisees who run franchise locations.",
+            "trigger_question": "How could we use franchising to make our business model more scalable and increase our market reach?",
+            "examples": ["McDonald's", "Ritz Carlton"]
+          }
+        ],
         "status": "verified"
       },
       {
         "name": "Revenue Differentiators",
+        "category": "Profit Formula Disruption",
+        "strategic_imperative": "Boost Revenues",
+        "description": "Find innovative ways to capture value, unlock previously unprofitable markets, and/or substantially increase revenues.",
+        "trigger_question": "Which new revenue streams or pricing mechanisms could we introduce to capture more value from our customers or unlock unprofitable markets?",
+        "assessment_question": "Do we use strong revenue streams and pricing mechanisms to monetize value creation for customers?",
+        "flavors": [
+          {
+            "name": "Recurring Revenue",
+            "description": "Generate recurring revenues from one-time sales. Advantages include compound revenue growth, lower cost of sales, and predictability.",
+            "trigger_question": "How could we generate long-term recurring revenues rather than transactional ones?",
+            "examples": []
+          },
+          {
+            "name": "Bait & Hook",
+            "description": "Lock customers in with a base product (the bait) in order to generate recurring revenues from a consumable (the hook) that customers need recurrently.",
+            "trigger_question": "How could we create recurring revenues with a base product or service and a consumable?",
+            "examples": []
+          },
+          {
+            "name": "Freemium Providers",
+            "description": "Offer basic products and services free of charge and premium services and advanced product features for a fee.",
+            "trigger_question": "How could we split our value proposition into a free and a premium offer?",
+            "examples": []
+          },
+          {
+            "name": "Subsidizers",
+            "description": "Offer the full value proposition for free or cheaply by subsidizing it through a strong alternative revenue stream.",
+            "trigger_question": "How could we give away our main value proposition for free by generating sufficient alternative revenue streams?",
+            "examples": []
+          }
+        ],
         "status": "verified"
       },
       {
-        "name": "Unresolved lock-in pattern label",
-        "status": "partially_verified",
-        "verification_note": "The public composite image OCR captured the descriptor 'How to lock in customers' but did not recover the pattern label cleanly. Keep this placeholder until confirmed against the book or a higher-fidelity source."
-      }
-    ],
-    "publicly_recovered_flavors": [
-      {
-        "name": "Backstage Disruption",
-        "status": "ocr_recovered"
+        "name": "Cost Differentiators",
+        "category": "Profit Formula Disruption",
+        "strategic_imperative": "Kill Costs",
+        "description": "Build a business model with a game-changing cost structure, not just by streamlining activities and resources, but by doing things in disruptive new ways.",
+        "trigger_question": "Could we change our cost structure significantly by creating and delivering value with different and differently configured resources and activities?",
+        "assessment_question": "Is our cost structure conventional or disruptive?",
+        "flavors": [
+          {
+            "name": "Resource Dodgers",
+            "description": "Eliminate the most costly and capital-intensive resources from your business model to create a game-changing cost structure.",
+            "trigger_question": "How could we create a resource-light business model and get rid of the most costly and capital intensive resources?",
+            "examples": ["Airbnb", "Uber", "Bharti Airtel"]
+          },
+          {
+            "name": "Technologists",
+            "description": "Use technology in radically new ways to create a game-changing cost structure.",
+            "trigger_question": "How could we use technology to replace activities and resources to create a game changing cost structure?",
+            "examples": ["WhatsApp", "Skype"]
+          },
+          {
+            "name": "Low Cost",
+            "description": "Combine activities, resources, and partners in radically new ways to create a game-changing cost structure with disruptively low prices.",
+            "trigger_question": "How could we radically recombine activities, resources, and partners to significantly lower costs and pricing?",
+            "examples": ["easyJet", "Ryanair", "Trader Joe's"]
+          }
+        ],
+        "status": "verified"
       },
       {
-        "name": "Frontstage Disruption",
-        "status": "ocr_recovered"
-      },
-      {
-        "name": "Profit Formula Disruption",
-        "status": "ocr_recovered"
+        "name": "Margin Masters",
+        "category": "Profit Formula Disruption",
+        "strategic_imperative": "Boost Margins",
+        "description": "Achieve significantly higher margins than competitors by focusing on what customers are willing to pay for most, while keeping your cost structure in check.",
+        "trigger_question": "How could we find innovative ways to eliminate the most costly aspects of our business model, while focusing on value that matters to customers most and which they are willing to pay a high price for?",
+        "assessment_question": "Do we have strong margins from low costs and high prices?",
+        "flavors": [
+          {
+            "name": "Contrarians",
+            "description": "Significantly reduce costs and increase value at the same time. Eliminate the most costly resources, activities, and partners, even if that means limiting the value proposition. Compensate by focusing on features that a well-defined segment loves and is willing to pay for.",
+            "trigger_question": "Which costly elements of our business model and value proposition could we eliminate and make up for with extremely valuable but affordable elements?",
+            "examples": ["Citizen M", "Cirque du Soleil", "Nintendo Wii"]
+          },
+          {
+            "name": "High Enders",
+            "description": "Create products and services at the high end of the market spectrum for a broad range of high-end customers. Use these to maximize margins and avoid the small size and extreme cost structure of a luxury niche.",
+            "trigger_question": "What could we modify in our business model to significantly increase customer value and price without substantially increasing our cost structure?",
+            "examples": ["iPhone"]
+          }
+        ],
+        "status": "verified"
       }
     ]
   },
   "shift": {
-    "status": "pending_source",
-    "notes": [
-      "Use this section for the established-business transformation patterns once sourced from The Invincible Company or an internal reference.",
-      "Do not infer SHIFT pattern names from Business Model Generation patterns."
+    "pattern_count": 12,
+    "categories": [
+      {
+        "name": "Value Proposition Shifts",
+        "description": "Transformations that fundamentally change what the company offers to customers."
+      },
+      {
+        "name": "Frontstage Driven Shifts",
+        "description": "Transformations driven by changes in customer segments, channels, or relationships."
+      },
+      {
+        "name": "Backstage Driven Shifts",
+        "description": "Transformations driven by changes in resources, activities, or partnerships."
+      },
+      {
+        "name": "Profit Formula Driven Shifts",
+        "description": "Transformations driven by changes in revenue model, cost structure, or margins."
+      }
     ],
-    "patterns": []
+    "patterns": [
+      {
+        "name": "Product to Recurring Service",
+        "category": "Value Proposition Shifts",
+        "description": "Shift from manufacturing and/or buying and selling products toward providing a recurring service. Recurring services require upfront customer acquisition costs that lead to recurring revenues that become more predictable and grow exponentially.",
+        "strategic_reflection": "How might we grow recurring and predictable revenues by providing a recurring service, rather than selling a product?",
+        "reverse_reflection": "How might we add scalable products to our services to increase the share of wallet and lifetime value of each customer and boost overall revenues?",
+        "example": "Hilti",
+        "status": "verified"
+      },
+      {
+        "name": "Low Tech to High Tech",
+        "category": "Value Proposition Shifts",
+        "description": "Shift from basic, often labour-intensive, low-tech value propositions toward technology-based value propositions. This allows scaling reach and increasing price, which leads to a boost in revenues.",
+        "strategic_reflection": "How might we scale our reach, increase price, and boost revenues by transforming a low-tech value proposition into a high-tech value proposition?",
+        "reverse_reflection": "How might we leverage low-tech activities or resources to provide value to customers that they really appreciate, but that doesn't cost much to provide or that technology can't offer?",
+        "example": "Netflix",
+        "status": "verified"
+      },
+      {
+        "name": "Sales to Platform",
+        "category": "Value Proposition Shifts",
+        "description": "Shift from value-chain activities and selling products toward products that become a platform for third-party products and value-added services. Platforms are harder to disrupt than simple products because they create resource castle network effects.",
+        "strategic_reflection": "How might we gain a competitive advantage by establishing ourselves as the platform connecting our customers with third-party products and service providers?",
+        "reverse_reflection": "How might we add our own scalable products and services to our platform to increase the lifetime value of each customer and boost overall revenues?",
+        "example": "iPhone & App Store",
+        "status": "verified"
+      },
+      {
+        "name": "Niche Market to Mass Market",
+        "category": "Frontstage Driven Shifts",
+        "description": "Shift from niche market player to mass market player. This often requires a simplification of the value proposition to cater to a larger market. The lower price is compensated by a larger volume of revenues from the mass market.",
+        "strategic_reflection": "How might we simplify our value proposition to break out of a niche market and cater to a mass market?",
+        "reverse_reflection": "How might we create niche value propositions for a series of niche segments with specific needs?",
+        "example": "TED",
+        "status": "verified"
+      },
+      {
+        "name": "B2B to B2(B2)C",
+        "category": "Frontstage Driven Shifts",
+        "description": "Shift from a B2B supplier that's invisible to the consumer toward a brand that matters to the consumer. Often a brand shift toward becoming more relevant to the consumer, including increased consumer marketing and B2C brand development.",
+        "strategic_reflection": "How might we increase revenues by becoming more relevant to consumers if we are a hidden B2B supplier?",
+        "reverse_reflection": "How might we use our B2C customer experience and relationships, infrastructure, resources, activities, and expertise, to create value for B2B customers and even competitors?",
+        "example": "Intel Inside",
+        "status": "verified"
+      },
+      {
+        "name": "Low Touch to High Touch",
+        "category": "Frontstage Driven Shifts",
+        "description": "Shift from standardized, low-touch value propositions toward customized, high-touch value propositions. High-touch value propositions command premium prices and lead to increased revenues.",
+        "strategic_reflection": "How might we increase price and revenues, by turning a standardized low-touch value proposition into a high-touch value proposition?",
+        "reverse_reflection": "How might we create or maintain customer value, while shifting from a high-touch to a low-touch experience?",
+        "example": "Apple Genius Bar",
+        "status": "verified"
+      },
+      {
+        "name": "Dedicated Resources to Multi-Usage",
+        "category": "Backstage Driven Shifts",
+        "description": "Shift from using a resource for one value proposition toward using the same resource for a completely different value proposition targeting a new customer. This leads to substantial synergies while opening up an entirely new revenue stream.",
+        "strategic_reflection": "How might we monetize one of our most important key resources with a new value proposition for a new customer segment?",
+        "reverse_reflection": "How might we trim our business model by refocusing resources used to serve several value propositions and dedicate them to one only?",
+        "example": "Fujifilm",
+        "status": "verified"
+      },
+      {
+        "name": "Asset Heavy to Asset Light",
+        "category": "Backstage Driven Shifts",
+        "description": "Shift from a business model based on high fixed costs and high capital expenditures toward an asset-light business with variable costs. This allows focusing on service provisioning and customer acquisition rather than building and maintaining assets.",
+        "strategic_reflection": "How might we free up capital and energy from building and maintaining assets toward focusing on service provisioning and customer acquisition?",
+        "reverse_reflection": "How might we leverage our light assets like IP and brand to invest in heavy assets to create a competitive advantage or barriers to market entry?",
+        "example": "Bharti Airtel",
+        "status": "verified"
+      },
+      {
+        "name": "Closed to Open Innovation",
+        "category": "Backstage Driven Shifts",
+        "description": "Shift from a closed approach to developing new value propositions toward an open approach based on external R&D and intellectual property, or sharing internal R&D and IP with outside partners.",
+        "strategic_reflection": "How might we make more usage of external R&D and IP (outside-in) or share internal R&D and IP with outside partners (inside-out)?",
+        "reverse_reflection": "How might we create a competitive advantage by internalizing R&D, IP, resources, and activities?",
+        "example": "Microsoft",
+        "status": "verified"
+      },
+      {
+        "name": "High Cost to Low Cost",
+        "category": "Profit Formula Driven Shifts",
+        "description": "Shift toward a more efficient activity and resource configuration to substantially decrease the cost structure and offer price-conscious customers a low-price value proposition, conquering new customer segments.",
+        "strategic_reflection": "Which new, price-conscious customer segment might we conquer with a low-price value proposition? How might we reconfigure activities and resources to disrupt our cost structure?",
+        "reverse_reflection": "How might we create value for price-insensitive customer segments? How might we leverage our resources and activities to create a high-value, high-price value proposition?",
+        "example": "Dow Corning Xiameter",
+        "status": "verified"
+      },
+      {
+        "name": "Transactional to Recurring Revenue",
+        "category": "Profit Formula Driven Shifts",
+        "description": "Shift from having to sell again and again with continuous cost of sales toward acquiring customers once to then earn recurring revenues. This requires identifying a recurring customer job-to-be-done addressed with a recurring value proposition.",
+        "strategic_reflection": "How might we shift from transactional revenues to recurring revenues by addressing a recurring customer job-to-be-done?",
+        "reverse_reflection": "How might we add transactional revenues to our recurring revenues in order to improve customer share of wallet and boost our overall revenues?",
+        "example": "Adobe",
+        "status": "verified"
+      },
+      {
+        "name": "Conventional to Contrarian",
+        "category": "Profit Formula Driven Shifts",
+        "description": "Significantly reduce costs and increase value at the same time. Eliminate the costliest resources, activities, and partners, even if that means limiting the value proposition. Compensate by focusing on features that a well-defined customer segment loves and is willing to pay for, but which are relatively cheap to provide.",
+        "strategic_reflection": "Which of the costliest activities and resources might we eliminate or reduce, even if they create value for customers? How might we replace that lost value by augmenting our value proposition with cheap value creators that matter to customers most?",
+        "reverse_reflection": "How might we add costly resources and activities to substantially increase value, price, and luxury feel? Or conversely, how might we strip to a pure low-cost model?",
+        "example": "Apple iMac",
+        "status": "verified"
+      }
+    ]
   },
   "agent_usage_guidance": {
     "step_2_behavior": [
-      "Use the INVENT pattern list in this file as the default candidate library for new-growth opportunities.",
-      "Treat SHIFT as unavailable until the pattern names are explicitly populated.",
-      "When a candidate pattern is only partially verified, surface it as a tentative recommendation and ask for consultant confirmation."
+      "Use the INVENT pattern list as the candidate library for new-growth opportunities (INVENT direction).",
+      "Use the SHIFT pattern list as the candidate library for incumbent transformation (SHIFT direction).",
+      "When recommending patterns, reference their trigger_question or strategic_reflection to explain alignment with the signal.",
+      "When a signal is ambiguous between INVENT and SHIFT, present shortlisted patterns from both libraries and let the consultant decide at the checkpoint.",
+      "Always validate that recommended pattern names exist in this file before returning them."
     ]
   }
 }

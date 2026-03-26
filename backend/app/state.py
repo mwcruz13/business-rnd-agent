@@ -18,6 +18,8 @@ class BMIWorkflowState(TypedDict, total=False):
     selected_patterns: list[str]
     pattern_rationale: str
     customer_profile: str
+    empathy_gap_questions: str
+    supplemental_voc: str
     value_driver_tree: str
     actionable_insights: str
     value_proposition_canvas: str
@@ -27,3 +29,6 @@ class BMIWorkflowState(TypedDict, total=False):
     experiment_selections: str
     experiment_plans: str
     experiment_worksheets: str
+    # Orchestration fields (Phase 1)
+    next_step: str
+    completed_steps: list[str]

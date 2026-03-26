@@ -81,4 +81,4 @@ def test_cli_run_and_resume_support_checkpoint_flow(tmp_path) -> None:
         ],
     )
     assert resume_2.exit_code == 0
-    assert "pending_checkpoint=checkpoint_2" in resume_2.stdout
+    assert "pending_checkpoint=checkpoint_3" in resume_2.stdout

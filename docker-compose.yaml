@@ -28,19 +28,34 @@ services:
       bmi-postgres:
         condition: service_healthy
 
-  bmi-frontend:
+  # Streamlit frontend — retired in favour of React frontend.
+  # Kept commented for reference; remove entirely when no longer needed.
+  # bmi-frontend:
+  #   build:
+  #     context: ./frontend
+  #   container_name: bmi-frontend
+  #   environment:
+  #     BACKEND_API_BASE_URL: http://bmi-backend:8000
+  #     CHOKIDAR_USEPOLLING: "true"
+  #   volumes:
+  #     - ./frontend:/app/frontend
+  #   working_dir: /app/frontend
+  #   command: streamlit run streamlit_app.py --server.address 0.0.0.0 --server.port 8501
+  #   ports:
+  #     - "8501:8501"
+  #   depends_on:
+  #     - bmi-backend
+
+  bmi-frontend-react:
     build:
-      context: ./frontend
-    container_name: bmi-frontend
-    environment:
-      BACKEND_API_BASE_URL: http://bmi-backend:8000
-      CHOKIDAR_USEPOLLING: "true"
+      context: ./frontend-react
+    container_name: bmi-frontend-react
     volumes:
-      - ./frontend:/app/frontend
-    working_dir: /app/frontend
-    command: streamlit run streamlit_app.py --server.address 0.0.0.0 --server.port 8501
+      - ./frontend-react/src:/app/src
+      - ./frontend-react/index.html:/app/index.html
+      - ./frontend-react/vite.config.js:/app/vite.config.js
     ports:
-      - "8501:8501"
+      - "8501:8080"
     depends_on:
       - bmi-backend
 

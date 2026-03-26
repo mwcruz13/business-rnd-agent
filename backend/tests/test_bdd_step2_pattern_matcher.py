@@ -1,6 +1,7 @@
-from pytest_bdd import given, scenarios, then, when
+from pytest_bdd import given, parsers, scenarios, then, when
 
-from backend.app.nodes.step2_pattern import run_step
+from backend.app.nodes.step2_pattern_llm import run_step2_llm
+from backend.app.patterns.pattern_affinity import INVENT_PATTERNS, SHIFT_PATTERNS
 from backend.app.state import BMIWorkflowState
 
 
@@ -20,13 +21,16 @@ def workflow_state() -> BMIWorkflowState:
                 "signal": "Customers delay onboarding due to workflow complexity",
                 "zone": "Overserved Customers",
                 "classification": "Disruptive - Low-End",
+                "filters": [],
             }
         ],
         "priority_matrix": [
             {
+                "signal_id": None,
                 "signal": "Customers delay onboarding due to workflow complexity",
                 "impact": 3,
                 "speed": 2,
+                "score": 6,
                 "tier": "Act",
             }
         ],
@@ -46,10 +50,12 @@ def new_market_workflow_state() -> BMIWorkflowState:
                 "signal": "Small teams launch analytics without enterprise implementation",
                 "zone": "New-Market Foothold",
                 "classification": "Disruptive — New-Market",
+                "filters": [],
             }
         ],
         "priority_matrix": [
             {
+                "signal_id": None,
                 "signal": "Small teams launch analytics without enterprise implementation",
                 "impact": 3,
                 "speed": 3,
@@ -62,7 +68,7 @@ def new_market_workflow_state() -> BMIWorkflowState:
 
 @when("the Step 2 pattern matcher node runs", target_fixture="step2_result")
 def step2_result(workflow_state: BMIWorkflowState) -> BMIWorkflowState:
-    return run_step(workflow_state)
+    return run_step2_llm(workflow_state)
 
 
 @then('the workflow current step is "pattern_select"')
@@ -93,18 +99,36 @@ def assert_invent_direction(step2_result: BMIWorkflowState) -> None:
     assert "INVENT" in step2_result["agent_recommendation"]
 
 
-@then('the agent recommendation includes "pending_library_source"')
-def assert_pending_shift_placeholder(step2_result: BMIWorkflowState) -> None:
-    assert "pending_library_source" in step2_result["agent_recommendation"]
+@then(parsers.parse('Step 2 pre-fills pattern direction as "{direction}"'))
+def assert_pattern_direction_prefilled(step2_result: BMIWorkflowState, direction: str) -> None:
+    assert step2_result["pattern_direction"] == direction
 
 
-@then('the agent recommendation references the verified INVENT pattern "Market Explorers"')
-def assert_invent_pattern_reference(step2_result: BMIWorkflowState) -> None:
-    assert "Market Explorers" in step2_result["agent_recommendation"]
+@then("Step 2 selects patterns from the SHIFT library")
+def assert_selected_shift_patterns(step2_result: BMIWorkflowState) -> None:
+    patterns = step2_result.get("selected_patterns", [])
+    assert len(patterns) > 0
+    for p in patterns:
+        assert p in SHIFT_PATTERNS, f"{p} is not a SHIFT pattern"
 
 
-@then("Step 2 does not set the consultant checkpoint fields")
-def assert_checkpoint_fields_unset(step2_result: BMIWorkflowState) -> None:
-    assert "pattern_direction" not in step2_result
-    assert "selected_patterns" not in step2_result
-    assert "pattern_rationale" not in step2_result
+@then("Step 2 selects patterns from the INVENT library")
+def assert_selected_invent_patterns(step2_result: BMIWorkflowState) -> None:
+    patterns = step2_result.get("selected_patterns", [])
+    assert len(patterns) > 0
+    for p in patterns:
+        assert p in INVENT_PATTERNS, f"{p} is not an INVENT pattern"
+
+
+@then(parsers.parse('the selected patterns include "{pattern}"'))
+def assert_selected_patterns_include(step2_result: BMIWorkflowState, pattern: str) -> None:
+    patterns = step2_result.get("selected_patterns", [])
+    assert pattern in patterns, f"Expected {pattern} in {patterns}"
+
+
+@then("the selected patterns are verified library entries")
+def assert_patterns_are_verified(step2_result: BMIWorkflowState) -> None:
+    patterns = step2_result.get("selected_patterns", [])
+    all_known = set(INVENT_PATTERNS) | set(SHIFT_PATTERNS)
+    for p in patterns:
+        assert p in all_known, f"{p} is not a known pattern"

@@ -82,11 +82,13 @@ def test_run_endpoint_pauses_and_resume_endpoint_advances_workflow() -> None:
     assert start_payload["run_status"] == "paused"
     assert start_payload["pending_checkpoint"] == "checkpoint_1"
 
+    # Approve checkpoint_1 → paused at checkpoint_1_5
     checkpoint_1_5 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
     assert checkpoint_1_5.status_code == 200
     assert checkpoint_1_5.json()["pending_checkpoint"] == "checkpoint_1_5"
 
-    checkpoint_2 = client.post(
+    # Edit checkpoint_1_5 → paused at checkpoint_3
+    checkpoint_3 = client.post(
         f"/runs/{session_id}/resume",
         json={
             "decision": "edit",
@@ -97,9 +99,35 @@ def test_run_endpoint_pauses_and_resume_endpoint_advances_workflow() -> None:
             },
         },
     )
+    assert checkpoint_3.status_code == 200
+    assert checkpoint_3.json()["pending_checkpoint"] == "checkpoint_3"
+
+    # Approve checkpoint_3 → paused at checkpoint_4
+    checkpoint_4 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
+    assert checkpoint_4.status_code == 200
+    assert checkpoint_4.json()["pending_checkpoint"] == "checkpoint_4"
+
+    # Approve checkpoint_4 → paused at checkpoint_5
+    checkpoint_5 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
+    assert checkpoint_5.status_code == 200
+    assert checkpoint_5.json()["pending_checkpoint"] == "checkpoint_5"
+
+    # Approve checkpoint_5 → paused at checkpoint_6
+    checkpoint_6 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
+    assert checkpoint_6.status_code == 200
+    assert checkpoint_6.json()["pending_checkpoint"] == "checkpoint_6"
+
+    # Approve checkpoint_6 → paused at checkpoint_2
+    checkpoint_2 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
     assert checkpoint_2.status_code == 200
     assert checkpoint_2.json()["pending_checkpoint"] == "checkpoint_2"
 
+    # Approve checkpoint_2 → paused at checkpoint_8
+    checkpoint_8 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
+    assert checkpoint_8.status_code == 200
+    assert checkpoint_8.json()["pending_checkpoint"] == "checkpoint_8"
+
+    # Approve checkpoint_8 → completed
     completed = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
     assert completed.status_code == 200
     assert completed.json()["run_status"] == "completed"
@@ -110,7 +138,7 @@ def test_run_endpoint_pauses_and_resume_endpoint_advances_workflow() -> None:
     assert fetched.json()["run_status"] == "completed"
 
 
-def test_resume_requires_consultant_pattern_selection_for_checkpoint_1_5() -> None:
+def test_resume_rejects_checkpoint_1_5_edit_without_pattern_direction() -> None:
     client = TestClient(app)
     session_id = f"api-invalid-resume-test-{uuid4()}"
 
@@ -124,6 +152,85 @@ def test_resume_requires_consultant_pattern_selection_for_checkpoint_1_5() -> No
     )
     client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
 
-    invalid_resume = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
+    invalid_resume = client.post(
+        f"/runs/{session_id}/resume",
+        json={"decision": "edit", "edit_state": {"pattern_direction": ""}},
+    )
     assert invalid_resume.status_code == 422
-    assert "checkpoint_1_5" in invalid_resume.json()["detail"]
+    assert "pattern_direction" in invalid_resume.json()["detail"]
+
+
+def test_start_from_step_endpoint_begins_at_step_1() -> None:
+    client = TestClient(app)
+    session_id = f"api-start-step1-{uuid4()}"
+
+    response = client.post(
+        "/runs/start-from-step",
+        json={
+            "step_number": 1,
+            "initial_state": {"voc_data": "Onboarding is slow and painful"},
+            "session_id": session_id,
+            "llm_backend": "azure",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["run_status"] == "paused"
+    assert payload["pending_checkpoint"] == "checkpoint_1"
+
+
+def test_start_from_step_rejects_missing_upstream_state() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/runs/start-from-step",
+        json={
+            "step_number": 3,
+            "initial_state": {"voc_data": "Some data but no signals"},
+        },
+    )
+    assert response.status_code == 422
+    assert "missing required upstream state" in response.json()["detail"]
+
+
+def test_start_from_step_rejects_invalid_step_number() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/runs/start-from-step",
+        json={
+            "step_number": 0,
+            "initial_state": {"voc_data": "anything"},
+        },
+    )
+    assert response.status_code == 422
+    assert "step_number must be between" in response.json()["detail"]
+
+
+def test_get_step_output_returns_persisted_output() -> None:
+    client = TestClient(app)
+    session_id = f"api-step-output-{uuid4()}"
+
+    # Start a run to populate step outputs
+    client.post(
+        "/runs",
+        json={
+            "input_text": "Onboarding takes too long",
+            "session_id": session_id,
+            "llm_backend": "azure",
+            "pause_at_checkpoints": True,
+        },
+    )
+
+    response = client.get(f"/runs/{session_id}/step/1")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["step_number"] == 1
+    assert payload["step_name"] == "step1_signal"
+
+
+def test_get_step_output_returns_404_for_missing_step() -> None:
+    client = TestClient(app)
+
+    response = client.get("/runs/nonexistent-session/step/1")
+    assert response.status_code == 404

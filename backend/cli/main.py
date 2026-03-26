@@ -96,5 +96,64 @@ def export(run_id: str) -> None:
     typer.echo(f"Scaffolded export command for run_id={run_id}")
 
 
+@app.command()
+def step1(
+    input: Path = typer.Option(..., "--input", exists=True, dir_okay=False, readable=True),
+    backend: str = typer.Option("azure", "--backend"),
+) -> None:
+    """Run only Step 1 (SOC Radar signal scan) against real input using a real LLM.
+
+    Prints the full structured JSON output — signals, interpretations,
+    priorities, coverage gaps, and agent recommendation.
+    """
+    from backend.app.config import get_settings
+    from backend.app.ingest.text import load_text
+    from backend.app.ingest.csv import load_csv_rows, load_csv_rows_from_text
+    from backend.app.llm.factory import get_chat_model
+    from backend.app.nodes.step1_signal_llm import run_step1_llm
+    from backend.app.state import BMIWorkflowState
+
+    suffix = input.suffix.lower()
+    if suffix == ".csv":
+        rows = load_csv_rows(str(input))
+        rendered_rows = []
+        for idx, row in enumerate(rows, 1):
+            cells = [f"{col}={val.strip()}" for col, val in row.items() if val and val.strip()]
+            if cells:
+                rendered_rows.append(f"Row {idx}: " + "; ".join(cells))
+        voc_data = "\n".join(rendered_rows)
+    else:
+        voc_data = load_text(str(input))
+
+    if not voc_data.strip():
+        typer.echo("Error: Input file is empty.", err=True)
+        raise typer.Exit(code=1)
+
+    settings = get_settings()
+    # Override backend if user provided a different one
+    if backend != settings.llm_backend:
+        settings.llm_backend = backend
+
+    typer.echo(f"LLM backend: {settings.llm_backend}")
+    typer.echo(f"Input file:  {input}")
+    typer.echo(f"Input chars: {len(voc_data)}")
+    typer.echo("Calling LLM for Step 1 signal scan...")
+    typer.echo("")
+
+    llm = get_chat_model(settings)
+    state: BMIWorkflowState = {"voc_data": voc_data}
+    result = run_step1_llm(state, llm)
+
+    # Print the signal output as formatted JSON
+    output = {
+        "signals": result.get("signals", []),
+        "interpreted_signals": result.get("interpreted_signals", []),
+        "priority_matrix": result.get("priority_matrix", []),
+        "coverage_gaps": result.get("coverage_gaps", []),
+        "agent_recommendation": result.get("agent_recommendation", ""),
+    }
+    typer.echo(json.dumps(output, indent=2))
+
+
 if __name__ == "__main__":
     app()

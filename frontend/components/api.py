@@ -32,7 +32,7 @@ def start_run(
         "llm_backend": llm_backend,
         "pause_at_checkpoints": pause_at_checkpoints,
     }
-    return _request_json("POST", "/runs", json=payload)
+    return _request_json("POST", "/runs", json=payload, timeout=300)
 
 
 def get_run_state(session_id: str) -> dict[str, Any]:
@@ -43,11 +43,16 @@ def resume_run(session_id: str, *, decision: str, edit_state: dict[str, Any] | N
     payload: dict[str, Any] = {"decision": decision}
     if edit_state is not None:
         payload["edit_state"] = edit_state
-    return _request_json("POST", f"/runs/{session_id}/resume", json=payload)
+    return _request_json("POST", f"/runs/{session_id}/resume", json=payload, timeout=300)
 
 
-def _request_json(method: str, path: str, *, json: dict[str, Any] | None = None) -> dict[str, Any]:
-    response = requests.request(method, f"{BACKEND_API_BASE_URL}{path}", json=json, timeout=30)
+def _request_json(method: str, path: str, *, json: dict[str, Any] | None = None, timeout: int = 30) -> dict[str, Any]:
+    try:
+        response = requests.request(method, f"{BACKEND_API_BASE_URL}{path}", json=json, timeout=timeout)
+    except requests.Timeout:
+        raise FrontendApiError(f"Request to {path} timed out after {timeout}s. The workflow may still be running — try refreshing.")
+    except requests.ConnectionError:
+        raise FrontendApiError(f"Cannot reach backend at {BACKEND_API_BASE_URL}. Is the service running?")
     if response.ok:
         return response.json()
 
