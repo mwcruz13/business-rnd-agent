@@ -1,14 +1,8 @@
 import { useEffect } from 'react';
-import { Box, Text, TextArea, DataTable } from 'grommet';
+import { Box, Text, TextArea, DataTable, Tab } from 'grommet';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-
-const Section = ({ title, children }) => (
-  <Box gap="xsmall" margin={{ bottom: 'medium' }}>
-    <Text weight="bold" size="small" color="text-weak">{title}</Text>
-    {children}
-  </Box>
-);
+import StepCard from '../components/StepCard.jsx';
 
 const SIGNAL_COLUMNS = [
   { property: 'signal_id', header: 'ID', size: 'xsmall' },
@@ -32,12 +26,11 @@ const PRIORITY_COLUMNS = [
   { property: 'tier', header: 'Tier', size: 'xsmall' },
 ];
 
-const Step1SignalScan = ({ runState, editMode, editState, onEditChange }) => {
+const Step1SignalScan = ({ runState, editMode, editState, onEditChange, sessionId }) => {
   if (!runState) return <Text color="text-weak">Waiting for workflow to start…</Text>;
 
   const { agent_recommendation, signals, interpreted_signals, priority_matrix, coverage_gaps } = runState;
 
-  // Initialize edit state from runState when entering edit mode
   useEffect(() => {
     if (editMode && Object.keys(editState).length === 0) {
       onEditChange({
@@ -53,104 +46,87 @@ const Step1SignalScan = ({ runState, editMode, editState, onEditChange }) => {
     return <Text color="text-weak">Step 1 has not run yet.</Text>;
   }
 
-  if (editMode) {
-    return (
-      <Box gap="medium">
-        <Section title="Agent Recommendation">
-          <TextArea
-            value={editState.agent_recommendation ?? agent_recommendation ?? ''}
-            onChange={(e) => onEditChange({ ...editState, agent_recommendation: e.target.value })}
-            rows={6}
-            resize="vertical"
-          />
-        </Section>
+  const handleImport = (fields) => onEditChange({ ...editState, ...fields });
 
-        {(editState.signals ?? signals)?.length > 0 && (
-          <Section title={`Signals (${(editState.signals ?? signals).length})`}>
-            <Box background="background-front" pad="small" round="small" overflow="auto">
-              <DataTable
-                columns={SIGNAL_COLUMNS}
-                data={editState.signals ?? signals}
-                size="medium"
-              />
-            </Box>
-          </Section>
-        )}
-
-        {(editState.interpreted_signals ?? interpreted_signals)?.length > 0 && (
-          <Section title={`Interpreted Signals (${(editState.interpreted_signals ?? interpreted_signals).length})`}>
-            <Box background="background-front" pad="small" round="small" overflow="auto">
-              <DataTable
-                columns={INTERPRETED_COLUMNS}
-                data={editState.interpreted_signals ?? interpreted_signals}
-                size="medium"
-              />
-            </Box>
-          </Section>
-        )}
-
-        {(editState.priority_matrix ?? priority_matrix)?.length > 0 && (
-          <Section title="Priority Matrix">
-            <Box background="background-front" pad="small" round="small" overflow="auto">
-              <DataTable
-                columns={PRIORITY_COLUMNS}
-                data={editState.priority_matrix ?? priority_matrix}
-                size="medium"
-              />
-            </Box>
-          </Section>
-        )}
-      </Box>
-    );
-  }
-
-  // Read-only view
   return (
-    <Box gap="small">
-      {agent_recommendation && (
-        <Section title="Agent Recommendation">
-          <Box background="background-front" pad="medium" round="small">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {agent_recommendation}
-            </ReactMarkdown>
-          </Box>
-        </Section>
-      )}
+    <StepCard stepIndex={0} stepLabel="Signal Scan" runState={runState} sessionId={sessionId} onImport={handleImport}>
+      <Tab title="Recommendation">
+        <Box pad="medium" overflow="auto">
+          {editMode ? (
+            <TextArea
+              value={editState.agent_recommendation ?? agent_recommendation ?? ''}
+              onChange={(e) => onEditChange({ ...editState, agent_recommendation: e.target.value })}
+              rows={6}
+              resize="vertical"
+            />
+          ) : agent_recommendation ? (
+            <Box background="background-front" pad="medium" round="small">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {agent_recommendation}
+              </ReactMarkdown>
+            </Box>
+          ) : (
+            <Text color="text-weak">No recommendation yet.</Text>
+          )}
+        </Box>
+      </Tab>
 
-      {signals && signals.length > 0 && (
-        <Section title={`Signals (${signals.length})`}>
-          <Box background="background-front" pad="small" round="small" overflow="auto">
-            <DataTable columns={SIGNAL_COLUMNS} data={signals} size="medium" />
-          </Box>
-        </Section>
-      )}
+      <Tab title={`Signals${signals?.length ? ` (${signals.length})` : ''}`}>
+        <Box pad="medium" overflow="auto">
+          {(editState.signals ?? signals)?.length > 0 ? (
+            <DataTable
+              columns={SIGNAL_COLUMNS}
+              data={editState.signals ?? signals}
+              size="medium"
+            />
+          ) : (
+            <Text color="text-weak">No signals yet.</Text>
+          )}
+        </Box>
+      </Tab>
 
-      {interpreted_signals && interpreted_signals.length > 0 && (
-        <Section title={`Interpreted Signals (${interpreted_signals.length})`}>
-          <Box background="background-front" pad="small" round="small" overflow="auto">
-            <DataTable columns={INTERPRETED_COLUMNS} data={interpreted_signals} size="medium" />
-          </Box>
-        </Section>
-      )}
+      <Tab title={`Interpreted${interpreted_signals?.length ? ` (${interpreted_signals.length})` : ''}`}>
+        <Box pad="medium" overflow="auto">
+          {(editState.interpreted_signals ?? interpreted_signals)?.length > 0 ? (
+            <DataTable
+              columns={INTERPRETED_COLUMNS}
+              data={editState.interpreted_signals ?? interpreted_signals}
+              size="medium"
+            />
+          ) : (
+            <Text color="text-weak">No interpreted signals yet.</Text>
+          )}
+        </Box>
+      </Tab>
 
-      {priority_matrix && priority_matrix.length > 0 && (
-        <Section title="Priority Matrix">
-          <Box background="background-front" pad="small" round="small" overflow="auto">
-            <DataTable columns={PRIORITY_COLUMNS} data={priority_matrix} size="medium" />
-          </Box>
-        </Section>
-      )}
+      <Tab title="Priority Matrix">
+        <Box pad="medium" overflow="auto">
+          {(editState.priority_matrix ?? priority_matrix)?.length > 0 ? (
+            <DataTable
+              columns={PRIORITY_COLUMNS}
+              data={editState.priority_matrix ?? priority_matrix}
+              size="medium"
+            />
+          ) : (
+            <Text color="text-weak">No priority matrix yet.</Text>
+          )}
+        </Box>
+      </Tab>
 
-      {coverage_gaps && coverage_gaps.length > 0 && (
-        <Section title="Coverage Gaps">
-          <Box background="background-front" pad="medium" round="small" overflow="auto">
-            <pre style={{ fontSize: '13px', whiteSpace: 'pre-wrap' }}>
-              {JSON.stringify(coverage_gaps, null, 2)}
-            </pre>
-          </Box>
-        </Section>
-      )}
-    </Box>
+      <Tab title="Coverage Gaps">
+        <Box pad="medium" overflow="auto">
+          {coverage_gaps && coverage_gaps.length > 0 ? (
+            <Box background="background-front" pad="medium" round="small">
+              <pre style={{ fontSize: '13px', whiteSpace: 'pre-wrap' }}>
+                {JSON.stringify(coverage_gaps, null, 2)}
+              </pre>
+            </Box>
+          ) : (
+            <Text color="text-weak">No coverage gaps identified.</Text>
+          )}
+        </Box>
+      </Tab>
+    </StepCard>
   );
 };
 

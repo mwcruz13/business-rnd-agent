@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { Box, Text, TextArea } from 'grommet';
+import { Box, Text, TextArea, Tab } from 'grommet';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import StepCard from '../components/StepCard.jsx';
 
-const Step7RiskMap = ({ runState, editMode, editState, onEditChange }) => {
+const Step7RiskMap = ({ runState, editMode, editState, onEditChange, sessionId }) => {
   if (!runState) return <Text color="text-weak">Waiting for workflow to start…</Text>;
 
   const { assumptions } = runState;
@@ -20,36 +21,34 @@ const Step7RiskMap = ({ runState, editMode, editState, onEditChange }) => {
     return <Text color="text-weak">Step 7 has not run yet.</Text>;
   }
 
-  if (editMode) {
-    return (
-      <Box gap="medium">
-        <Box gap="xsmall">
-          <Text weight="bold" size="small">Assumptions &amp; Risk Map (Markdown)</Text>
-          <Text size="xsmall" color="text-weak">
-            Edit the assumption list, DVF categories, and evidence strength assessments.
-          </Text>
-          <TextArea
-            value={editState.assumptions ?? assumptions ?? ''}
-            onChange={(e) => onEditChange({ ...editState, assumptions: e.target.value })}
-            rows={16}
-            resize="vertical"
-          />
-        </Box>
-      </Box>
-    );
-  }
+  const handleImport = (fields) => onEditChange({ ...editState, ...fields });
 
   return (
-    <Box gap="medium">
-      <Box gap="xsmall">
-        <Text weight="bold" size="small" color="text-weak">Assumptions &amp; Risk Map</Text>
-        <Box background="background-front" pad="medium" round="small">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {assumptions}
-          </ReactMarkdown>
+    <StepCard stepIndex={6} stepLabel="Risk Map" runState={runState} sessionId={sessionId} onImport={handleImport}>
+      <Tab title="Assumptions & Risk Map">
+        <Box pad="medium" overflow="auto">
+          {editMode ? (
+            <Box gap="xsmall">
+              <Text size="xsmall" color="text-weak">
+                Edit the assumption list, DVF categories, and evidence strength assessments.
+              </Text>
+              <TextArea
+                value={editState.assumptions ?? assumptions ?? ''}
+                onChange={(e) => onEditChange({ ...editState, assumptions: e.target.value })}
+                rows={16}
+                resize="vertical"
+              />
+            </Box>
+          ) : (
+            <Box background="background-front" pad="medium" round="small">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {assumptions}
+              </ReactMarkdown>
+            </Box>
+          )}
         </Box>
-      </Box>
-    </Box>
+      </Tab>
+    </StepCard>
   );
 };
 

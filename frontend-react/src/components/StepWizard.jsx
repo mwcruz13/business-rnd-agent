@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
-import { Box, Heading, Text, Notification, Spinner } from 'grommet';
+import { useState } from 'react';
+import { Box, Text, Notification, Spinner } from 'grommet';
 import { useWorkflow } from '../context/WorkflowContext.jsx';
-import StepSidebar, { STEPS } from './StepSidebar.jsx';
+import StepSidebar from './StepSidebar.jsx';
 import CheckpointActions from './CheckpointActions.jsx';
 
 // Dynamic step component imports (lazy-style, but kept simple for Phase 3)
@@ -38,7 +38,6 @@ const StepWizard = () => {
 
   // Determine which step component to render
   const StepComponent = STEP_COMPONENTS[activeStep] ?? null;
-  const stepDef = STEPS[activeStep];
 
   const handleApprove = async () => {
     try {
@@ -74,18 +73,12 @@ const StepWizard = () => {
 
       {/* Main content */}
       <Box flex pad="medium" gap="small" overflow="auto">
-        {/* Header */}
-        <Box direction="row" align="center" justify="between">
-          <Box>
-            <Heading level={3} margin="none">
-              Step {activeStep + 1}: {stepDef?.label}
-            </Heading>
-            <Text size="small" color="text-weak">
-              Session: {sessionId}
-            </Text>
+        {/* Loading indicator */}
+        {isLoading && (
+          <Box direction="row" justify="end">
+            <Spinner size="small" />
           </Box>
-          {isLoading && <Spinner size="small" />}
-        </Box>
+        )}
 
         {/* Error notification */}
         {error && (
@@ -118,6 +111,7 @@ const StepWizard = () => {
               editMode={editMode}
               editState={editState}
               onEditChange={setEditState}
+              sessionId={sessionId}
             />
           ) : (
             <Text>Unknown step</Text>

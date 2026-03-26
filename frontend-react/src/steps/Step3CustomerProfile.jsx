@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { Box, Text, TextArea } from 'grommet';
+import { Box, Text, TextArea, Tab } from 'grommet';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import StepCard from '../components/StepCard.jsx';
 
-const Step3CustomerProfile = ({ runState, editMode, editState, onEditChange }) => {
+const Step3CustomerProfile = ({ runState, editMode, editState, onEditChange, sessionId }) => {
   if (!runState) return <Text color="text-weak">Waiting for workflow to start…</Text>;
 
   const { customer_profile, empathy_gap_questions, supplemental_voc } = runState;
@@ -21,80 +22,70 @@ const Step3CustomerProfile = ({ runState, editMode, editState, onEditChange }) =
     return <Text color="text-weak">Step 3 has not run yet.</Text>;
   }
 
-  if (editMode) {
-    return (
-      <Box gap="medium">
-        <Box gap="xsmall">
-          <Text weight="bold" size="small">Customer Profile (Markdown)</Text>
-          <TextArea
-            value={editState.customer_profile ?? customer_profile ?? ''}
-            onChange={(e) => onEditChange({ ...editState, customer_profile: e.target.value })}
-            rows={12}
-            resize="vertical"
-          />
-        </Box>
+  const handleImport = (fields) => onEditChange({ ...editState, ...fields });
 
-        {empathy_gap_questions && (
-          <Box gap="xsmall">
-            <Text weight="bold" size="small" color="text-weak">Empathy Gap Questions (read-only)</Text>
+  return (
+    <StepCard stepIndex={2} stepLabel="Customer Profile" runState={runState} sessionId={sessionId} onImport={handleImport}>
+      <Tab title="Profile">
+        <Box pad="medium" overflow="auto">
+          {editMode ? (
+            <TextArea
+              value={editState.customer_profile ?? customer_profile ?? ''}
+              onChange={(e) => onEditChange({ ...editState, customer_profile: e.target.value })}
+              rows={12}
+              resize="vertical"
+            />
+          ) : (
+            <Box background="background-front" pad="medium" round="small">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {customer_profile}
+              </ReactMarkdown>
+            </Box>
+          )}
+        </Box>
+      </Tab>
+
+      <Tab title="Empathy Questions">
+        <Box pad="medium" overflow="auto">
+          {empathy_gap_questions ? (
             <Box background="background-front" pad="medium" round="small">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {empathy_gap_questions}
               </ReactMarkdown>
             </Box>
-          </Box>
-        )}
-
-        <Box gap="xsmall">
-          <Text weight="bold" size="small">Supplemental VoC</Text>
-          <Text size="xsmall" color="text-weak">
-            Add additional customer insights to strengthen the profile.
-          </Text>
-          <TextArea
-            value={editState.supplemental_voc ?? supplemental_voc ?? ''}
-            onChange={(e) => onEditChange({ ...editState, supplemental_voc: e.target.value })}
-            rows={6}
-            resize="vertical"
-            placeholder="Paste additional interview notes, survey results, or observations…"
-          />
+          ) : (
+            <Text color="text-weak">No empathy gap questions yet.</Text>
+          )}
         </Box>
-      </Box>
-    );
-  }
+      </Tab>
 
-  return (
-    <Box gap="medium">
-      <Box gap="xsmall">
-        <Text weight="bold" size="small" color="text-weak">Customer Profile</Text>
-        <Box background="background-front" pad="medium" round="small">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {customer_profile}
-          </ReactMarkdown>
+      <Tab title="Supplemental VoC">
+        <Box pad="medium" overflow="auto">
+          {editMode ? (
+            <Box gap="xsmall">
+              <Text size="xsmall" color="text-weak">
+                Add additional customer insights to strengthen the profile.
+              </Text>
+              <TextArea
+                value={editState.supplemental_voc ?? supplemental_voc ?? ''}
+                onChange={(e) => onEditChange({ ...editState, supplemental_voc: e.target.value })}
+                rows={6}
+                resize="vertical"
+                placeholder="Paste additional interview notes, survey results, or observations…"
+              />
+            </Box>
+          ) : supplemental_voc ? (
+            <Box background="background-front" pad="medium" round="small">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {supplemental_voc}
+              </ReactMarkdown>
+            </Box>
+          ) : (
+            <Text color="text-weak">No supplemental VoC yet.</Text>
+          )}
         </Box>
-      </Box>
-
-      {empathy_gap_questions && (
-        <Box gap="xsmall">
-          <Text weight="bold" size="small" color="text-weak">Empathy Gap Questions</Text>
-          <Box background="background-front" pad="medium" round="small">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {empathy_gap_questions}
-            </ReactMarkdown>
-          </Box>
-        </Box>
-      )}
-
-      {supplemental_voc && (
-        <Box gap="xsmall">
-          <Text weight="bold" size="small" color="text-weak">Supplemental VoC</Text>
-          <Box background="background-front" pad="medium" round="small">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {supplemental_voc}
-            </ReactMarkdown>
-          </Box>
-        </Box>
-      )}
-    </Box>
+      </Tab>
+    </StepCard>
   );
 };
 

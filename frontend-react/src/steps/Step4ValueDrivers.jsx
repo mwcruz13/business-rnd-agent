@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { Box, Text, TextArea } from 'grommet';
+import { Box, Text, TextArea, Tab } from 'grommet';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import StepCard from '../components/StepCard.jsx';
 
-const Step4ValueDrivers = ({ runState, editMode, editState, onEditChange }) => {
+const Step4ValueDrivers = ({ runState, editMode, editState, onEditChange, sessionId }) => {
   if (!runState) return <Text color="text-weak">Waiting for workflow to start…</Text>;
 
   const { value_driver_tree, actionable_insights } = runState;
@@ -21,53 +22,50 @@ const Step4ValueDrivers = ({ runState, editMode, editState, onEditChange }) => {
     return <Text color="text-weak">Step 4 has not run yet.</Text>;
   }
 
-  if (editMode) {
-    return (
-      <Box gap="medium">
-        <Box gap="xsmall">
-          <Text weight="bold" size="small">Value Driver Tree (Markdown)</Text>
-          <TextArea
-            value={editState.value_driver_tree ?? value_driver_tree ?? ''}
-            onChange={(e) => onEditChange({ ...editState, value_driver_tree: e.target.value })}
-            rows={12}
-            resize="vertical"
-          />
-        </Box>
-        <Box gap="xsmall">
-          <Text weight="bold" size="small">Actionable Insights (Markdown)</Text>
-          <TextArea
-            value={editState.actionable_insights ?? actionable_insights ?? ''}
-            onChange={(e) => onEditChange({ ...editState, actionable_insights: e.target.value })}
-            rows={8}
-            resize="vertical"
-          />
-        </Box>
-      </Box>
-    );
-  }
+  const handleImport = (fields) => onEditChange({ ...editState, ...fields });
 
   return (
-    <Box gap="medium">
-      <Box gap="xsmall">
-        <Text weight="bold" size="small" color="text-weak">Value Driver Tree</Text>
-        <Box background="background-front" pad="medium" round="small">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {value_driver_tree}
-          </ReactMarkdown>
+    <StepCard stepIndex={3} stepLabel="Value Drivers" runState={runState} sessionId={sessionId} onImport={handleImport}>
+      <Tab title="Value Driver Tree">
+        <Box pad="medium" overflow="auto">
+          {editMode ? (
+            <TextArea
+              value={editState.value_driver_tree ?? value_driver_tree ?? ''}
+              onChange={(e) => onEditChange({ ...editState, value_driver_tree: e.target.value })}
+              rows={12}
+              resize="vertical"
+            />
+          ) : (
+            <Box background="background-front" pad="medium" round="small">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {value_driver_tree}
+              </ReactMarkdown>
+            </Box>
+          )}
         </Box>
-      </Box>
+      </Tab>
 
-      {actionable_insights && (
-        <Box gap="xsmall">
-          <Text weight="bold" size="small" color="text-weak">Actionable Insights</Text>
-          <Box background="background-front" pad="medium" round="small">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {actionable_insights}
-            </ReactMarkdown>
-          </Box>
+      <Tab title="Actionable Insights">
+        <Box pad="medium" overflow="auto">
+          {editMode ? (
+            <TextArea
+              value={editState.actionable_insights ?? actionable_insights ?? ''}
+              onChange={(e) => onEditChange({ ...editState, actionable_insights: e.target.value })}
+              rows={8}
+              resize="vertical"
+            />
+          ) : actionable_insights ? (
+            <Box background="background-front" pad="medium" round="small">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {actionable_insights}
+              </ReactMarkdown>
+            </Box>
+          ) : (
+            <Text color="text-weak">No actionable insights yet.</Text>
+          )}
         </Box>
-      )}
-    </Box>
+      </Tab>
+    </StepCard>
   );
 };
 

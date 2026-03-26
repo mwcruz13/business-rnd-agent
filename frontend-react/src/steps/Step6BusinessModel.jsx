@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { Box, Text, TextArea } from 'grommet';
+import { Box, Text, TextArea, Tab } from 'grommet';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import StepCard from '../components/StepCard.jsx';
 
-const Step6BusinessModel = ({ runState, editMode, editState, onEditChange }) => {
+const Step6BusinessModel = ({ runState, editMode, editState, onEditChange, sessionId }) => {
   if (!runState) return <Text color="text-weak">Waiting for workflow to start…</Text>;
 
   const { business_model_canvas } = runState;
@@ -20,33 +21,29 @@ const Step6BusinessModel = ({ runState, editMode, editState, onEditChange }) => 
     return <Text color="text-weak">Step 6 has not run yet.</Text>;
   }
 
-  if (editMode) {
-    return (
-      <Box gap="medium">
-        <Box gap="xsmall">
-          <Text weight="bold" size="small">Business Model Canvas (Markdown)</Text>
-          <TextArea
-            value={editState.business_model_canvas ?? business_model_canvas ?? ''}
-            onChange={(e) => onEditChange({ ...editState, business_model_canvas: e.target.value })}
-            rows={16}
-            resize="vertical"
-          />
-        </Box>
-      </Box>
-    );
-  }
+  const handleImport = (fields) => onEditChange({ ...editState, ...fields });
 
   return (
-    <Box gap="medium">
-      <Box gap="xsmall">
-        <Text weight="bold" size="small" color="text-weak">Business Model Canvas</Text>
-        <Box background="background-front" pad="medium" round="small">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {business_model_canvas}
-          </ReactMarkdown>
+    <StepCard stepIndex={5} stepLabel="Business Model" runState={runState} sessionId={sessionId} onImport={handleImport}>
+      <Tab title="Business Model Canvas">
+        <Box pad="medium" overflow="auto">
+          {editMode ? (
+            <TextArea
+              value={editState.business_model_canvas ?? business_model_canvas ?? ''}
+              onChange={(e) => onEditChange({ ...editState, business_model_canvas: e.target.value })}
+              rows={16}
+              resize="vertical"
+            />
+          ) : (
+            <Box background="background-front" pad="medium" round="small">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {business_model_canvas}
+              </ReactMarkdown>
+            </Box>
+          )}
         </Box>
-      </Box>
-    </Box>
+      </Tab>
+    </StepCard>
   );
 };
 
