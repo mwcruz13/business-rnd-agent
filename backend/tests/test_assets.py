@@ -36,4 +36,4 @@ def test_load_step_prompt_resolves_packaged_prompt_template():
 
     assert asset.kind == "prompt"
     assert asset.name == "step2_pattern_matcher"
-    assert "You are the Step 2 Pattern Matcher" in asset.body
+    assert "You are the Step 2 Pattern Reasoner" in asset.body

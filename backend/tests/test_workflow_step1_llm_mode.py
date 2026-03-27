@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from backend.app.nodes import step1_signal
 from backend.app.nodes.step1_signal_llm import SignalScanResult
+from backend.app.workers import steps as worker_steps
 from backend.app.workflow import get_run_state
 from backend.app.workflow import run_workflow_from_voc_data
 
@@ -80,12 +81,15 @@ def test_workflow_service_can_pause_after_step1_in_llm_mode(monkeypatch) -> None
     session_id = f"workflow-step1-llm-mode-{uuid4()}"
     fake_model = FakeStructuredChatModel(_sample_result())
 
-    monkeypatch.setattr(
-        step1_signal,
-        "get_settings",
-        lambda: SimpleNamespace(llm_backend="azure"),
-    )
-    monkeypatch.setattr(step1_signal, "get_chat_model", lambda settings: fake_model)
+    # Patch both the old node module (for any direct callers) and
+    # the new worker module (which the orchestrator now uses)
+    for target_module in (step1_signal, worker_steps):
+        monkeypatch.setattr(
+            target_module,
+            "get_settings",
+            lambda: SimpleNamespace(llm_backend="azure"),
+        )
+        monkeypatch.setattr(target_module, "get_chat_model", lambda settings: fake_model)
 
     first_pause = run_workflow_from_voc_data(
         "Customers report onboarding friction, too many manual steps, and delays before they reach value.",

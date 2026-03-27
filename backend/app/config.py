@@ -4,15 +4,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    llm_backend: str = "azure"
+    #llm_backend: str = "azure"
+    llm_backend: str = "ollama"
     azure_openai_endpoint: str = ""
     azure_openai_api_key: str = ""
     azure_openai_api_version: str = "2025-01-01-preview"
     azure_openai_deployment_reasoning: str = ""
     azure_openai_deployment_chat: str = ""
     azure_openai_deployment_embedding: str = ""
-    ollama_base_url: str = "http://host.docker.internal:11434"
-    ollama_model: str = "llama3.3:70b"
+    ollama_base_url: str = "http://192.168.10.250:11434"
+    ollama_model: str = "nemotron-3-super:latest"
     postgres_host: str = "bmi-postgres"
     postgres_port: int = 5432
     postgres_db: str = "postgres"
