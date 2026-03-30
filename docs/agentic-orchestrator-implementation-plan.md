@@ -284,20 +284,333 @@ Definition of done:
 - All existing checkpoint and workflow BDD tests still pass
 - Legacy mode remains available via configuration
 
-### Phase 5: Deepen Individual Workers Where Needed
+### Phase 5: Per-Step Quality Gates and Structured Output Hardening
 
-Goal: Allow richer agent behavior inside remaining steps (3–8) without affecting the workflow contract.
+Goal: Every LLM-backed step (1–7) gets an LLM-as-Judge quality gate and confirmed Pydantic structured output, so the entire pipeline has measurable, auditable analytical quality from signal scan to risk map.
 
-Examples:
+#### Current State (baseline before Phase 5 work)
 
-- Steps 3–8 can migrate from rule-based to LLM-backed execution using the same pattern proven in Step 1
-- Each worker can incorporate the LLM-as-Judge quality gate for its own SKILL compliance
-- Workers can incorporate internal tool usage or structured sub-calls if necessary
+| Step | Structured Output? | Pydantic Root Model | Quality Gate? |
+|------|:---:|---|:---:|
+| 1 — Signal Scan | Yes | `SignalScanResult` | Yes — `judge.py` (completeness, relevance, groundedness, SKILL compliance) |
+| 2 — Pattern Matcher | Yes | `PatternReasonerOutput` | Partial — post-hoc validation only (selected patterns must exist in shortlist) |
+| 3 — Customer Profile | Yes | `CustomerEmpathyProfile` | Partial — empathy gate (structural completeness check on jobs/pains/gains) |
+| 4 — Value Drivers | Yes | `Step4Output` | No |
+| 5 — Value Proposition | Yes | `ValuePropositionCanvas` | No |
+| 6 — Design Canvas | Yes | `Step6Output` | No |
+| 7 — Risk Map | Yes | `Step7Output` | No |
+| 8 — Experiment Plan | No (deterministic) | N/A — dataclasses | N/A (no LLM call) |
 
-Definition of done:
+**Structured output**: Steps 1–7 already use `with_structured_output()`. Step 8 is deterministic and does not need it.
 
-- Internal sophistication can increase per worker
-- The orchestration contract and workflow checkpoints remain stable
+**Quality gates**: Only Step 1 has the full LLM-as-Judge pattern. Steps 2–7 need per-step judge evaluations.
+
+#### 5A — Per-Step Quality Gate Design
+
+Each step gets its own judge evaluation function in `backend/app/llm/judge.py` (or a new `judge_steps.py` if the module grows too large). All judges follow the same pattern proven in Step 1:
+
+1. **Judge receives three inputs**: (a) upstream state the step was given, (b) the SKILL/prompt instructions the step should have followed, (c) the step's structured output.
+2. **Judge scores four dimensions** on a 1–5 rubric with rationale per dimension.
+3. **Judge returns a `JudgeVerdict`** (same Pydantic schema — reusable across all steps).
+4. **BDD scenario per step** asserts minimum thresholds.
+
+##### Step 2 — Pattern Matcher Judge
+
+| Dimension | Question | Pass Threshold |
+|---|---|---|
+| **Relevance** | Are the selected patterns appropriate for the detected signal direction and zone? | >= 4 |
+| **Groundedness** | Does the rationale cite specific signal evidence and pattern descriptions? | >= 4 |
+| **SKILL compliance** | Did the step follow the hybrid approach — affinity shortlist first, then LLM reasoning? | >= 3 |
+| **Coherence** | Is the pattern selection internally consistent (no contradictory patterns)? | >= 3 |
+
+SKILL context: `prompts/step2_pattern_matcher.md` + `strategyzer-pattern-library.json`
+
+##### Step 3 — Customer Profile Judge
+
+| Dimension | Question | Pass Threshold |
+|---|---|---|
+| **Completeness** | Does the profile cover functional, social, and emotional job types with corresponding pains and gains? | >= 3 |
+| **Relevance** | Are the jobs, pains, and gains traceable to the VoC input and Step 1 signals? | >= 4 |
+| **Groundedness** | Does each job/pain/gain reference observable customer behavior, not consultant speculation? | >= 4 |
+| **SKILL compliance** | Does the profile follow the CXIF empathy structure (segment → jobs → pains → gains)? | >= 3 |
+
+SKILL context: `cxif-bmi-coach/SKILL.md`
+
+##### Step 4 — Value Driver Judge
+
+| Dimension | Question | Pass Threshold |
+|---|---|---|
+| **Completeness** | Does the output include a value driver tree, context analysis, and WHO-DOES-BECAUSE-BUT statement? | >= 3 |
+| **Relevance** | Are success measures and friction points traceable to the customer profile? | >= 4 |
+| **Groundedness** | Are problem statements grounded in identified pains and jobs, not generic business jargon? | >= 3 |
+| **SKILL compliance** | Does the output follow the CXIF Measure and Define phases? | >= 3 |
+
+SKILL context: `cxif-bmi-coach/SKILL.md`
+
+##### Step 5 — Value Proposition Judge
+
+| Dimension | Question | Pass Threshold |
+|---|---|---|
+| **Completeness** | Does the canvas include products/services, pain relievers, gain creators, and ad-lib prototypes? | >= 3 |
+| **Relevance** | Do pain relievers map to identified customer pains? Do gain creators map to identified gains? | >= 4 |
+| **Groundedness** | Are the VP elements traceable to the value driver tree and problem statements? | >= 3 |
+| **SKILL compliance** | Does the output follow the CXIF Value Proposition Canvas structure? | >= 3 |
+
+SKILL context: `cxif-bmi-coach/SKILL.md`
+
+##### Step 6 — Design Canvas Judge
+
+| Dimension | Question | Pass Threshold |
+|---|---|---|
+| **Completeness** | Does the BMC cover desirability, feasibility, and viability blocks? Does fit assessment include all three fit types? | >= 3 |
+| **Relevance** | Do the BMC building blocks connect to the value proposition? Do fit rows reference canvas elements? | >= 4 |
+| **Coherence** | Is the BMC internally consistent — do channel, revenue, and cost blocks align with the value proposition? | >= 3 |
+| **SKILL compliance** | Does the output follow the CXIF Business Model Canvas and fit assessment structure? | >= 3 |
+
+SKILL context: `cxif-bmi-coach/SKILL.md`
+
+##### Step 7 — Risk Map Judge
+
+| Dimension | Question | Pass Threshold |
+|---|---|---|
+| **Completeness** | Does the output include assumptions across all three DVF categories with an importance × evidence matrix? | >= 3 |
+| **Relevance** | Are assumptions traceable to specific BMC building blocks and fit assessment gaps? | >= 4 |
+| **Groundedness** | Are assumptions stated as testable hypotheses, not vague concerns? | >= 4 |
+| **SKILL compliance** | Does the output follow the Precoil EMT format (DVF categories, quadrant assignment, tension check)? | >= 3 |
+
+SKILL context: `precoil-emt/agent.md` + `precoil-emt-pattern-library.json`
+
+#### 5B — CXIF Domain Validation Library and Structured Output Hardening
+
+##### Problem
+
+Steps 1, 2, 7, and 8 each have a **domain vocabulary validation library** (`.json` under `patterns/`) that defines the canonical terms the LLM output must use. This enables deterministic structural compliance checks in BDD tests — e.g., "every signal zone is a valid SOC Radar zone", "selected patterns are verified library entries", "assumptions include all DVF categories".
+
+Steps 3–6 (all CXIF-based) have **no such library**. The LLM is told to follow the CXIF SKILL.md, but there's no structured reference to validate against. If the LLM invents a pain type like "annoyance" instead of using the canonical "Functional / Social / Emotional / Ancillary", nothing catches it.
+
+| Step | Has Pattern Library? | Domain |
+|------|:---:|---|
+| 1 — Signal Scan | Yes — `soc-radar-pattern-library.json` | SOC Radar zones, filters, classifications, tiers |
+| 2 — Pattern Matcher | Yes — `strategyzer-pattern-library.json` | INVENT + SHIFT verified pattern names |
+| 3 — Customer Profile | **No** | CXIF empathy (job/pain/gain types, importance/severity/relevance scales) |
+| 4 — Value Drivers | **No** | CXIF measure/define (driver types, friction types, insight format) |
+| 5 — Value Proposition | **No** | CXIF value map (product types, reliever/creator types, relevance scales) |
+| 6 — Design Canvas | **No** | CXIF design (BMC building blocks, fit dimensions, fit statuses) |
+| 7 — Risk Map | Yes — `precoil-emt-pattern-library.json` | DVF categories, quadrants, assumption format |
+| 8 — Experiments | Yes — `experiment-library.json` | 44 experiment cards |
+
+##### Solution: `cxif-pattern-library.json`
+
+Create a single CXIF domain validation library at `patterns/cxif-pattern-library.json` that codifies the canonical vocabulary from `cxif-bmi-coach/SKILL.md`. This serves Steps 3, 4, 5, and 6 the same way the SOC Radar library serves Step 1.
+
+**Contents** (extracted from the SKILL.md tables and rules):
+
+```json
+{
+  "metadata": {
+    "title": "CXIF Pattern Library for Steps 3-6",
+    "scope": "Domain vocabulary for Empathize, Measure, Define, and Design phases",
+    "source": "cxif-bmi-coach/SKILL.md"
+  },
+
+  "empathy_profile": {
+    "job_types": ["Functional", "Social", "Emotional", "Supporting"],
+    "pain_types": ["Functional", "Social", "Emotional", "Ancillary"],
+    "gain_types": ["Functional", "Social", "Emotional", "Financial"],
+    "importance_scale": ["High", "Medium", "Low"],
+    "severity_scale": ["Severe", "Moderate", "Light"],
+    "relevance_scale": ["Essential", "Expected", "Desired", "Unexpected"],
+    "min_jobs": 3,
+    "min_pains": 3,
+    "min_gains": 3
+  },
+
+  "value_driver_tree": {
+    "driver_types": ["Cost", "Revenue", "Time", "Effort", "Volume", "Satisfaction"],
+    "friction_types": ["Pain", "Gap", "Delay", "Error"],
+    "journey_phases": ["Awareness", "Evaluation", "Purchase", "Delivery", "Support", "Renewal"],
+    "insight_format": "WHO DOES BECAUSE BUT",
+    "problem_priority_scale": ["High", "Medium", "Low"]
+  },
+
+  "value_proposition_canvas": {
+    "product_service_types": ["Physical/Tangible", "Digital", "Intangible", "Financial"],
+    "pain_reliever_types": ["Functional", "Social", "Emotional", "Ancillary"],
+    "gain_creator_types": ["Functional", "Social", "Emotional", "Financial"],
+    "relevance_scale_products": ["Core", "Nice-to-have"],
+    "relevance_scale_relievers": ["Substantial", "Nice-to-have"],
+    "relevance_scale_creators": ["Substantial", "Nice-to-have"],
+    "min_ad_lib_prototypes": 2,
+    "ad_lib_template": "OUR [products] HELP [segment] WHO WANT TO [jobs] BY [reducing] [pain] AND [improving] [gain]"
+  },
+
+  "business_model_canvas": {
+    "building_blocks": {
+      "desirability": ["Customer Segments", "Value Proposition", "Channels", "Customer Relationships"],
+      "feasibility": ["Key Partnerships", "Key Activities", "Key Resources"],
+      "viability": ["Revenue Streams", "Cost Structure"]
+    },
+    "all_block_names": [
+      "Customer Segments", "Value Proposition", "Channels",
+      "Customer Relationships", "Key Partnerships", "Key Activities",
+      "Key Resources", "Revenue Streams", "Cost Structure"
+    ],
+    "fit_dimensions": ["Desirability", "Feasibility", "Viability"],
+    "fit_status_values": ["Validated", "Assumed", "Unknown"],
+    "problem_solution_fit_values": ["Strong", "Partial", "Weak"]
+  }
+}
+```
+
+##### Structural Compliance Checks (new BDD scenarios)
+
+With the library in place, each CXIF step gets a structural compliance scenario (deterministic, no LLM judge needed) — the same layer that Step 1 already has:
+
+- **Step 3**: Every job type is in `empathy_profile.job_types`, every pain type is in `empathy_profile.pain_types`, every gain type is in `empathy_profile.gain_types`, every importance is in `importance_scale`, etc.
+- **Step 4**: Every driver type is in `value_driver_tree.driver_types`, every friction type is in `friction_types`, insight follows WHO-DOES-BECAUSE-BUT format.
+- **Step 5**: Every product type is in `value_proposition_canvas.product_service_types`, every pain reliever type is in `pain_reliever_types`, minimum 2 ad-lib prototypes.
+- **Step 6**: Every BMC block name is in `business_model_canvas.all_block_names`, fit status values are in `fit_status_values`, all three fit dimensions present.
+
+These checks run fast (no LLM call), catch vocabulary drift early, and complement the LLM-as-Judge quality evaluation.
+
+##### Additional Hardening
+
+1. **Step 8 — Add Pydantic schemas**: Replace the `dataclass`-based `ExperimentCard` and `TopAssumption` with Pydantic `BaseModel` classes. Add a root `Step8Output` model. This doesn't change behavior (Step 8 is deterministic) but makes the pipeline uniformly typed for serialization, validation, and the future audit trail.
+
+2. **Promote structured dict storage where currently markdown**: Steps 3–7 store rendered markdown strings in state keys (e.g., `customer_profile`, `value_driver_tree`). Optionally, add a parallel `_structured` key (e.g., `customer_profile_structured`) containing the Pydantic `.model_dump()` dict. This preserves backward compatibility (the markdown string is still there) while giving downstream steps and audit trail typed access to the structured data. This is optional per step and can be done incrementally.
+
+##### 5B-2 — Enrichments to Existing Pattern Libraries
+
+**Source documents** (added to `assistant/docs/`):
+- `Customer Jobs Pains Gains Trigger Questions.txt`
+- `The Business Model Shifts Library.txt`
+- `The Invent Pattern Library.txt`
+- `Knowledge Document - Exploit Portfolio Business Model Disruption Risk Assessment.txt`
+
+**Strategyzer library enrichments** (`strategyzer-pattern-library.json`):
+
+1. **INVENT patterns — add `assessment_scale`**: The Invent Pattern Library document provides 7-point scale anchors for each pattern's `assessment_question`. The current library has the question but not the scale meaning. Add an `assessment_scale` field to each INVENT pattern:
+   ```json
+   "assessment_scale": {
+     "negative_anchor": "There is little untapped potential and the market is shrinking",
+     "positive_anchor": "The market potential is large, not yet occupied, and growing"
+   }
+   ```
+   This enables structural validation that LLM-generated assessments use the correct scale language.
+
+2. **SHIFT patterns — verify examples**: The Business Model Shifts document confirms examples (Hilti, Netflix, TED, Intel Inside, Apple Genius Bar, Fujifilm, Bharti Airtel, Microsoft, Dow Corning Xiameter, Adobe, Apple iMac). Cross-check that existing `example` fields match.
+
+3. **SHIFT patterns — add category grouping vocabulary**: The Shifts document organizes patterns under "Value Proposition Shifts" (3 patterns), "Frontstage Driven Shifts" (3 patterns), "Backstage Driven Shifts" (3 patterns), "Profit Formula Driven Shifts" (3 patterns). These categories provide a structural validation dimension for Step 2 output.
+
+**CXIF library enrichments** (`cxif-pattern-library.json` — new):
+
+4. **Add `trigger_questions` section**: The Customer Jobs Pains Gains Trigger Questions document provides canonical question sets:
+   - Jobs: 4 trigger questions + 2 context trigger questions
+   - Pains: 9 trigger questions (organized by pain type)
+   - Gains: 9 trigger questions (organized by gain type)
+
+   These serve two purposes:
+   - Step 3's empathy gate: when the gate fires trigger questions for incomplete profiles, the canonical questions provide the reference vocabulary
+   - Judge SKILL compliance: the judge can verify that empathy analysis addresses the dimensions covered by trigger questions
+
+**Future enrichment candidate** (not part of Phase 5):
+
+5. **Exploit Portfolio Assessment library**: The Exploit Portfolio document defines a structured 10-item Performance assessment and 10-item Trend assessment, each with 7-point scales and BMC-aligned anchors. This could enrich Steps 6 and 7 in a future phase:
+   - Step 6 (Design Canvas): validate BMC blocks against performance assessment dimensions
+   - Step 7 (Risk Map): trend assessment dimensions identify where threats concentrate and can inform assumption prioritization
+   This is documented here for future reference but is out of scope for Phase 5.
+
+#### 5C — BDD Feature Scenarios
+
+Each step gets one new scenario in its `.feature` file following the Step 1 judge pattern:
+
+```gherkin
+# step2-pattern-matcher.feature
+Scenario: Step 2 produces a quality-assessed pattern selection
+  Given a workflow state with interpreted signals from Step 1
+  When the Step 2 pattern matcher node runs
+  And the LLM judge evaluates the pattern selection against the pattern matcher SKILL
+  Then the judge relevance score is at least 4
+  And the judge groundedness score is at least 4
+  And the judge SKILL compliance score is at least 3
+  And the judge coherence score is at least 3
+
+# step3-customer-profile.feature
+Scenario: Step 3 produces a quality-assessed customer empathy profile
+  Given a workflow state with a consultant-approved pattern direction
+  When the Step 3 customer profile node runs
+  And the LLM judge evaluates the empathy profile against the CXIF SKILL
+  Then the judge completeness score is at least 3
+  And the judge relevance score is at least 4
+  And the judge groundedness score is at least 4
+  And the judge SKILL compliance score is at least 3
+
+# step4-vpm.feature
+Scenario: Step 4 produces a quality-assessed value driver output
+  Given a workflow state with a completed Step 3 empathy profile
+  When the Step 4 VPM synthesizer node runs
+  And the LLM judge evaluates the value drivers against the CXIF SKILL
+  Then the judge completeness score is at least 3
+  And the judge relevance score is at least 4
+  And the judge groundedness score is at least 3
+  And the judge SKILL compliance score is at least 3
+
+# step5-define.feature
+Scenario: Step 5 produces a quality-assessed value proposition canvas
+  Given a workflow state with completed Step 4 outputs
+  When the Step 5 define model node runs
+  And the LLM judge evaluates the value proposition against the CXIF SKILL
+  Then the judge completeness score is at least 3
+  And the judge relevance score is at least 4
+  And the judge groundedness score is at least 3
+  And the judge SKILL compliance score is at least 3
+
+# step6-design.feature
+Scenario: Step 6 produces a quality-assessed design canvas
+  Given a workflow state with a completed Step 5 value proposition canvas
+  When the Step 6 design canvas node runs
+  And the LLM judge evaluates the design canvas against the CXIF SKILL
+  Then the judge completeness score is at least 3
+  And the judge relevance score is at least 4
+  And the judge coherence score is at least 3
+  And the judge SKILL compliance score is at least 3
+
+# step7-risk.feature
+Scenario: Step 7 produces a quality-assessed risk map
+  Given a workflow state with completed Step 6 design outputs
+  When the Step 7 risk mapper node runs
+  And the LLM judge evaluates the risk map against the Precoil EMT SKILL
+  Then the judge completeness score is at least 3
+  And the judge relevance score is at least 4
+  And the judge groundedness score is at least 4
+  And the judge SKILL compliance score is at least 3
+```
+
+#### 5D — Implementation Sequence
+
+1. **5D-1**: Create `patterns/cxif-pattern-library.json` — the CXIF domain validation library with canonical vocabulary for Steps 3–6, including the `trigger_questions` section from the Customer Jobs Pains Gains source document.
+2. **5D-2**: Enrich `strategyzer-pattern-library.json` — add `assessment_scale` to each INVENT pattern, verify SHIFT examples, add SHIFT category grouping vocabulary.
+3. **5D-3**: Add a `CXIFPatternLibrary` loader (or extend `PatternLibraryLoader`) to expose CXIF vocabulary programmatically.
+4. **5D-4**: Add structural compliance BDD scenarios to Steps 3–6 `.feature` files (deterministic — no LLM needed at test time).
+5. **5D-5**: Implement step definitions for structural compliance using the CXIF library as the validation source.
+6. **5D-6**: Generalize `judge.py` — extract a reusable `evaluate_step_quality()` function that accepts step-specific rubric, SKILL context, upstream state, and step output. Keep `evaluate_step1_quality()` as a convenience wrapper.
+7. **5D-7**: Implement Steps 2–7 judge evaluation functions (one per step), each with a step-specific rubric and dimension set.
+8. **5D-8**: Add judge BDD scenarios to each step's `.feature` file.
+9. **5D-9**: Add step definitions in each step's test module to wire the judge call.
+10. **5D-10**: Add Pydantic models for Step 8 output (optional — deterministic step).
+11. **5D-11**: Optionally add `_structured` parallel keys for Steps 3–7.
+12. **5D-12**: Run full test suite — all existing + new structural + new judge scenarios must pass.
+
+#### Definition of Done
+
+- Every LLM-backed step (1–7) has an LLM-as-Judge quality gate with documented rubric
+- Judge dimensions and thresholds are defined per step in the plan and enforced in BDD scenarios
+- All steps use `with_structured_output()` with Pydantic models (Steps 1–7 confirmed, Step 8 optional)
+- `cxif-pattern-library.json` exists under `patterns/` and codifies the CXIF domain vocabulary for Steps 3–6
+- Every CXIF step (3–6) has structural compliance BDD scenarios that validate output against the CXIF library (same pattern as Step 1 against SOC Radar library)
+- All 8 steps now have a domain validation library: SOC Radar (Step 1), Strategyzer (Step 2), CXIF (Steps 3–6), Precoil EMT (Step 7), Experiment Library (Step 8)
+- All existing BDD tests pass without modification
+- New structural compliance + judge scenarios pass against both Azure and Ollama backends
 
 ## Proposed Module Direction
 
@@ -411,6 +724,111 @@ Recommended execution order:
 8. implement Phase 3: simplify workflow service sequencing logic
 9. rerun the full relevant backend test set inside the container
 10. implement Phase 5: deepen individual workers where needed
+
+### Phase 6: Worker Audit Trail and Observability
+
+Goal: Provide production-grade visibility into worker decisions so that every LLM interaction can be inspected, audited, and debugged after the fact.
+
+#### Problem Statement
+
+Today the only audit trail is the final state snapshot persisted per step in `StepOutput` and the checkpoint decision records in `CheckpointRecord`. There is no record of:
+
+- What prompt was sent to the LLM
+- What raw response the LLM returned
+- Which model/deployment was actually used at execution time
+- Token usage (input/output) and latency
+- Whether structured output parsing required retries
+- Quality judge scores (where applicable)
+
+This makes production debugging, cost tracking, and compliance auditing impossible.
+
+#### Design
+
+1. **`WorkerAuditLog` database table** — one row per worker execution, storing:
+   - `session_id`, `step_name`, `step_number`
+   - `llm_backend`, `model_name`, `model_deployment` — the actual model identity used
+   - `prompt_text` — the full prompt sent to the LLM
+   - `raw_response` — the raw LLM response before structured parsing
+   - `structured_output` — the parsed structured output (JSON)
+   - `input_tokens`, `output_tokens`, `total_tokens` — token usage
+   - `latency_ms` — wall-clock execution time
+   - `retry_count` — number of structured output parse retries
+   - `error_message` — if the step failed, the error detail
+   - `judge_scores` — quality evaluation scores (JSON, nullable)
+   - `created_at` — timestamp
+
+2. **`AuditLogger` utility** — a lightweight logger that workers call to record LLM interactions. Injected into workers via the `BaseWorker.run()` method so no `_llm.py` business logic needs to change.
+
+3. **Interception point**: `BaseWorker.run()` wraps `execute()` with timing, catches errors, and delegates audit persistence. The `_llm.py` functions optionally return metadata (token counts, raw response) via an extended return protocol.
+
+4. **API endpoint**: `GET /runs/{id}/audit` — returns the audit trail for a given run, ordered by step number.
+
+5. **Structured logging**: In addition to DB persistence, emit structured log lines (JSON) to stdout for each worker execution so `docker logs` provides real-time visibility.
+
+#### Definition of Done
+
+- Every worker execution (LLM and deterministic) produces an audit record
+- Audit records capture prompt, response, model identity, tokens, and latency
+- Audit trail is queryable via API
+- Structured log output enables `docker logs -f` monitoring
+- Existing tests still pass — audit logging is additive, not behavior-changing
+- Migration script creates the `WorkerAuditLog` table
+
+#### Test Plan
+
+- BDD scenario: a completed step produces an audit record with required fields
+- BDD scenario: audit trail for a full run contains 8 records in step order
+- BDD scenario: API endpoint returns audit records for a given session
+- Unit test: AuditLogger correctly captures timing and error states
+- Regression: all existing 81+ tests pass without modification
+
+## Future Release Candidates
+
+Items below are validated as theoretically sound but deferred until the current implementation plan (Phases 1–6) is complete. They are captured here so they don't get lost and can be prioritized in a subsequent release cycle.
+
+### FR-1: SOC Radar Pattern Library — Christensen Fidelity Refinements
+
+**Source**: `assistant/docs/soc-radar-fixes.md.html` — review of the SOC Radar pattern library against Christensen's canon (*The Innovator's Dilemma*, *The Innovator's Solution*, *Seeing What's Next*).
+
+#### FR-1a: Add 8th Signal Zone — Value Network Shift
+
+Add a "Value Network Shift" zone to capture signals where entrants use new channels, partnerships, or customer relationships that incumbents cannot replicate without cannibalizing their core business. This is a Christensen non-negotiable for disruption (IDS Ch. 3).
+
+**Rationale**: Currently implied within "Business Model Anomaly" but not elevated as a distinct detection zone. Christensen treats value networks (channels, partnerships, customer relationships) as separable from business model structure (cost/revenue).
+
+**Impact (cross-cutting)**:
+- `soc-radar-pattern-library.json` — `count: 7→8`, add zone object, update `agent_usage_guidance`
+- `step1_signal_llm.py` — add zone to `DetectedSignal.zone` Field description, system prompt zone list, `_VALID_ZONES` set
+- `pattern_affinity.py` — add "Value Network Shift" row to both `_ZONE_INVENT_AFFINITY` and `_ZONE_SHIFT_AFFINITY` matrices; classify in `_AMBIGUOUS_ZONES`
+- `test_bdd_step1_signal_scanner.py` — add "Value Network Shift" to `valid_zones` set
+- `soc-radar/SKILL.md` — update all zone enumeration references from 7 to 8
+- **Design decision needed**: disambiguate "Value Network Shift" from narrowed "Business Model Anomaly" (BMA focuses on cost/revenue structure; VNS focuses on channels/partnerships/customer relationships)
+
+#### FR-1b: Refine Enabling Technology Zone Description
+
+Update description to encode Christensen's principle that technology alone is sustaining — disruptive potential only emerges when paired with a business model shift (SWN Ch. 4).
+
+**Proposed text**: *"Technologies that reduce barriers to entry or change the cost curve. Disruptive potential emerges when paired with a business model shift; technology alone typically enables sustaining innovation."*
+
+**Impact**: JSON-only edit. No code or test changes.
+
+#### FR-1c: Refine Trajectory Filter Question
+
+Add directionality to the Trajectory disruption filter — the entrant must be improving *from the low-end or non-consumption base* (ID Ch. 4). Without this, the filter falsely flags sustaining innovations improving from the high end.
+
+**Proposed text**: *"Is the entrant improving from the low-end or non-consumption base at a rate that will meet mainstream needs?"*
+
+**Impact**: JSON-only edit. No code or test changes.
+
+#### FR-1d (Deferred further): Signal Lifecycle Stage Tracking
+
+Add a `Signal_Lifecycle_Stage` field to evidence capture to track zone migration over time (e.g., "Nonconsumption → New-Market Foothold"). Conceptually sound per Christensen (IDS Ch. 2: *"Disruption is a process, not an event"*) but requires a signal persistence layer (database, not workflow state) that is beyond current architecture scope.
+
+### FR-2: Exploit Portfolio Assessment Library
+
+**Source**: `Knowledge Document - Exploit Portfolio Business Model Disruption Risk Assessment.txt`
+
+Add a pattern library for portfolio-level business model disruption risk assessment, enabling Steps 6–7 to evaluate not just individual BMC fit but portfolio-wide risk exposure across the Explore/Exploit spectrum. Requires design work to determine integration points with the CXIF pipeline.
 
 ## Working Rule During Refactor
 

@@ -50,9 +50,9 @@ const App = () => {
     <ErrorBoundary>
       <WorkflowProvider>
         <BrowserRouter>
-          <Box fill background="background-back">
+          <Box fill background="background-back" style={{ minHeight: '100vh' }}>
             <AppHeader />
-            <Box flex overflow="auto">
+            <Box flex overflow="auto" style={{ minHeight: 0 }}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/workflow" element={<WorkflowPage />} />

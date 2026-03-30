@@ -219,7 +219,7 @@ const HomePage = () => {
               <Box gap="xsmall" flex>
                 <Text size="small" weight="bold">LLM Backend</Text>
                 <Select
-                  options={['azure', 'openai']}
+                  options={['azure', 'openai', 'ollama']}
                   value={llmBackend}
                   onChange={({ option }) => setLlmBackend(option)}
                 />

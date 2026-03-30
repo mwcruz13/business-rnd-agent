@@ -63,7 +63,7 @@ const StepWizard = () => {
   };
 
   return (
-    <Box direction="row" fill>
+    <Box direction="row" fill style={{ minHeight: 0 }}>
       {/* Sidebar */}
       <StepSidebar
         activeStep={activeStep}
@@ -72,7 +72,7 @@ const StepWizard = () => {
       />
 
       {/* Main content */}
-      <Box flex pad="medium" gap="small" overflow="auto">
+      <Box flex pad="medium" gap="small" overflow="auto" style={{ minHeight: 0 }}>
         {/* Loading indicator */}
         {isLoading && (
           <Box direction="row" justify="end">
@@ -104,7 +104,7 @@ const StepWizard = () => {
         )}
 
         {/* Step content */}
-        <Box flex overflow="auto">
+        <Box>
           {StepComponent ? (
             <StepComponent
               runState={runState}
