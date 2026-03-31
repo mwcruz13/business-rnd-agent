@@ -39,7 +39,7 @@ class SignalScannerWorker(BaseWorker):
         return "SOC Radar signal scan from VoC input"
 
     def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
-        return run_step1_llm(state, get_chat_model(get_settings()))
+        return run_step1_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
 
 
 class PatternMatcherWorker(BaseWorker):
@@ -58,7 +58,7 @@ class PatternMatcherWorker(BaseWorker):
         return "Hybrid pattern matching (affinity shortlist + LLM reasoning)"
 
     def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
-        return run_step2_llm(state, get_chat_model(get_settings()))
+        return run_step2_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
 
 
 class CustomerProfileWorker(BaseWorker):
@@ -77,7 +77,7 @@ class CustomerProfileWorker(BaseWorker):
         return "CXIF empathy profile and empathy gate"
 
     def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
-        return run_step3_llm(state, get_chat_model(get_settings()))
+        return run_step3_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
 
 
 class ValueDriverWorker(BaseWorker):
@@ -96,7 +96,7 @@ class ValueDriverWorker(BaseWorker):
         return "CXIF Measure and Define (value driver tree + actionable insights)"
 
     def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
-        return run_step4_llm(state, get_chat_model(get_settings()))
+        return run_step4_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
 
 
 class ValuePropositionWorker(BaseWorker):
@@ -115,7 +115,7 @@ class ValuePropositionWorker(BaseWorker):
         return "Value Proposition Canvas"
 
     def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
-        return run_step5_llm(state, get_chat_model(get_settings()))
+        return run_step5_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
 
 
 class BusinessModelWorker(BaseWorker):
@@ -134,7 +134,7 @@ class BusinessModelWorker(BaseWorker):
         return "Business Model Canvas and Fit Assessment"
 
     def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
-        return run_step6_llm(state, get_chat_model(get_settings()))
+        return run_step6_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
 
 
 class RiskMapWorker(BaseWorker):
@@ -153,7 +153,7 @@ class RiskMapWorker(BaseWorker):
         return "Precoil EMT assumption mapping"
 
     def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
-        return run_step7_llm(state, get_chat_model(get_settings()))
+        return run_step7_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
 
 
 class ExperimentPlanWorker(BaseWorker):

@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { Box, Button, Text } from 'grommet';
+import { useRef, useContext } from 'react';
+import { Box, Button, Text, ResponsiveContext } from 'grommet';
 import { Download, Upload } from 'grommet-icons';
 import { stepFieldsToYaml, yamlToStepFields, stepYamlFilename } from '../utils/yamlStepFields.js';
 
@@ -9,6 +9,8 @@ import { stepFieldsToYaml, yamlToStepFields, stepYamlFilename } from '../utils/y
  */
 const StepToolbar = ({ stepIndex, stepLabel, runState, sessionId, onImport }) => {
   const fileInputRef = useRef(null);
+  const size = useContext(ResponsiveContext);
+  const isSmall = size === 'small';
 
   const handleDownload = () => {
     const yamlStr = stepFieldsToYaml(stepIndex, runState);
@@ -51,28 +53,29 @@ const StepToolbar = ({ stepIndex, stepLabel, runState, sessionId, onImport }) =>
 
   return (
     <Box
-      direction="row"
-      align="center"
+      direction={isSmall ? 'column' : 'row'}
+      align={isSmall ? 'start' : 'center'}
       justify="between"
-      pad={{ horizontal: 'medium', vertical: 'small' }}
+      pad={{ horizontal: isSmall ? 'small' : 'medium', vertical: 'small' }}
       border={{ side: 'bottom', color: 'border' }}
       flex={false}
+      gap={isSmall ? 'small' : undefined}
     >
-      <Text weight="bold" size="medium">
+      <Text weight="bold" size={isSmall ? 'small' : 'medium'}>
         Step {stepIndex + 1}: {stepLabel}
       </Text>
 
       <Box direction="row" gap="small">
         <Button
           icon={<Download size="small" />}
-          label="Download"
+          label={isSmall ? undefined : 'Download'}
           size="small"
           onClick={handleDownload}
           tip="Download step content as YAML"
         />
         <Button
           icon={<Upload size="small" />}
-          label="Upload"
+          label={isSmall ? undefined : 'Upload'}
           size="small"
           onClick={handleUploadClick}
           tip="Upload YAML to populate step fields"

@@ -1,5 +1,6 @@
+import { useContext } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Box, Header, Heading, Nav, Anchor, Text } from 'grommet';
+import { Box, Header, Heading, Nav, Anchor, Text, ResponsiveContext } from 'grommet';
 import { Hpe } from 'grommet-icons';
 import { WorkflowProvider } from './context/WorkflowContext.jsx';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
@@ -11,16 +12,19 @@ const AppHeader = () => {
   const { sessionId, clearSession } = useWorkflow();
   const location = useLocation();
   const onWorkflowPage = location.pathname === '/workflow';
+  const size = useContext(ResponsiveContext);
+  const isSmall = size === 'small';
 
   return (
     <Header
       background="background-front"
-      pad={{ horizontal: 'medium', vertical: 'small' }}
+      pad={{ horizontal: isSmall ? 'small' : 'medium', vertical: 'small' }}
       border={{ side: 'bottom', color: 'border' }}
+      responsive
     >
       <Box direction="row" align="center" gap="small">
         <Hpe color="brand" size="medium" />
-        <Heading level={4} margin="none">BMI Consultant</Heading>
+        {!isSmall && <Heading level={4} margin="none">BMI Consultant</Heading>}
       </Box>
       <Nav direction="row" gap="medium" align="center">
         {onWorkflowPage && sessionId && (

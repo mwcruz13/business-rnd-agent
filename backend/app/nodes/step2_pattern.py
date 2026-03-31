@@ -13,4 +13,4 @@ from backend.app.state import BMIWorkflowState
 
 
 def run_step(state: BMIWorkflowState) -> BMIWorkflowState:
-    return run_step2_llm(state, get_chat_model(get_settings()))
+    return run_step2_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))

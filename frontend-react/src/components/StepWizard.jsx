@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Box, Text, Notification, Spinner } from 'grommet';
+import { useState, useContext } from 'react';
+import { Box, Text, Notification, Spinner, ResponsiveContext } from 'grommet';
 import { useWorkflow } from '../context/WorkflowContext.jsx';
 import StepSidebar from './StepSidebar.jsx';
 import CheckpointActions from './CheckpointActions.jsx';
@@ -33,6 +33,8 @@ const StepWizard = () => {
 
   const [editMode, setEditMode] = useState(false);
   const [editState, setEditState] = useState({});
+  const size = useContext(ResponsiveContext);
+  const isSmall = size === 'small';
 
   const currentCheckpoint = runState?.pending_checkpoint || null;
 
@@ -72,7 +74,7 @@ const StepWizard = () => {
       />
 
       {/* Main content */}
-      <Box flex pad="medium" gap="small" overflow="auto" style={{ minHeight: 0 }}>
+      <Box flex pad={isSmall ? 'small' : 'medium'} gap="small" overflow="auto" style={{ minHeight: 0 }}>
         {/* Loading indicator */}
         {isLoading && (
           <Box direction="row" justify="end">

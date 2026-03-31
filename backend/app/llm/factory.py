@@ -7,12 +7,18 @@ from langchain_openai import AzureChatOpenAI
 from backend.app.config import Settings
 
 
-def get_chat_model(settings: Settings) -> BaseChatModel:
-    if settings.llm_backend == "ollama":
+def get_chat_model(settings: Settings, llm_backend: str | None = None) -> BaseChatModel:
+    backend_name = (llm_backend or settings.llm_backend).strip().lower()
+
+    if backend_name == "ollama":
         return ChatOllama(
             base_url=settings.ollama_base_url,
             model=settings.ollama_model,
+            format="json",
         )
+
+    if backend_name != "azure":
+        raise ValueError(f"Unsupported llm_backend: {backend_name}")
 
     return AzureChatOpenAI(
         azure_endpoint=settings.azure_openai_endpoint,

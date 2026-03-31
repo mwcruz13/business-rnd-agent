@@ -65,7 +65,7 @@ export async function startRun({ inputText, inputFormat, llmBackend, pauseAtChec
       llm_backend: llmBackend || 'azure',
       pause_at_checkpoints: pauseAtCheckpoints,
     },
-    timeout: 300000,
+    timeout: 900000,
   });
 }
 
@@ -78,7 +78,7 @@ export async function resumeRun(sessionId, { decision, editState }) {
   if (editState) body.edit_state = editState;
   return request('POST', `/runs/${encodeURIComponent(sessionId)}/resume`, {
     body,
-    timeout: 300000,
+    timeout: 900000,
   });
 }
 
@@ -90,7 +90,7 @@ export async function startFromStep({ stepNumber, initialState, llmBackend, sess
       llm_backend: llmBackend || 'azure',
       session_id: sessionId || undefined,
     },
-    timeout: 300000,
+    timeout: 900000,
   });
 }
 

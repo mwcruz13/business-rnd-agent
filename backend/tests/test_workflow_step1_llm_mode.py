@@ -3,9 +3,12 @@ from __future__ import annotations
 from types import SimpleNamespace
 from uuid import uuid4
 
+import pytest
+
 from backend.app.nodes import step1_signal
 from backend.app.nodes.step1_signal_llm import SignalScanResult
 from backend.app.workers import steps as worker_steps
+from backend.app.llm.factory import get_chat_model
 from backend.app.workflow import get_run_state
 from backend.app.workflow import run_workflow_from_voc_data
 
@@ -89,7 +92,7 @@ def test_workflow_service_can_pause_after_step1_in_llm_mode(monkeypatch) -> None
             "get_settings",
             lambda: SimpleNamespace(llm_backend="azure"),
         )
-        monkeypatch.setattr(target_module, "get_chat_model", lambda settings: fake_model)
+        monkeypatch.setattr(target_module, "get_chat_model", lambda settings, llm_backend=None: fake_model)
 
     first_pause = run_workflow_from_voc_data(
         "Customers report onboarding friction, too many manual steps, and delays before they reach value.",
@@ -110,3 +113,36 @@ def test_workflow_service_can_pause_after_step1_in_llm_mode(monkeypatch) -> None
     assert persisted["run_status"] == "paused"
     assert persisted["pending_checkpoint"] == "checkpoint_1"
     assert persisted["signals"][0]["signal"] == first_pause["signals"][0]["signal"]
+
+
+def test_get_chat_model_uses_runtime_ollama_override() -> None:
+    settings = SimpleNamespace(
+        llm_backend="azure",
+        ollama_base_url="http://ollama.local:11434",
+        ollama_model="nemotron-test",
+        azure_openai_endpoint="https://example.openai.azure.com",
+        azure_openai_api_key="secret",
+        azure_openai_api_version="2025-01-01-preview",
+        azure_openai_deployment_chat="chat-deployment",
+    )
+
+    model = get_chat_model(settings, "ollama")
+
+    assert model.__class__.__name__ == "ChatOllama"
+    assert getattr(model, "model") == "nemotron-test"
+    assert str(getattr(model, "base_url")) == "http://ollama.local:11434"
+
+
+def test_get_chat_model_rejects_unsupported_backend() -> None:
+    settings = SimpleNamespace(
+        llm_backend="azure",
+        ollama_base_url="http://ollama.local:11434",
+        ollama_model="nemotron-test",
+        azure_openai_endpoint="https://example.openai.azure.com",
+        azure_openai_api_key="secret",
+        azure_openai_api_version="2025-01-01-preview",
+        azure_openai_deployment_chat="chat-deployment",
+    )
+
+    with pytest.raises(ValueError, match="Unsupported llm_backend: openai"):
+        get_chat_model(settings, "openai")

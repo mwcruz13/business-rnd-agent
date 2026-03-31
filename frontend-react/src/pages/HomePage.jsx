@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Button, Heading, Text, TextArea, TextInput, Select, FileInput,
-  Card, CardBody, CardHeader, Notification,
+  Card, CardBody, CardHeader, Notification, ResponsiveContext,
 } from 'grommet';
 import { PlayFill, Document } from 'grommet-icons';
 import { useWorkflow } from '../context/WorkflowContext.jsx';
@@ -165,9 +165,12 @@ const HomePage = () => {
     }
   };
 
+  const size = useContext(ResponsiveContext);
+  const isSmall = size === 'small';
+
   return (
-    <Box align="center" pad="large" gap="medium" fill>
-      <Box width="large" gap="medium">
+    <Box align="center" pad={{ horizontal: isSmall ? 'medium' : 'large', vertical: 'medium' }} gap="medium" fill>
+      <Box width={{ max: 'xlarge' }} fill="horizontal" gap="medium">
         <Heading level={2} margin="none">BMI Consultant Workflow</Heading>
         <Text color="text-weak">
           Start a new business model innovation workflow or resume an existing session.
@@ -207,7 +210,7 @@ const HomePage = () => {
               />
             </Box>
 
-            <Box direction="row" gap="medium">
+            <Box direction={isSmall ? 'column' : 'row'} gap="medium">
               <Box gap="xsmall" flex>
                 <Text size="small" weight="bold">Input Format</Text>
                 <Select
@@ -219,7 +222,7 @@ const HomePage = () => {
               <Box gap="xsmall" flex>
                 <Text size="small" weight="bold">LLM Backend</Text>
                 <Select
-                  options={['azure', 'openai', 'ollama']}
+                  options={['azure', 'ollama']}
                   value={llmBackend}
                   onChange={({ option }) => setLlmBackend(option)}
                 />
