@@ -23,3 +23,32 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* ---- Always-visible scrollbars ---- */
+/* Reserve gutter space so layout does not shift when content grows */
+* {
+  scrollbar-gutter: stable;
+}
+
+/* Webkit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.18) rgba(0, 0, 0, 0.04);
+}

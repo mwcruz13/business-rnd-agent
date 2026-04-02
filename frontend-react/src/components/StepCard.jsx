@@ -19,7 +19,7 @@ const StepCard = ({
     round="small"
     elevation="small"
     fill
-    overflow="hidden"
+    overflow={{ horizontal: 'hidden', vertical: 'auto' }}
   >
     <StepToolbar
       stepIndex={stepIndex}
