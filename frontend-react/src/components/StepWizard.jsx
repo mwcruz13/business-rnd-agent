@@ -1,7 +1,8 @@
 import { useState, useContext } from 'react';
-import { Box, Text, Notification, Spinner, ResponsiveContext } from 'grommet';
+import { Box, Text, Notification, Spinner, Button, ResponsiveContext } from 'grommet';
+import { Revert } from 'grommet-icons';
 import { useWorkflow } from '../context/WorkflowContext.jsx';
-import StepSidebar from './StepSidebar.jsx';
+import StepSidebar, { STEPS } from './StepSidebar.jsx';
 import CheckpointActions from './CheckpointActions.jsx';
 
 // Dynamic step component imports (lazy-style, but kept simple for Phase 3)
@@ -28,7 +29,7 @@ const STEP_COMPONENTS = [
 const StepWizard = () => {
   const {
     sessionId, runState, activeStep, isLoading, error,
-    resumeWorkflow, goToStep, setError,
+    resumeWorkflow, restartFromStep, goToStep, setError,
   } = useWorkflow();
 
   const [editMode, setEditMode] = useState(false);
@@ -37,6 +38,20 @@ const StepWizard = () => {
   const isSmall = size === 'small';
 
   const currentCheckpoint = runState?.pending_checkpoint || null;
+  const completedSteps = runState?.completed_steps || [];
+
+  // The step name the user is currently viewing in the sidebar.
+  const viewingStepKey = STEPS[activeStep]?.key;
+
+  // True when the user is viewing a step that was already completed and is
+  // NOT the step where the workflow is currently paused.  This covers both
+  // "completed" runs and "paused" runs where the user navigates back.
+  const isViewingCompletedStep =
+    completedSteps.includes(viewingStepKey) &&
+    runState?.run_status !== 'in_progress' &&
+    // Don't show restart bar on the step that's pending checkpoint approval —
+    // that step already has the checkpoint Approve/Edit bar.
+    !(currentCheckpoint && activeStep === completedSteps.length);
 
   // Determine which step component to render
   const StepComponent = STEP_COMPONENTS[activeStep] ?? null;
@@ -62,6 +77,21 @@ const StepWizard = () => {
   const handleCancel = () => {
     setEditMode(false);
     setEditState({});
+  };
+
+  const handleRestartFromHere = async () => {
+    try {
+      const stepNumber = activeStep + 1; // 1-based
+      if (editMode) {
+        await restartFromStep(stepNumber, editState);
+        setEditMode(false);
+        setEditState({});
+      } else {
+        await restartFromStep(stepNumber);
+      }
+    } catch {
+      // error already set in context
+    }
   };
 
   return (
@@ -130,6 +160,60 @@ const StepWizard = () => {
             isLoading={isLoading}
             editMode={editMode}
           />
+        )}
+
+        {/* Restart-from-step actions for previously completed steps */}
+        {isViewingCompletedStep && (
+          <Box
+            direction={isSmall ? 'column' : 'row'}
+            gap="small"
+            pad="small"
+            border={{ side: 'top', color: 'border' }}
+            justify={isSmall ? 'center' : 'end'}
+            align={isSmall ? 'stretch' : 'center'}
+            background="background-front"
+          >
+            <Text size="small" color="text-weak" margin={isSmall ? undefined : { right: 'auto' }}>
+              Reviewing completed step {activeStep + 1}
+            </Text>
+            {editMode ? (
+              <>
+                <Button
+                  label="Cancel"
+                  onClick={handleCancel}
+                  disabled={isLoading}
+                  secondary
+                  size="small"
+                />
+                <Button
+                  label="Save & Restart from here"
+                  icon={<Revert size="small" />}
+                  onClick={handleRestartFromHere}
+                  disabled={isLoading}
+                  primary
+                  size="small"
+                />
+              </>
+            ) : (
+              <>
+                <Button
+                  label="Edit"
+                  onClick={handleEdit}
+                  disabled={isLoading}
+                  secondary
+                  size="small"
+                />
+                <Button
+                  label="Restart from here"
+                  icon={<Revert size="small" />}
+                  onClick={handleRestartFromHere}
+                  disabled={isLoading}
+                  primary
+                  size="small"
+                />
+              </>
+            )}
+          </Box>
         )}
       </Box>
     </Box>

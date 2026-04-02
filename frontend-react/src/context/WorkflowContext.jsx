@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
-import { startRun, getRunState, resumeRun, startFromStep as apiStartFromStep } from '../api/workflowApi.js';
+import { startRun, getRunState, resumeRun, startFromStep as apiStartFromStep, restartFromStep as apiRestartFromStep } from '../api/workflowApi.js';
 
 const WorkflowContext = createContext(null);
 
@@ -105,6 +105,23 @@ export function WorkflowProvider({ children }) {
     }
   }, [persistSession]);
 
+  const restartFromStep = useCallback(async (stepNumber, editState) => {
+    if (!sessionId) throw new Error('No active session');
+    setIsLoading(true);
+    setError(null);
+    try {
+      const state = await apiRestartFromStep(sessionId, { stepNumber, editState });
+      setRunState(state);
+      setActiveStep(resolveStepIndex(state));
+      return state;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [sessionId]);
+
   const goToStep = useCallback((index) => {
     setActiveStep(index);
   }, []);
@@ -124,6 +141,7 @@ export function WorkflowProvider({ children }) {
     error,
     startWorkflow,
     startFromStep,
+    restartFromStep,
     loadSession,
     resumeWorkflow,
     goToStep,

@@ -94,6 +94,15 @@ export async function startFromStep({ stepNumber, initialState, llmBackend, sess
   });
 }
 
+export async function restartFromStep(sessionId, { stepNumber, editState }) {
+  const body = { step_number: stepNumber };
+  if (editState) body.edit_state = editState;
+  return request('POST', `/runs/${encodeURIComponent(sessionId)}/restart`, {
+    body,
+    timeout: 900000,
+  });
+}
+
 export async function getStepOutput(sessionId, stepNumber) {
   return request('GET', `/runs/${encodeURIComponent(sessionId)}/step/${stepNumber}`);
 }

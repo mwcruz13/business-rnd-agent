@@ -231,9 +231,54 @@ def resume_workflow(
             advance_index = WORKFLOW_STEP_ORDER.index(checkpoint.after_step_name) + 1
             state_to_resume["completed_steps"] = steps_completed_before(advance_index)
 
-        session.commit()
+        # Execute next steps within the same transaction so that checkpoint
+        # resolution is rolled back if execution fails (atomicity fix).
+        return _execute_orchestrated(
+            session_id, state_to_resume, pause_at_checkpoints=True, db_session=session,
+        )
 
-    return _execute_orchestrated(session_id, state_to_resume, pause_at_checkpoints=True)
+
+def restart_from_step(
+    session_id: str,
+    step_number: int,
+    *,
+    edit_state: dict[str, Any] | None = None,
+) -> BMIWorkflowState:
+    """Rewind an existing session to *step_number* and re-execute from there.
+
+    The caller may optionally supply *edit_state* to override fields before
+    re-execution (e.g. the user edited the Business Model Canvas).
+    """
+    ensure_database_schema()
+    if step_number < 1 or step_number > len(WORKFLOW_STEP_ORDER):
+        raise ValueError(f"step_number must be between 1 and {len(WORKFLOW_STEP_ORDER)}")
+
+    step_index = step_number - 1
+
+    with SessionLocal() as session:
+        run = session.get(WorkflowRun, session_id)
+        if run is None:
+            raise ValueError(f"Unknown workflow session: {session_id}")
+
+        # Build the state to resume from the persisted run state.
+        current = BMIWorkflowState(copy.deepcopy(run.state_json))
+
+        # Apply user edits if provided.
+        if edit_state:
+            for key, value in edit_state.items():
+                current[key] = value
+
+        # Rewind completed_steps so that the target step and all later steps
+        # will be re-executed.
+        current["completed_steps"] = steps_completed_before(step_index)
+
+        # Invalidate any pending checkpoint so the run can proceed.
+        run.status = "in_progress"
+        run.pending_checkpoint = None
+
+        return _execute_orchestrated(
+            session_id, current, pause_at_checkpoints=True, db_session=session,
+        )
 
 
 def _render_csv_rows_as_voc_data(rows: list[dict[str, str]]) -> str:
@@ -275,12 +320,20 @@ def _execute_orchestrated(
     state: BMIWorkflowState,
     *,
     pause_at_checkpoints: bool,
+    db_session=None,
 ) -> BMIWorkflowState:
+    """Run the workflow loop, optionally reusing a caller-provided DB session.
+
+    When *db_session* is supplied the caller owns the transaction boundary,
+    which lets ``resume_workflow`` and ``restart_from_step`` keep checkpoint
+    resolution and step execution in a single atomic commit.
+    """
     current_state = BMIWorkflowState(copy.deepcopy(state))
     if "completed_steps" not in current_state:
         current_state["completed_steps"] = []
 
-    with SessionLocal() as session:
+    def _run_within(session):
+        nonlocal current_state
         run = session.get(WorkflowRun, session_id)
         if run is None:
             raise ValueError(f"Unknown workflow session: {session_id}")
@@ -335,6 +388,12 @@ def _execute_orchestrated(
         run.state_json = dict(completed_state)
         session.commit()
         return completed_state
+
+    if db_session is not None:
+        return _run_within(db_session)
+
+    with SessionLocal() as session:
+        return _run_within(session)
 
 
 def _persist_completed_run(final_state: BMIWorkflowState) -> None:

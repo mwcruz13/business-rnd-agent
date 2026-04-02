@@ -8,6 +8,7 @@ from backend.app.config import get_settings
 from backend.app.db.session import DatabaseSchemaNotReadyError
 from backend.app.workflow import get_run_state
 from backend.app.workflow import get_step_output
+from backend.app.workflow import restart_from_step
 from backend.app.workflow import resume_workflow
 from backend.app.workflow import run_workflow_from_csv_text
 from backend.app.workflow import run_workflow_from_path, run_workflow_from_voc_data
@@ -36,6 +37,11 @@ class RunWorkflowRequest(BaseModel):
 
 class ResumeWorkflowRequest(BaseModel):
     decision: str
+    edit_state: dict[str, Any] | None = None
+
+
+class RestartFromStepRequest(BaseModel):
+    step_number: int
     edit_state: dict[str, Any] | None = None
 
 
@@ -103,6 +109,24 @@ def get_workflow_run(session_id: str) -> dict[str, Any]:
 def resume_workflow_run(session_id: str, request: ResumeWorkflowRequest) -> dict[str, Any]:
     try:
         result = resume_workflow(session_id, decision=request.decision, edit_state=request.edit_state)
+    except ValueError as error:
+        message = str(error)
+        if message.startswith("Unknown workflow session"):
+            raise HTTPException(status_code=404, detail=message) from error
+        raise HTTPException(status_code=422, detail=message) from error
+    except DatabaseSchemaNotReadyError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    return dict(result)
+
+
+@app.post("/runs/{session_id}/restart")
+def restart_workflow_from_step(session_id: str, request: RestartFromStepRequest) -> dict[str, Any]:
+    try:
+        result = restart_from_step(
+            session_id,
+            request.step_number,
+            edit_state=request.edit_state,
+        )
     except ValueError as error:
         message = str(error)
         if message.startswith("Unknown workflow session"):

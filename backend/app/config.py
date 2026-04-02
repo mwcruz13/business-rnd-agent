@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     azure_openai_deployment_chat: str = ""
     azure_openai_deployment_embedding: str = ""
     ollama_base_url: str = "http://192.168.100.250:11434"
-    ollama_model: str = "nemotron-3-super:latest"
+    ollama_model: str = "nemotron-cascade-2:30b"
     postgres_host: str = "bmi-postgres"
     postgres_port: int = 5432
     postgres_db: str = "postgres"
