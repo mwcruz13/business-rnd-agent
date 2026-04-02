@@ -50,6 +50,7 @@ export const STEP_YAML_FIELDS = [
     { key: 'experiment_selections', label: 'Experiment Selections', type: 'text' },
     { key: 'experiment_plans', label: 'Experiment Plans', type: 'text' },
     { key: 'experiment_worksheets', label: 'Experiment Worksheets', type: 'text' },
+    { key: 'experiment_cards', label: 'Experiment Cards', type: 'json' },
   ],
 ];
 

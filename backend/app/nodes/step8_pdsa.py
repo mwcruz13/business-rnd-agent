@@ -342,7 +342,130 @@ def _format_worksheet(assumption: TopAssumption, primary_card: ExperimentCard, n
     )
 
 
-def _build_outputs(state: BMIWorkflowState) -> tuple[str, str, str]:
+def _build_card_object(
+    assumption: TopAssumption,
+    primary_card: ExperimentCard,
+    path: list[ExperimentCard],
+    card_index: int,
+) -> dict[str, object]:
+    next_card = path[1] if len(path) > 1 else None
+    return {
+        "id": f"exp-{card_index:03d}",
+        "assumption": assumption.assumption,
+        "category": assumption.category,
+        "evidence_strength": primary_card.evidence_strength,
+        "card_name": primary_card.name,
+        "what_it_tests": primary_card.what_it_tests,
+        "best_used_when": primary_card.best_used_when,
+        "test_audience": "The stakeholders closest to the risk described in the assumption.",
+        "sample_size": 8,
+        "timebox": "1 week",
+        "primary_metric": PRIMARY_METRICS[assumption.category],
+        "secondary_metrics": SECONDARY_METRICS[assumption.category],
+        "success_looks_like": "The result clearly strengthens confidence and justifies moving to the next experiment.",
+        "failure_looks_like": "The result clearly lowers confidence or exposes a more important risk.",
+        "ambiguous_looks_like": "The signal is mixed and leaves the assumption unresolved.",
+        "sequencing": {
+            "usually_runs_after": list(primary_card.usually_runs_after),
+            "next_if_positive": next_card.name if next_card else None,
+            "next_if_mixed": next_card.name if next_card else None,
+        },
+        "selection_rationale": (
+            f"This sequence starts with {primary_card.name} because the assumption currently "
+            f"has no direct evidence and needs the cheapest credible signal first."
+        ),
+        "evidence_path": [
+            {
+                "step": idx + 1,
+                "card_name": c.name,
+                "evidence_strength": c.evidence_strength,
+            }
+            for idx, c in enumerate(path)
+        ],
+        "status": "planned",
+        "owner": None,
+        "date_started": None,
+        "date_completed": None,
+        "evidence": {
+            "what_customers_said": None,
+            "what_customers_did": None,
+            "what_surprised_us": None,
+            "confidence_change": None,
+            "decision": None,
+            "next_experiment": None,
+            "notes": None,
+        },
+    }
+
+
+VALID_CARD_STATUSES = {"planned", "running", "evidence_captured", "decision_made"}
+VALID_CONFIDENCE_VALUES = {"increased", "decreased", "unchanged"}
+VALID_DECISION_VALUES = {"continue", "refine", "stop"}
+
+UPDATABLE_EVIDENCE_FIELDS = {
+    "status", "owner", "date_started", "date_completed",
+    "evidence",
+}
+
+
+def update_experiment_card_evidence(
+    card: dict[str, object],
+    updates: dict[str, object],
+) -> dict[str, object]:
+    """Apply only Zone B (evidence) updates to an experiment card dict.
+
+    Returns a new dict with the updates merged. Raises ValueError for
+    invalid field names or values.
+    """
+    disallowed = set(updates.keys()) - UPDATABLE_EVIDENCE_FIELDS
+    if disallowed:
+        raise ValueError(f"Cannot update Zone A fields: {', '.join(sorted(disallowed))}")
+
+    result = dict(card)
+
+    if "status" in updates:
+        if updates["status"] not in VALID_CARD_STATUSES:
+            raise ValueError(
+                f"Invalid status '{updates['status']}'. "
+                f"Allowed: {', '.join(sorted(VALID_CARD_STATUSES))}"
+            )
+        result["status"] = updates["status"]
+
+    for field in ("owner", "date_started", "date_completed"):
+        if field in updates:
+            result[field] = updates[field]
+
+    if "evidence" in updates:
+        merged_evidence = dict(result.get("evidence") or {})
+        incoming = updates["evidence"]
+        if not isinstance(incoming, dict):
+            raise ValueError("evidence must be a dict")
+        for key, value in incoming.items():
+            if key not in {
+                "what_customers_said", "what_customers_did",
+                "what_surprised_us", "confidence_change",
+                "decision", "next_experiment", "notes",
+            }:
+                raise ValueError(f"Unknown evidence field: {key}")
+            if key == "confidence_change" and value is not None:
+                if value not in VALID_CONFIDENCE_VALUES:
+                    raise ValueError(
+                        f"Invalid confidence_change '{value}'. "
+                        f"Allowed: {', '.join(sorted(VALID_CONFIDENCE_VALUES))}"
+                    )
+            if key == "decision" and value is not None:
+                if value not in VALID_DECISION_VALUES:
+                    raise ValueError(
+                        f"Invalid decision '{value}'. "
+                        f"Allowed: {', '.join(sorted(VALID_DECISION_VALUES))}"
+                    )
+            merged_evidence[key] = value
+        result["evidence"] = merged_evidence
+
+    return result
+
+
+def _build_outputs(state: BMIWorkflowState) -> tuple[str, str, str, list[dict[str, object]]]:
     cards, precoil_library = _load_assets()
     if "step_8_behavior" not in precoil_library.get("agent_usage_guidance", {}):
         raise ValueError("Unexpected Precoil step 8 guidance")
@@ -351,6 +474,7 @@ def _build_outputs(state: BMIWorkflowState) -> tuple[str, str, str]:
     selections: list[str] = []
     plans: list[str] = []
     worksheets: list[str] = []
+    card_objects: list[dict[str, object]] = []
 
     for assumption in top_assumptions:
         path = _get_category_path(assumption.category, cards)
@@ -359,16 +483,18 @@ def _build_outputs(state: BMIWorkflowState) -> tuple[str, str, str]:
         plans.append(_format_implementation_plan(assumption, path[0]))
         plans.append(_format_evidence_sequence(assumption, path))
         worksheets.append(_format_worksheet(assumption, path[0], path[1] if len(path) > 1 else None))
+        card_objects.append(_build_card_object(assumption, path[0], path, len(card_objects) + 1))
 
-    return "\n\n".join(selections), "\n\n".join(plans), "\n\n".join(worksheets)
+    return "\n\n".join(selections), "\n\n".join(plans), "\n\n".join(worksheets), card_objects
 
 
 def run_step(state: BMIWorkflowState) -> BMIWorkflowState:
-    experiment_selections, experiment_plans, experiment_worksheets = _build_outputs(state)
+    experiment_selections, experiment_plans, experiment_worksheets, experiment_cards = _build_outputs(state)
     return {
         **state,
         "current_step": "pdsa_plan",
         "experiment_selections": experiment_selections,
         "experiment_plans": experiment_plans,
         "experiment_worksheets": experiment_worksheets,
+        "experiment_cards": experiment_cards,
     }

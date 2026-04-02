@@ -107,4 +107,10 @@ export async function getStepOutput(sessionId, stepNumber) {
   return request('GET', `/runs/${encodeURIComponent(sessionId)}/step/${stepNumber}`);
 }
 
+export async function updateExperimentCard(sessionId, cardId, updates) {
+  return request('PATCH', `/runs/${encodeURIComponent(sessionId)}/experiment-cards/${encodeURIComponent(cardId)}`, {
+    body: { updates },
+  });
+}
+
 export { ApiError };

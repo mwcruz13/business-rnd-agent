@@ -9,6 +9,7 @@ from backend.app.db.session import DatabaseSchemaNotReadyError
 from backend.app.workflow import get_run_state
 from backend.app.workflow import get_step_output
 from backend.app.workflow import restart_from_step
+from backend.app.workflow import update_experiment_card
 from backend.app.workflow import resume_workflow
 from backend.app.workflow import run_workflow_from_csv_text
 from backend.app.workflow import run_workflow_from_path, run_workflow_from_voc_data
@@ -21,7 +22,7 @@ app = FastAPI(title="BMI Consultant Backend", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:8501", "http://localhost:8080"],
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PATCH"],
     allow_headers=["Content-Type"],
 )
 
@@ -43,6 +44,10 @@ class ResumeWorkflowRequest(BaseModel):
 class RestartFromStepRequest(BaseModel):
     step_number: int
     edit_state: dict[str, Any] | None = None
+
+
+class UpdateExperimentCardRequest(BaseModel):
+    updates: dict[str, Any]
 
 
 class StartFromStepRequest(BaseModel):
@@ -135,6 +140,23 @@ def restart_workflow_from_step(session_id: str, request: RestartFromStepRequest)
     except DatabaseSchemaNotReadyError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     return dict(result)
+
+
+@app.patch("/runs/{session_id}/experiment-cards/{card_id}")
+def patch_experiment_card(
+    session_id: str, card_id: str, request: UpdateExperimentCardRequest,
+) -> dict[str, Any]:
+    try:
+        return update_experiment_card(session_id, card_id, request.updates)
+    except ValueError as error:
+        message = str(error)
+        if message.startswith("Unknown workflow session"):
+            raise HTTPException(status_code=404, detail=message) from error
+        if "not found" in message:
+            raise HTTPException(status_code=404, detail=message) from error
+        raise HTTPException(status_code=422, detail=message) from error
+    except DatabaseSchemaNotReadyError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
 
 
 @app.post("/runs/start-from-step")

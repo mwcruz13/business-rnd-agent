@@ -9,6 +9,16 @@ Feature: Step 8 PDSA experiment designer
     And the workflow state contains experiment selections
     And the workflow state contains experiment plans
     And the workflow state contains experiment worksheets
+    And the workflow state contains structured experiment cards
+
+  Scenario: Step 8 produces interactive experiment card objects
+    Given a workflow state with completed Step 7 risk outputs
+    When the Step 8 PDSA experiment designer node runs
+    Then each experiment card has a unique id and correct structure
+    And each experiment card matches a top assumption
+    And each experiment card starts with planned status and empty evidence
+    And experiment card evidence can be updated with valid Zone B fields
+    And experiment card rejects updates to Zone A fields
 
   Scenario: Step 8 uses canonical experiment cards and documented artifact formats
     Given a workflow state with completed Step 7 risk outputs

@@ -1,13 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { Box, Text, TextArea, Tab } from 'grommet';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import StepCard from '../components/StepCard.jsx';
+import ExperimentCardDeck from '../components/ExperimentCardDeck.jsx';
 
 const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sessionId }) => {
   if (!runState) return <Text color="text-weak">Waiting for workflow to start…</Text>;
 
-  const { experiment_selections, experiment_plans, experiment_worksheets } = runState;
+  const {
+    experiment_selections, experiment_plans, experiment_worksheets, experiment_cards,
+  } = runState;
 
   useEffect(() => {
     if (editMode && Object.keys(editState).length === 0) {
@@ -19,14 +22,38 @@ const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sess
     }
   }, [editMode]);
 
-  if (!experiment_selections && !experiment_plans) {
+  if (!experiment_selections && !experiment_plans && (!experiment_cards || experiment_cards.length === 0)) {
     return <Text color="text-weak">Step 8 has not run yet.</Text>;
   }
 
   const handleImport = (fields) => onEditChange({ ...editState, ...fields });
 
+  const handleCardUpdated = useCallback((cardId, updatedCard) => {
+    // Update the local runState experiment_cards optimistically
+    if (!runState.experiment_cards) return;
+    const idx = runState.experiment_cards.findIndex((c) => c.id === cardId);
+    if (idx >= 0) {
+      runState.experiment_cards[idx] = updatedCard;
+    }
+  }, [runState]);
+
   return (
     <StepCard stepIndex={7} stepLabel="Experiment Plan" runState={runState} sessionId={sessionId} onImport={handleImport}>
+      {/* Primary tab: interactive cards */}
+      <Tab title="Experiment Cards">
+        <Box pad="medium" overflow="auto">
+          {experiment_cards && experiment_cards.length > 0 ? (
+            <ExperimentCardDeck
+              cards={experiment_cards}
+              sessionId={sessionId}
+              onCardUpdated={handleCardUpdated}
+            />
+          ) : (
+            <Text color="text-weak">No experiment cards yet. Check the Selections tab for the raw output.</Text>
+          )}
+        </Box>
+      </Tab>
+
       <Tab title="Selections">
         <Box pad="medium" overflow="auto">
           {editMode ? (

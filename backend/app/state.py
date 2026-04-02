@@ -29,6 +29,7 @@ class BMIWorkflowState(TypedDict, total=False):
     experiment_selections: str
     experiment_plans: str
     experiment_worksheets: str
+    experiment_cards: list[dict[str, object]]
     # Orchestration fields (Phase 1)
     next_step: str
     completed_steps: list[str]

@@ -132,6 +132,43 @@ def get_step_output(session_id: str, step_number: int) -> dict[str, Any]:
         return {"step_number": record.step_number, "step_name": record.step_name, "output": record.output_json}
 
 
+def update_experiment_card(
+    session_id: str,
+    card_id: str,
+    updates: dict[str, Any],
+) -> dict[str, Any]:
+    """Apply Zone B evidence updates to a single experiment card and persist."""
+    from backend.app.nodes.step8_pdsa import update_experiment_card_evidence
+
+    ensure_database_schema()
+    with SessionLocal() as session:
+        run = session.get(WorkflowRun, session_id)
+        if run is None:
+            raise ValueError(f"Unknown workflow session: {session_id}")
+
+        state = dict(run.state_json)
+        cards = state.get("experiment_cards")
+        if not cards or not isinstance(cards, list):
+            raise ValueError("Session has no experiment cards")
+
+        card_index = None
+        for idx, card in enumerate(cards):
+            if card.get("id") == card_id:
+                card_index = idx
+                break
+
+        if card_index is None:
+            raise ValueError(f"Experiment card '{card_id}' not found in session {session_id}")
+
+        cards[card_index] = update_experiment_card_evidence(cards[card_index], updates)
+        state["experiment_cards"] = cards
+
+        run.state_json = state
+        session.commit()
+
+        return cards[card_index]
+
+
 def start_workflow_from_step(
     step_number: int,
     initial_state: dict[str, Any],

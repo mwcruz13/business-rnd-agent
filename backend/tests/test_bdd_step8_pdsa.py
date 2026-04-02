@@ -1,6 +1,7 @@
 from pytest_bdd import given, scenarios, then, when
+import pytest
 
-from backend.app.nodes.step8_pdsa import run_step
+from backend.app.nodes.step8_pdsa import run_step, update_experiment_card_evidence
 from backend.app.state import BMIWorkflowState
 
 
@@ -171,3 +172,76 @@ def assert_exact_assumptions(step8_result: BMIWorkflowState) -> None:
         assert assumption in step8_result["experiment_selections"]
         assert assumption in step8_result["experiment_plans"]
         assert assumption in step8_result["experiment_worksheets"]
+
+
+@then("the workflow state contains structured experiment cards")
+def assert_experiment_cards_present(step8_result: BMIWorkflowState) -> None:
+    cards = step8_result.get("experiment_cards")
+    assert isinstance(cards, list)
+    assert len(cards) == 3  # one per top assumption (D, V, F)
+
+
+@then("each experiment card has a unique id and correct structure")
+def assert_card_structure(step8_result: BMIWorkflowState) -> None:
+    cards = step8_result["experiment_cards"]
+    ids = set()
+    required_fields = {
+        "id", "assumption", "category", "evidence_strength", "card_name",
+        "what_it_tests", "best_used_when", "primary_metric", "secondary_metrics",
+        "success_looks_like", "failure_looks_like", "ambiguous_looks_like",
+        "sequencing", "evidence_path", "status", "evidence",
+    }
+    for card in cards:
+        assert card["id"] not in ids, f"Duplicate card id: {card['id']}"
+        ids.add(card["id"])
+        missing = required_fields - set(card.keys())
+        assert not missing, f"Card {card['id']} missing fields: {missing}"
+
+
+@then("each experiment card matches a top assumption")
+def assert_cards_match_assumptions(step8_result: BMIWorkflowState) -> None:
+    cards = step8_result["experiment_cards"]
+    card_assumptions = {c["assumption"] for c in cards}
+    for assumption_text in TOP_ASSUMPTIONS.values():
+        assert assumption_text in card_assumptions
+
+
+@then("each experiment card starts with planned status and empty evidence")
+def assert_cards_initial_state(step8_result: BMIWorkflowState) -> None:
+    for card in step8_result["experiment_cards"]:
+        assert card["status"] == "planned"
+        assert card["owner"] is None
+        evidence = card["evidence"]
+        for key in ("what_customers_said", "what_customers_did", "what_surprised_us",
+                     "confidence_change", "decision", "next_experiment", "notes"):
+            assert evidence[key] is None, f"evidence.{key} should be None"
+
+
+@then("experiment card evidence can be updated with valid Zone B fields")
+def assert_evidence_update(step8_result: BMIWorkflowState) -> None:
+    card = step8_result["experiment_cards"][0]
+    updated = update_experiment_card_evidence(card, {
+        "status": "running",
+        "owner": "Jane Doe",
+        "evidence": {
+            "what_customers_said": "They confirmed the pain is real.",
+            "confidence_change": "increased",
+        },
+    })
+    assert updated["status"] == "running"
+    assert updated["owner"] == "Jane Doe"
+    assert updated["evidence"]["what_customers_said"] == "They confirmed the pain is real."
+    assert updated["evidence"]["confidence_change"] == "increased"
+    # Original evidence fields remain None
+    assert updated["evidence"]["what_customers_did"] is None
+
+
+@then("experiment card rejects updates to Zone A fields")
+def assert_zone_a_rejected(step8_result: BMIWorkflowState) -> None:
+    card = step8_result["experiment_cards"][0]
+    with pytest.raises(ValueError, match="Cannot update Zone A fields"):
+        update_experiment_card_evidence(card, {"assumption": "Hacked"})
+    with pytest.raises(ValueError, match="Cannot update Zone A fields"):
+        update_experiment_card_evidence(card, {"card_name": "Fake Card"})
+    with pytest.raises(ValueError, match="Invalid status"):
+        update_experiment_card_evidence(card, {"status": "bogus"})
