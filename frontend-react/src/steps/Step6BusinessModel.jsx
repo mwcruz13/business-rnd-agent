@@ -35,7 +35,7 @@ const Step6BusinessModel = ({ runState, editMode, editState, onEditChange, sessi
               resize="vertical"
             />
           ) : (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {business_model_canvas}
               </ReactMarkdown>

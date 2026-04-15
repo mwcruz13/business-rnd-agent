@@ -1,5 +1,4 @@
-import { useContext } from 'react';
-import { Box, Button, Text, ResponsiveContext } from 'grommet';
+import { Box, Button, Text } from 'grommet';
 import { Checkmark, Edit, Close } from 'grommet-icons';
 
 /**
@@ -13,22 +12,20 @@ const CheckpointActions = ({
   isLoading,
   editMode,
 }) => {
-  const size = useContext(ResponsiveContext);
-  const isSmall = size === 'small';
-
   if (!checkpointId) return null;
 
   return (
     <Box
-      direction={isSmall ? 'column' : 'row'}
+      direction="row"
+      wrap
       gap="small"
       pad="small"
       border={{ side: 'top', color: 'border' }}
-      justify={isSmall ? 'center' : 'end'}
-      align={isSmall ? 'stretch' : 'center'}
+      justify="end"
+      align="center"
       background="background-front"
     >
-      <Text size="small" color="text-weak" margin={isSmall ? undefined : { right: 'auto' }}>
+      <Text size="small" color="text-weak" margin={{ right: 'auto' }}>
         Checkpoint: <strong>{checkpointId}</strong>
       </Text>
 

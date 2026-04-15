@@ -60,7 +60,7 @@ const Step1SignalScan = ({ runState, editMode, editState, onEditChange, sessionI
               resize="vertical"
             />
           ) : agent_recommendation ? (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {agent_recommendation}
               </ReactMarkdown>

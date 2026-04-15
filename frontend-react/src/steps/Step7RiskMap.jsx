@@ -40,7 +40,7 @@ const Step7RiskMap = ({ runState, editMode, editState, onEditChange, sessionId }
               />
             </Box>
           ) : (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {assumptions}
               </ReactMarkdown>

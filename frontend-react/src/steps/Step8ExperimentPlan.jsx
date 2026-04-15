@@ -64,7 +64,7 @@ const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sess
               resize="vertical"
             />
           ) : experiment_selections ? (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {experiment_selections}
               </ReactMarkdown>
@@ -85,7 +85,7 @@ const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sess
               resize="vertical"
             />
           ) : experiment_plans ? (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {experiment_plans}
               </ReactMarkdown>
@@ -106,7 +106,7 @@ const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sess
               resize="vertical"
             />
           ) : experiment_worksheets ? (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {experiment_worksheets}
               </ReactMarkdown>

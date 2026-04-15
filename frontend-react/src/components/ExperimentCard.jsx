@@ -6,15 +6,15 @@ import {
 import { Expand, Contract, Save, StatusGood, InProgress, StatusCritical } from 'grommet-icons';
 
 const CATEGORY_COLORS = {
-  Desirability: { bg: '#E8F5E9', badge: '#388E3C', label: 'D' },
-  Feasibility: { bg: '#E3F2FD', badge: '#1565C0', label: 'F' },
-  Viability: { bg: '#FFF3E0', badge: '#E65100', label: 'V' },
+  Desirability: { bg: 'rgba(1, 169, 130, 0.1)', badge: 'status-ok', label: 'D' },
+  Feasibility: { bg: 'rgba(0, 99, 178, 0.1)', badge: 'brand', label: 'F' },
+  Viability: { bg: 'rgba(255, 138, 0, 0.1)', badge: 'status-warning', label: 'V' },
 };
 
 const STRENGTH_COLORS = {
-  Weak: '#FFB74D',
-  Medium: '#64B5F6',
-  Strong: '#81C784',
+  Weak: 'status-warning',
+  Medium: 'accent-3',
+  Strong: 'status-ok',
 };
 
 const STATUS_OPTIONS = [

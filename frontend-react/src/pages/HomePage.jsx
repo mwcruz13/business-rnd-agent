@@ -169,7 +169,7 @@ const HomePage = () => {
   const isSmall = size === 'small';
 
   return (
-    <Box align="center" pad={{ horizontal: isSmall ? 'medium' : 'large', vertical: 'medium' }} gap="medium" fill>
+    <Box align="center" pad={{ horizontal: isSmall ? 'medium' : 'large', vertical: 'medium' }} gap="medium" fill="horizontal" flex={false}>
       <Box width={{ max: 'xlarge' }} fill="horizontal" gap="medium">
         <Heading level={2} margin="none">BMI Consultant Workflow</Heading>
         <Text color="text-weak">
@@ -210,8 +210,8 @@ const HomePage = () => {
               />
             </Box>
 
-            <Box direction={isSmall ? 'column' : 'row'} gap="medium">
-              <Box gap="xsmall" flex>
+            <Box direction="row" gap="medium" wrap>
+              <Box gap="xsmall" width={{ min: '200px' }} flex="grow">
                 <Text size="small" weight="bold">Input Format</Text>
                 <Select
                   options={['text', 'csv']}
@@ -219,7 +219,7 @@ const HomePage = () => {
                   onChange={({ option }) => setInputFormat(option)}
                 />
               </Box>
-              <Box gap="xsmall" flex>
+              <Box gap="xsmall" width={{ min: '200px' }} flex="grow">
                 <Text size="small" weight="bold">LLM Backend</Text>
                 <Select
                   options={['azure', 'ollama']}

@@ -36,7 +36,7 @@ const Step4ValueDrivers = ({ runState, editMode, editState, onEditChange, sessio
               resize="vertical"
             />
           ) : (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {value_driver_tree}
               </ReactMarkdown>
@@ -55,7 +55,7 @@ const Step4ValueDrivers = ({ runState, editMode, editState, onEditChange, sessio
               resize="vertical"
             />
           ) : actionable_insights ? (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {actionable_insights}
               </ReactMarkdown>

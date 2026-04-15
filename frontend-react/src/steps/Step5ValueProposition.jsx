@@ -36,7 +36,7 @@ const Step5ValueProposition = ({ runState, editMode, editState, onEditChange, se
               resize="vertical"
             />
           ) : (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {value_proposition_canvas}
               </ReactMarkdown>
@@ -55,7 +55,7 @@ const Step5ValueProposition = ({ runState, editMode, editState, onEditChange, se
               resize="vertical"
             />
           ) : fit_assessment ? (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {fit_assessment}
               </ReactMarkdown>

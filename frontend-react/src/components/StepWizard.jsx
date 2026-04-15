@@ -165,15 +165,16 @@ const StepWizard = () => {
         {/* Restart-from-step actions for previously completed steps */}
         {isViewingCompletedStep && (
           <Box
-            direction={isSmall ? 'column' : 'row'}
+            direction="row"
+            wrap
             gap="small"
             pad="small"
             border={{ side: 'top', color: 'border' }}
-            justify={isSmall ? 'center' : 'end'}
-            align={isSmall ? 'stretch' : 'center'}
+            justify="end"
+            align="center"
             background="background-front"
           >
-            <Text size="small" color="text-weak" margin={isSmall ? undefined : { right: 'auto' }}>
+            <Text size="small" color="text-weak" margin={{ right: 'auto' }}>
               Reviewing completed step {activeStep + 1}
             </Text>
             {editMode ? (

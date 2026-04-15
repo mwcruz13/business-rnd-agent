@@ -36,7 +36,7 @@ const Step3CustomerProfile = ({ runState, editMode, editState, onEditChange, ses
               resize="vertical"
             />
           ) : (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {customer_profile}
               </ReactMarkdown>
@@ -48,7 +48,7 @@ const Step3CustomerProfile = ({ runState, editMode, editState, onEditChange, ses
       <Tab title="Empathy Questions">
         <Box pad="medium" overflow="auto">
           {empathy_gap_questions ? (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {empathy_gap_questions}
               </ReactMarkdown>
@@ -75,7 +75,7 @@ const Step3CustomerProfile = ({ runState, editMode, editState, onEditChange, ses
               />
             </Box>
           ) : supplemental_voc ? (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {supplemental_voc}
               </ReactMarkdown>

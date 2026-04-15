@@ -119,7 +119,7 @@ const Step2PatternDirection = ({ runState, editMode, editState, onEditChange, se
               resize="vertical"
             />
           ) : pattern_rationale ? (
-            <Box background="background-front" pad="medium" round="small">
+            <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {pattern_rationale}
               </ReactMarkdown>
