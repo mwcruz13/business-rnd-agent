@@ -3,6 +3,7 @@ from typing import TypedDict
 
 class BMIWorkflowState(TypedDict, total=False):
     session_id: str
+    session_name: str
     current_step: str
     run_status: str
     pending_checkpoint: str

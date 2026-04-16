@@ -57,12 +57,13 @@ export async function getHealth() {
   return request('GET', '/health');
 }
 
-export async function startRun({ inputText, inputFormat, llmBackend, pauseAtCheckpoints = true }) {
+export async function startRun({ inputText, inputFormat, llmBackend, sessionName, pauseAtCheckpoints = true }) {
   return request('POST', '/runs', {
     body: {
       input_text: inputText,
       input_format: inputFormat || null,
       llm_backend: llmBackend || 'azure',
+      session_name: sessionName || null,
       pause_at_checkpoints: pauseAtCheckpoints,
     },
     timeout: 900000,
@@ -82,15 +83,26 @@ export async function resumeRun(sessionId, { decision, editState }) {
   });
 }
 
-export async function startFromStep({ stepNumber, initialState, llmBackend, sessionId }) {
+export async function startFromStep({ stepNumber, initialState, llmBackend, sessionId, sessionName }) {
   return request('POST', '/runs/start-from-step', {
     body: {
       step_number: stepNumber,
       initial_state: initialState,
       llm_backend: llmBackend || 'azure',
       session_id: sessionId || undefined,
+      session_name: sessionName || null,
     },
     timeout: 900000,
+  });
+}
+
+export async function listSessions() {
+  return request('GET', '/sessions');
+}
+
+export async function renameSession(sessionId, sessionName) {
+  return request('PATCH', `/runs/${encodeURIComponent(sessionId)}/name`, {
+    body: { session_name: sessionName },
   });
 }
 

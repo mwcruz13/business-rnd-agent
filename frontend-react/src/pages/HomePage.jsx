@@ -1,8 +1,8 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box, Button, Heading, Text, TextArea, TextInput, Select, FileInput,
-  Card, CardBody, CardHeader, Notification, ResponsiveContext,
+  Card, CardBody, CardHeader, Notification, ResponsiveContext, DataTable,
 } from 'grommet';
 import { PlayFill, Document } from 'grommet-icons';
 import { useWorkflow } from '../context/WorkflowContext.jsx';
@@ -94,7 +94,7 @@ function parseFieldValue(rawValue, type) {
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { startWorkflow, startFromStep, loadSession, isLoading, error, setError } = useWorkflow();
+  const { startWorkflow, startFromStep, loadSession, fetchSessions, isLoading, error, setError } = useWorkflow();
 
   const [vocText, setVocText] = useState('');
   const [inputFormat, setInputFormat] = useState('text');
@@ -102,6 +102,21 @@ const HomePage = () => {
   const [entryStep, setEntryStep] = useState(1);
   const [upstreamFields, setUpstreamFields] = useState({});
   const [existingSessionId, setExistingSessionId] = useState('');
+  const [sessionName, setSessionName] = useState('');
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSessionsLoading(true);
+    fetchSessions().then((data) => {
+      if (!cancelled) {
+        setSessions(data || []);
+        setSessionsLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [fetchSessions]);
 
   const handleFileUpload = (event) => {
     const file = event.target.files?.[0];
@@ -122,7 +137,7 @@ const HomePage = () => {
 
     try {
       if (entryStep === 1) {
-        await startWorkflow(vocText, inputFormat, llmBackend);
+        await startWorkflow(vocText, inputFormat, llmBackend, sessionName.trim() || undefined);
       } else {
         const initialState = { voc_data: vocText };
         const fields = UPSTREAM_FIELDS_BY_STEP[entryStep] || [];
@@ -135,7 +150,7 @@ const HomePage = () => {
             return;
           }
         }
-        await startFromStep(entryStep, initialState, llmBackend);
+        await startFromStep(entryStep, initialState, llmBackend, sessionName.trim() || undefined);
       }
       navigate('/workflow');
     } catch {
@@ -190,6 +205,18 @@ const HomePage = () => {
             <Heading level={3} margin="none">New Workflow</Heading>
           </CardHeader>
           <CardBody pad="medium" gap="medium">
+            <Box gap="xsmall">
+              <Text size="small" weight="bold">Session Name (optional)</Text>
+              <TextInput
+                placeholder="e.g. HBM Supply Chain Analysis"
+                value={sessionName}
+                onChange={(e) => setSessionName(e.target.value)}
+              />
+              <Text size="xsmall" color="text-weak">
+                Give your session a memorable name so you can find it later.
+              </Text>
+            </Box>
+
             <Box gap="xsmall">
               <Text size="small" weight="bold">Voice of Customer Data</Text>
               <TextArea
@@ -297,8 +324,71 @@ const HomePage = () => {
             <Heading level={3} margin="none">Resume Session</Heading>
           </CardHeader>
           <CardBody pad="medium" gap="medium">
-            <Box gap="xsmall">
-              <Text size="small" weight="bold">Session ID</Text>
+            {sessionsLoading ? (
+              <Text color="text-weak">Loading sessions…</Text>
+            ) : sessions.length > 0 ? (
+              <Box gap="small">
+                <Text size="small" weight="bold">Recent Sessions</Text>
+                <DataTable
+                  columns={[
+                    {
+                      property: 'session_name',
+                      header: 'Name',
+                      render: (datum) => (
+                        <Text size="small" truncate>
+                          {datum.session_name || '(unnamed)'}
+                        </Text>
+                      ),
+                    },
+                    {
+                      property: 'session_id',
+                      header: 'ID',
+                      render: (datum) => (
+                        <Text size="xsmall" color="text-weak">
+                          {datum.session_id.slice(0, 12)}…
+                        </Text>
+                      ),
+                    },
+                    {
+                      property: 'status',
+                      header: 'Status',
+                      render: (datum) => (
+                        <Text size="xsmall">{datum.status}</Text>
+                      ),
+                    },
+                    {
+                      property: 'current_step',
+                      header: 'Step',
+                      render: (datum) => (
+                        <Text size="xsmall">{datum.current_step}</Text>
+                      ),
+                    },
+                    {
+                      property: 'created_at',
+                      header: 'Created',
+                      render: (datum) => (
+                        <Text size="xsmall">
+                          {datum.created_at ? new Date(datum.created_at).toLocaleDateString() : '—'}
+                        </Text>
+                      ),
+                    },
+                  ]}
+                  data={sessions}
+                  primaryKey="session_id"
+                  onClickRow={({ datum }) => {
+                    loadSession(datum.session_id).then(() => navigate('/workflow')).catch(() => {});
+                  }}
+                  step={10}
+                  paginate
+                  size="small"
+                />
+              </Box>
+            ) : (
+              <Text size="small" color="text-weak">No previous sessions found.</Text>
+            )}
+
+            <Box border={{ side: 'top', color: 'border' }} pad={{ top: 'medium' }} gap="xsmall">
+              <Text size="small" weight="bold">Or enter a Session ID directly</Text>
               <TextInput
                 placeholder="e.g. f30832a1-…"
                 value={existingSessionId}

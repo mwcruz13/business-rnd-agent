@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
-import { startRun, getRunState, resumeRun, startFromStep as apiStartFromStep, restartFromStep as apiRestartFromStep } from '../api/workflowApi.js';
+import { startRun, getRunState, resumeRun, startFromStep as apiStartFromStep, restartFromStep as apiRestartFromStep, listSessions as apiListSessions } from '../api/workflowApi.js';
 
 const WorkflowContext = createContext(null);
 
@@ -26,24 +26,30 @@ export function WorkflowProvider({ children }) {
   const [sessionId, setSessionId] = useState(
     () => localStorage.getItem('bmi_session_id') || null,
   );
+  const [sessionName, setSessionName] = useState(
+    () => localStorage.getItem('bmi_session_name') || null,
+  );
   const [runState, setRunState] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const persistSession = useCallback((id) => {
+  const persistSession = useCallback((id, name) => {
     setSessionId(id);
+    setSessionName(name || null);
     if (id) localStorage.setItem('bmi_session_id', id);
     else localStorage.removeItem('bmi_session_id');
+    if (name) localStorage.setItem('bmi_session_name', name);
+    else localStorage.removeItem('bmi_session_name');
   }, []);
 
-  const startWorkflow = useCallback(async (vocData, inputFormat, llmBackend) => {
+  const startWorkflow = useCallback(async (vocData, inputFormat, llmBackend, sessionNameInput) => {
     setIsLoading(true);
     setError(null);
     try {
-      const state = await startRun({ inputText: vocData, inputFormat, llmBackend });
+      const state = await startRun({ inputText: vocData, inputFormat, llmBackend, sessionName: sessionNameInput });
       setRunState(state);
-      persistSession(state.session_id);
+      persistSession(state.session_id, state.session_name || sessionNameInput);
       setActiveStep(resolveStepIndex(state));
       return state;
     } catch (err) {
@@ -60,7 +66,7 @@ export function WorkflowProvider({ children }) {
     try {
       const state = await getRunState(id);
       setRunState(state);
-      persistSession(state.session_id);
+      persistSession(state.session_id, state.session_name);
       setActiveStep(resolveStepIndex(state));
       return state;
     } catch (err) {
@@ -88,13 +94,13 @@ export function WorkflowProvider({ children }) {
     }
   }, [sessionId]);
 
-  const startFromStep = useCallback(async (stepNumber, initialState, llmBackend) => {
+  const startFromStep = useCallback(async (stepNumber, initialState, llmBackend, sessionNameInput) => {
     setIsLoading(true);
     setError(null);
     try {
-      const state = await apiStartFromStep({ stepNumber, initialState, llmBackend });
+      const state = await apiStartFromStep({ stepNumber, initialState, llmBackend, sessionName: sessionNameInput });
       setRunState(state);
-      persistSession(state.session_id);
+      persistSession(state.session_id, state.session_name || sessionNameInput);
       setActiveStep(resolveStepIndex(state));
       return state;
     } catch (err) {
@@ -130,11 +136,21 @@ export function WorkflowProvider({ children }) {
     setRunState(null);
     setActiveStep(0);
     setError(null);
-    persistSession(null);
+    persistSession(null, null);
   }, [persistSession]);
+
+  const fetchSessions = useCallback(async () => {
+    try {
+      return await apiListSessions();
+    } catch (err) {
+      setError(err.message);
+      return [];
+    }
+  }, []);
 
   const value = {
     sessionId,
+    sessionName,
     runState,
     activeStep,
     isLoading,
@@ -146,6 +162,7 @@ export function WorkflowProvider({ children }) {
     resumeWorkflow,
     goToStep,
     clearSession,
+    fetchSessions,
     setError,
   };
 

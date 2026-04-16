@@ -35,6 +35,7 @@ def run_workflow_from_voc_data(
     voc_data: str,
     *,
     session_id: str | None = None,
+    session_name: str | None = None,
     llm_backend: str | None = None,
     input_type: str = "text",
     pause_at_checkpoints: bool = False,
@@ -51,6 +52,8 @@ def run_workflow_from_voc_data(
         "llm_backend": llm_backend or settings.llm_backend,
         "voc_data": normalized_voc_data,
     }
+    if session_name:
+        initial_state["session_name"] = session_name
     ensure_database_schema()
     if pause_at_checkpoints:
         return _start_checkpointed_run(initial_state)
@@ -65,6 +68,7 @@ def run_workflow_from_path(
     input_path: str | Path,
     *,
     session_id: str | None = None,
+    session_name: str | None = None,
     llm_backend: str | None = None,
     pause_at_checkpoints: bool = False,
 ) -> BMIWorkflowState:
@@ -75,6 +79,7 @@ def run_workflow_from_path(
         return run_workflow_from_voc_data(
             load_text(str(path)),
             session_id=session_id,
+            session_name=session_name,
             llm_backend=llm_backend,
             input_type="text",
             pause_at_checkpoints=pause_at_checkpoints,
@@ -83,6 +88,7 @@ def run_workflow_from_path(
         return run_workflow_from_voc_data(
             _render_csv_rows_as_voc_data(load_csv_rows(str(path))),
             session_id=session_id,
+            session_name=session_name,
             llm_backend=llm_backend,
             input_type="csv",
             pause_at_checkpoints=pause_at_checkpoints,
@@ -95,12 +101,14 @@ def run_workflow_from_csv_text(
     csv_text: str,
     *,
     session_id: str | None = None,
+    session_name: str | None = None,
     llm_backend: str | None = None,
     pause_at_checkpoints: bool = False,
 ) -> BMIWorkflowState:
     return run_workflow_from_voc_data(
         _render_csv_rows_as_voc_data(load_csv_rows_from_text(csv_text)),
         session_id=session_id,
+        session_name=session_name,
         llm_backend=llm_backend,
         input_type="csv",
         pause_at_checkpoints=pause_at_checkpoints,
@@ -113,7 +121,45 @@ def get_run_state(session_id: str) -> BMIWorkflowState:
         run = session.get(WorkflowRun, session_id)
         if run is None:
             raise ValueError(f"Unknown workflow session: {session_id}")
-        return BMIWorkflowState(run.state_json)
+        state = BMIWorkflowState(run.state_json)
+        if run.session_name:
+            state["session_name"] = run.session_name
+        return state
+
+
+def list_sessions() -> list[dict[str, Any]]:
+    """Return a summary list of all workflow sessions, most recent first."""
+    ensure_database_schema()
+    with SessionLocal() as session:
+        runs = session.scalars(
+            select(WorkflowRun).order_by(WorkflowRun.created_at.desc())
+        ).all()
+        return [
+            {
+                "session_id": r.session_id,
+                "session_name": r.session_name,
+                "status": r.status,
+                "current_step": r.current_step,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+                "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+            }
+            for r in runs
+        ]
+
+
+def rename_session(session_id: str, session_name: str) -> dict[str, Any]:
+    """Update the session_name for an existing run."""
+    ensure_database_schema()
+    with SessionLocal() as session:
+        run = session.get(WorkflowRun, session_id)
+        if run is None:
+            raise ValueError(f"Unknown workflow session: {session_id}")
+        run.session_name = session_name.strip() or None
+        session.commit()
+        return {
+            "session_id": run.session_id,
+            "session_name": run.session_name,
+        }
 
 
 def get_step_output(session_id: str, step_number: int) -> dict[str, Any]:
@@ -174,6 +220,7 @@ def start_workflow_from_step(
     initial_state: dict[str, Any],
     *,
     session_id: str | None = None,
+    session_name: str | None = None,
     llm_backend: str | None = None,
     pause_at_checkpoints: bool = True,
 ) -> BMIWorkflowState:
@@ -192,6 +239,8 @@ def start_workflow_from_step(
         llm_backend=llm_backend or settings.llm_backend,
         **{k: v for k, v in initial_state.items() if k not in ("session_id", "current_step", "input_type", "llm_backend")},
     )
+    if session_name:
+        state["session_name"] = session_name
 
     validate_initial_state_for_step(step_name, state)
     ensure_database_schema()
@@ -206,6 +255,7 @@ def start_workflow_from_step(
         session.add(
             WorkflowRun(
                 session_id=sid,
+                session_name=session_name,
                 input_type=str(state.get("input_type", "text")),
                 status="in_progress",
                 llm_backend=str(state["llm_backend"]),
@@ -338,6 +388,7 @@ def _start_checkpointed_run(initial_state: BMIWorkflowState) -> BMIWorkflowState
         session.add(
             WorkflowRun(
                 session_id=session_id,
+                session_name=initial_state.get("session_name"),
                 input_type=str(initial_state["input_type"]),
                 status="in_progress",
                 llm_backend=str(initial_state["llm_backend"]),
@@ -442,6 +493,7 @@ def _persist_completed_run(final_state: BMIWorkflowState) -> None:
         session.add(
             WorkflowRun(
                 session_id=session_id,
+                session_name=final_state.get("session_name"),
                 input_type=str(final_state["input_type"]),
                 status="completed",
                 llm_backend=str(final_state["llm_backend"]),

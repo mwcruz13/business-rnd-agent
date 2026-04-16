@@ -9,7 +9,7 @@ import HomePage from './pages/HomePage.jsx';
 import WorkflowPage from './pages/WorkflowPage.jsx';
 
 const AppHeader = () => {
-  const { sessionId, clearSession } = useWorkflow();
+  const { sessionId, sessionName, clearSession } = useWorkflow();
   const location = useLocation();
   const onWorkflowPage = location.pathname === '/workflow';
   const size = useContext(ResponsiveContext);
@@ -29,7 +29,7 @@ const AppHeader = () => {
       <Nav direction="row" gap="medium" align="center">
         {onWorkflowPage && sessionId && (
           <Text size="xsmall" color="text-weak">
-            Session: {sessionId.slice(0, 12)}…
+            {sessionName ? sessionName : `Session: ${sessionId.slice(0, 12)}…`}
           </Text>
         )}
         {onWorkflowPage && (

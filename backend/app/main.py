@@ -8,6 +8,8 @@ from backend.app.config import get_settings
 from backend.app.db.session import DatabaseSchemaNotReadyError
 from backend.app.workflow import get_run_state
 from backend.app.workflow import get_step_output
+from backend.app.workflow import list_sessions
+from backend.app.workflow import rename_session
 from backend.app.workflow import restart_from_step
 from backend.app.workflow import update_experiment_card
 from backend.app.workflow import resume_workflow
@@ -32,6 +34,7 @@ class RunWorkflowRequest(BaseModel):
     input_path: str | None = None
     input_format: str | None = None
     session_id: str | None = None
+    session_name: str | None = None
     llm_backend: str | None = None
     pause_at_checkpoints: bool = True
 
@@ -54,6 +57,7 @@ class StartFromStepRequest(BaseModel):
     step_number: int
     initial_state: dict[str, Any]
     session_id: str | None = None
+    session_name: str | None = None
     llm_backend: str | None = None
     pause_at_checkpoints: bool = True
 
@@ -61,6 +65,28 @@ class StartFromStepRequest(BaseModel):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "llm_backend": settings.llm_backend}
+
+
+class RenameSessionRequest(BaseModel):
+    session_name: str
+
+
+@app.get("/sessions")
+def list_all_sessions() -> list[dict[str, Any]]:
+    try:
+        return list_sessions()
+    except DatabaseSchemaNotReadyError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+
+
+@app.patch("/runs/{session_id}/name")
+def rename_workflow_session(session_id: str, request: RenameSessionRequest) -> dict[str, Any]:
+    try:
+        return rename_session(session_id, request.session_name)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    except DatabaseSchemaNotReadyError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
 
 
 @app.post("/runs")
@@ -74,6 +100,7 @@ def run_workflow(request: RunWorkflowRequest) -> dict[str, Any]:
                 result = run_workflow_from_csv_text(
                     request.input_text,
                     session_id=request.session_id,
+                    session_name=request.session_name,
                     llm_backend=request.llm_backend,
                     pause_at_checkpoints=request.pause_at_checkpoints,
                 )
@@ -81,6 +108,7 @@ def run_workflow(request: RunWorkflowRequest) -> dict[str, Any]:
                 result = run_workflow_from_voc_data(
                     request.input_text,
                     session_id=request.session_id,
+                    session_name=request.session_name,
                     llm_backend=request.llm_backend,
                     input_type="text",
                     pause_at_checkpoints=request.pause_at_checkpoints,
@@ -89,6 +117,7 @@ def run_workflow(request: RunWorkflowRequest) -> dict[str, Any]:
             result = run_workflow_from_path(
                 request.input_path or "",
                 session_id=request.session_id,
+                session_name=request.session_name,
                 llm_backend=request.llm_backend,
                 pause_at_checkpoints=request.pause_at_checkpoints,
             )
@@ -166,6 +195,7 @@ def start_from_step(request: StartFromStepRequest) -> dict[str, Any]:
             request.step_number,
             request.initial_state,
             session_id=request.session_id,
+            session_name=request.session_name,
             llm_backend=request.llm_backend,
             pause_at_checkpoints=request.pause_at_checkpoints,
         )
