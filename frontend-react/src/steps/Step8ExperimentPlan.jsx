@@ -1,11 +1,15 @@
-import { useEffect, useCallback } from 'react';
-import { Box, Text, TextArea, Tab } from 'grommet';
+import { useState, useEffect, useCallback } from 'react';
+import { Box, Text, TextArea, Tab, Button, Spinner } from 'grommet';
+import { DocumentDownload, DocumentPpt } from 'grommet-icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import StepCard from '../components/StepCard.jsx';
 import ExperimentCardDeck from '../components/ExperimentCardDeck.jsx';
+import { downloadExport } from '../api/workflowApi.js';
 
 const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sessionId }) => {
+  const [exporting, setExporting] = useState(null); // 'md' | 'pptx' | null
+
   if (!runState) return <Text color="text-weak">Waiting for workflow to start…</Text>;
 
   const {
@@ -28,6 +32,13 @@ const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sess
 
   const handleImport = (fields) => onEditChange({ ...editState, ...fields });
 
+  const handleExport = async (format) => {
+    setExporting(format);
+    try { await downloadExport(sessionId, format); }
+    catch (err) { console.error('Export failed:', err); }
+    finally { setExporting(null); }
+  };
+
   const handleCardUpdated = useCallback((cardId, updatedCard) => {
     // Update the local runState experiment_cards optimistically
     if (!runState.experiment_cards) return;
@@ -39,6 +50,27 @@ const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sess
 
   return (
     <StepCard stepIndex={7} stepLabel="Experiment Plan" runState={runState} sessionId={sessionId} onImport={handleImport}>
+      {runState?.run_status === 'completed' && (
+        <Box direction="row" gap="small" pad={{ vertical: 'small' }} align="center">
+          <Text weight="bold" size="small">Export Full Report:</Text>
+          <Button
+            label={exporting === 'md' ? 'Exporting…' : 'Markdown'}
+            icon={exporting === 'md' ? <Spinner size="xsmall" /> : <DocumentDownload size="small" />}
+            size="small"
+            secondary
+            disabled={!!exporting}
+            onClick={() => handleExport('md')}
+          />
+          <Button
+            label={exporting === 'pptx' ? 'Exporting…' : 'PowerPoint'}
+            icon={exporting === 'pptx' ? <Spinner size="xsmall" /> : <DocumentPpt size="small" />}
+            size="small"
+            secondary
+            disabled={!!exporting}
+            onClick={() => handleExport('pptx')}
+          />
+        </Box>
+      )}
       {/* Primary tab: interactive cards */}
       <Tab title="Experiment Cards">
         <Box pad="medium" overflow="auto">

@@ -313,6 +313,10 @@ Generate 2-3 alternative ad-libs to encourage exploration of multiple directions
 ```
 
 ### Rules
+- The Value Map (left side of the canvas) represents the SUPPLIER'S response to the customer's needs — frame products, pain relievers, and gain creators from the supplier's perspective: what the supplier builds, delivers, or enables
+- The Customer Profile (right side of the canvas) remains customer-centric — frame jobs, pains, and gains from the customer's perspective
+- Pain relievers describe HOW THE SUPPLIER relieves the customer's pain, not how the customer copes with the pain themselves
+- Gain creators describe HOW THE SUPPLIER creates or enhances the customer's gain, not how the customer achieves the gain on their own
 - Prototype multiple alternatives — do not refine a single direction too early
 - Keep prototypes rough, quick, and cheap — refined prototypes are hard to throw away
 - Pain relievers must map to specific pains identified in the Empathize phase

@@ -20,20 +20,26 @@ from backend.app.state import BMIWorkflowState
 
 class ProductService(BaseModel):
     type: str = Field(description="Digital, Physical, Intangible, or Financial")
-    product_service: str
+    product_service: str = Field(
+        description="A specific product or service the supplier offers to the customer"
+    )
     relevance: str = Field(description="Core, Nice-to-have, or Supporting")
 
 
 class PainReliever(BaseModel):
     type: str = Field(description="Functional, Social, or Emotional")
-    pain_reliever: str
+    pain_reliever: str = Field(
+        description="How the supplier's product or service relieves this customer pain"
+    )
     pain_addressed: str = Field(description="Must reference a specific customer pain from the empathy profile")
     relevance: str = Field(description="Substantial, Nice-to-have, or Minor")
 
 
 class GainCreator(BaseModel):
     type: str = Field(description="Functional, Social, Emotional, or Financial")
-    gain_creator: str
+    gain_creator: str = Field(
+        description="How the supplier's product or service creates or enhances this customer gain"
+    )
     gain_addressed: str = Field(description="Must reference a specific customer gain from the empathy profile")
     relevance: str = Field(description="Substantial, Nice-to-have, or Minor")
 
@@ -60,13 +66,18 @@ def _build_messages(state: BMIWorkflowState) -> list[SystemMessage | HumanMessag
     if not customer_profile.strip():
         raise ValueError("Customer profile is required for Step 5")
 
-    skill_asset = PromptAssetLoader().load_skill_asset("cxif-bmi-coach")
+    skill_asset = PromptAssetLoader().load_step_prompt("step5_value_proposition")
     selected_patterns = ", ".join(state.get("selected_patterns", [])) or "approved patterns"
     pattern_direction = str(state.get("pattern_direction", ""))
 
     system_prompt = (
         f"{skill_asset.body}\n\n"
         "You are the CXIF Value Proposition Design agent for the BMI consultant workflow.\n"
+        "You are designing a value proposition FROM THE SUPPLIER'S PERSPECTIVE.\n"
+        "The products, services, pain relievers, and gain creators represent what the SUPPLIER\n"
+        "offers to address the customer's jobs, pains, and gains identified in the empathy profile.\n"
+        "The customer profile (jobs, pains, gains) defines WHAT needs to be addressed.\n"
+        "The Value Map defines HOW THE SUPPLIER addresses it.\n\n"
         "Execute the Design phase (Value Proposition Canvas) from the CXIF framework.\n\n"
         "RULES:\n"
         "- Products & Services: list the key offerings shaped by the selected patterns.\n"
@@ -78,12 +89,15 @@ def _build_messages(state: BMIWorkflowState) -> list[SystemMessage | HumanMessag
         "- Reference the selected patterns in your outputs."
     )
 
+    voc_data = str(state.get('voc_data', ''))[:2000]
+
     user_prompt = (
         f"Pattern direction: {pattern_direction}\n"
         f"Selected patterns: {selected_patterns}\n\n"
         f"Customer Empathy Profile:\n{customer_profile}\n\n"
         f"Context Analysis & Actionable Insights:\n{actionable_insights}\n\n"
-        f"Value Driver Tree:\n{state.get('value_driver_tree', '')}"
+        f"Value Driver Tree:\n{state.get('value_driver_tree', '')}\n\n"
+        f"Original Voice of Customer evidence (reference for grounding):\n{voc_data}"
     )
     return [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
 

@@ -125,4 +125,37 @@ export async function updateExperimentCard(sessionId, cardId, updates) {
   });
 }
 
+
+/**
+ * Download a file export (Markdown or PPTX) as a browser download.
+ * @param {'md'|'pptx'} format
+ */
+export async function downloadExport(sessionId, format) {
+  const path = `/runs/${encodeURIComponent(sessionId)}/export/${format}`;
+  const response = await fetch(`${BASE}${path}`);
+  if (!response.ok) {
+    let detail;
+    try {
+      const err = await response.json();
+      detail = err.detail || `Export failed (${response.status})`;
+    } catch {
+      detail = `Export failed (${response.status})`;
+    }
+    throw new ApiError(detail, response.status);
+  }
+  const blob = await response.blob();
+  const disposition = response.headers.get('content-disposition') || '';
+  const filenameMatch = disposition.match(/filename="?([^"]+)"?/);
+  const filename = filenameMatch ? filenameMatch[1] : `report.${format}`;
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export { ApiError };

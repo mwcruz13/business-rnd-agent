@@ -91,9 +91,66 @@ def status(session_id: str = typer.Option(..., "--session-id")) -> None:
         typer.echo(f"pending_checkpoint={result['pending_checkpoint']}")
 
 
-@app.command()
-def export(run_id: str) -> None:
-    typer.echo(f"Scaffolded export command for run_id={run_id}")
+@app.command(name="export-report")
+def export_report_cmd(
+    session_id: str | None = typer.Option(None, "--session-id"),
+    output: Path | None = typer.Option(None, "--output", "-o"),
+) -> None:
+    """Export a workflow session to a structured Markdown report."""
+    from backend.cli.export_report import export_report
+
+    export_report(session_id=session_id, output=output)
+
+
+@app.command(name="export-pptx")
+def export_pptx_cmd(
+    session_id: str | None = typer.Option(None, "--session-id"),
+    output: str | None = typer.Option(None, "--output", "-o"),
+    template: str = typer.Option(
+        "hpe_dark_template.pptx",
+        "--template",
+    ),
+) -> None:
+    """Export a workflow session to an HPE-branded PowerPoint report."""
+    from backend.app.db.models import WorkflowRun
+    from backend.app.db.session import SessionLocal
+    from backend.cli.generate_report_pptx import generate_report_pptx
+
+    sess = SessionLocal()
+    try:
+        if session_id:
+            run = sess.query(WorkflowRun).filter_by(session_id=session_id).first()
+            if not run:
+                typer.echo(f"Error: session '{session_id}' not found.", err=True)
+                raise typer.Exit(code=1)
+        else:
+            run = (
+                sess.query(WorkflowRun)
+                .filter_by(status="completed")
+                .order_by(WorkflowRun.created_at.desc())
+                .first()
+            )
+            if not run:
+                run = sess.query(WorkflowRun).order_by(WorkflowRun.created_at.desc()).first()
+            if not run:
+                typer.echo("Error: no workflow runs found.", err=True)
+                raise typer.Exit(code=1)
+            typer.echo(f"Using most recent session: {run.session_id}")
+
+        state = run.state_json if isinstance(run.state_json, dict) else {}
+        meta = {
+            "session_id": run.session_id,
+            "session_name": run.session_name,
+            "created": run.created_at.strftime("%Y-%m-%d %H:%M UTC") if run.created_at else "N/A",
+            "status": run.status,
+            "llm_backend": run.llm_backend,
+            "input_type": run.input_type,
+        }
+
+        out = generate_report_pptx(state, meta, template_path=template, output_path=output)
+        typer.echo(f"Report saved to {out}")
+    finally:
+        sess.close()
 
 
 @app.command()

@@ -1,7 +1,10 @@
+import tempfile
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from backend.app.config import get_settings
@@ -214,3 +217,70 @@ def get_step(session_id: str, step_number: int) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail=str(error)) from error
     except DatabaseSchemaNotReadyError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
+
+
+@app.get("/runs/{session_id}/export/md")
+def export_markdown(session_id: str):
+    """Download the workflow report as a Markdown file."""
+    from backend.app.db.models import WorkflowRun
+    from backend.app.db.session import SessionLocal
+    from backend.cli.export_report import build_report
+
+    sess = SessionLocal()
+    try:
+        run = sess.query(WorkflowRun).filter_by(session_id=session_id).first()
+        if not run:
+            raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found.")
+        report = build_report(run)
+        tmp = tempfile.NamedTemporaryFile(suffix=".md", delete=False, mode="w", encoding="utf-8")
+        tmp.write(report)
+        tmp.close()
+        filename = f"{session_id[:12]}_report.md"
+        return FileResponse(tmp.name, media_type="text/markdown", filename=filename)
+    except DatabaseSchemaNotReadyError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    finally:
+        sess.close()
+
+
+@app.get("/runs/{session_id}/export/pptx")
+def export_pptx(session_id: str):
+    """Download the workflow report as a PowerPoint file."""
+    from backend.app.db.models import WorkflowRun
+    from backend.app.db.session import SessionLocal
+    from backend.cli.generate_report_pptx import generate_report_pptx
+
+    TEMPLATE = "hpe_dark_template.pptx"
+    if not Path(TEMPLATE).exists():
+        raise HTTPException(
+            status_code=500,
+            detail="PowerPoint template not found. Copy the HPE template to the container.",
+        )
+
+    sess = SessionLocal()
+    try:
+        run = sess.query(WorkflowRun).filter_by(session_id=session_id).first()
+        if not run:
+            raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found.")
+        state = run.state_json if isinstance(run.state_json, dict) else {}
+        meta = {
+            "session_id": run.session_id,
+            "session_name": run.session_name,
+            "created": run.created_at.strftime("%Y-%m-%d %H:%M UTC") if run.created_at else "N/A",
+            "status": run.status,
+            "llm_backend": run.llm_backend,
+            "input_type": run.input_type,
+        }
+        tmp = tempfile.NamedTemporaryFile(suffix=".pptx", delete=False)
+        tmp.close()
+        generate_report_pptx(state, meta, template_path=TEMPLATE, output_path=tmp.name)
+        filename = f"{session_id[:12]}_report.pptx"
+        return FileResponse(
+            tmp.name,
+            media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            filename=filename,
+        )
+    except DatabaseSchemaNotReadyError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    finally:
+        sess.close()

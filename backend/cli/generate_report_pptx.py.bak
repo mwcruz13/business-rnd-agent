@@ -1,0 +1,993 @@
+"""
+Generate a BMI Workflow Report PowerPoint from a completed workflow session.
+
+Reads session state from the database and produces a presentation using
+the HPE Dark Inspirational R9 template.
+
+Usage (inside container):
+    python -m backend.cli.generate_report_pptx --session-id <ID>
+    python -m backend.cli.generate_report_pptx   # uses most recent completed session
+
+Output: reports/<session_id>_report.pptx  (or --output <path>)
+"""
+from __future__ import annotations
+
+import json
+import re
+import textwrap
+from pathlib import Path
+from typing import Any
+
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.dml.color import RGBColor
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.oxml.ns import qn
+
+# ── HPE Dark Theme ──────────────────────────────────────────────────────
+BG_DARK     = RGBColor(0x29, 0x2D, 0x3A)
+WHITE       = RGBColor(0xFF, 0xFF, 0xFF)
+MUTED       = RGBColor(0xB1, 0xB9, 0xBE)
+MID_GRAY    = RGBColor(0x53, 0x5C, 0x66)
+HPE_GREEN   = RGBColor(0x00, 0xE0, 0xAF)
+HPE_GREEN_D = RGBColor(0x00, 0xB8, 0x8C)
+HPE_PURPLE  = RGBColor(0x9B, 0x84, 0xFC)
+HPE_BLUE    = RGBColor(0x65, 0xAE, 0xF9)
+HPE_CYAN    = RGBColor(0x62, 0xE5, 0xF6)
+HPE_ORANGE  = RGBColor(0xF2, 0x6B, 0x43)
+HPE_YELLOW  = RGBColor(0xFF, 0xBC, 0x44)
+CARD_BG     = RGBColor(0x33, 0x3A, 0x4A)
+CARD_BG2    = RGBColor(0x2F, 0x35, 0x44)
+CARD_BORDER = MID_GRAY
+FADED_NUM   = RGBColor(0x44, 0x4C, 0x5A)
+
+FH = "HPE Graphik Semibold"
+FB = "HPE Graphik"
+
+TEMPLATE = "Inspirational gallery_jan26/HPE-PowerPoint-Dark-Inspirational-R9.pptx"
+BLANK_LAYOUT = 37
+
+TIER_COLORS = {"Act": HPE_GREEN, "Investigate": HPE_BLUE, "Monitor": HPE_YELLOW, "Ignore": MID_GRAY}
+CAT_COLORS  = {"Desirability": HPE_GREEN, "Feasibility": HPE_BLUE, "Viability": HPE_PURPLE}
+
+
+# ── Helpers ─────────────────────────────────────────────────────────────
+
+def _init_prs(template_path: str) -> Presentation:
+    prs = Presentation(template_path)
+    sldIdLst = prs.slides._sldIdLst
+    for sldId in list(sldIdLst):
+        rId = sldId.get(qn("r:id"))
+        if rId:
+            try:
+                prs.part.drop_rel(rId)
+            except KeyError:
+                pass
+        sldIdLst.remove(sldId)
+    return prs
+
+
+def _slide(prs: Presentation):
+    s = prs.slides.add_slide(prs.slide_layouts[BLANK_LAYOUT])
+    bg = s.background.fill
+    bg.solid()
+    bg.fore_color.rgb = BG_DARK
+    return s
+
+
+def _tb(s, l, t, w, h, text, font=FB, sz=14, clr=WHITE, bold=False,
+        align=PP_ALIGN.LEFT, spacing_after=0):
+    box = s.shapes.add_textbox(Inches(l), Inches(t), Inches(w), Inches(h))
+    tf = box.text_frame
+    tf.word_wrap = True
+    tf.auto_size = None
+    p = tf.paragraphs[0]
+    p.alignment = align
+    if spacing_after:
+        p.space_after = Pt(spacing_after)
+    r = p.add_run()
+    r.text = text
+    r.font.name = font
+    r.font.size = Pt(sz)
+    r.font.color.rgb = clr
+    r.font.bold = bold
+    return box
+
+
+def _multi_tb(s, l, t, w, h, lines, font=FB, sz=12, clr=MUTED, bold=False,
+              align=PP_ALIGN.LEFT, sp=4, bullet=False):
+    box = s.shapes.add_textbox(Inches(l), Inches(t), Inches(w), Inches(h))
+    tf = box.text_frame
+    tf.word_wrap = True
+    tf.auto_size = None
+    for i, line in enumerate(lines):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.alignment = align
+        p.space_after = Pt(sp)
+        r = p.add_run()
+        r.text = ("\u2022  " + line) if bullet else line
+        r.font.name = font
+        r.font.size = Pt(sz)
+        r.font.color.rgb = clr
+        r.font.bold = bold
+    return box
+
+
+def _rect(s, l, t, w, h, fill, border=None, radius=True):
+    shape_type = MSO_SHAPE.ROUNDED_RECTANGLE if radius else MSO_SHAPE.RECTANGLE
+    sh = s.shapes.add_shape(shape_type, Inches(l), Inches(t), Inches(w), Inches(h))
+    sh.fill.solid()
+    sh.fill.fore_color.rgb = fill
+    if border:
+        sh.line.color.rgb = border
+        sh.line.width = Pt(1)
+    else:
+        sh.line.fill.background()
+    return sh
+
+
+def _bar(s, l, t, w, h, fill):
+    sh = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(l), Inches(t), Inches(w), Inches(h))
+    sh.fill.solid()
+    sh.fill.fore_color.rgb = fill
+    sh.line.fill.background()
+    return sh
+
+
+def _footer(s, text="BMI WORKFLOW REPORT"):
+    _tb(s, 0.5, 6.9, 12.3, 0.35, text, FB, 8, MID_GRAY, False, PP_ALIGN.CENTER)
+
+
+def _section_label(s, y, text):
+    _tb(s, 0.7, y, 8, 0.3, text, FH, 10, HPE_GREEN, True)
+
+
+def _section_title(s, y, text, sz=26):
+    _tb(s, 0.7, y + 0.3, 12, 0.6, text, FH, sz, WHITE, True)
+
+
+def _notes(s, text):
+    s.notes_slide.notes_text_frame.text = text
+
+
+def _trunc(text: str, max_len: int = 120) -> str:
+    if len(text) <= max_len:
+        return text
+    return text[: max_len - 1] + "\u2026"
+
+
+def _parse_md_table(md_text: str) -> list[dict[str, str]]:
+    """Parse a markdown table into a list of dicts. Returns [] if no table found."""
+    lines = [l.strip() for l in md_text.strip().split("\n") if l.strip()]
+    table_lines = [l for l in lines if l.startswith("|")]
+    if len(table_lines) < 3:
+        return []
+    headers_raw = [h.strip() for h in table_lines[0].split("|") if h.strip()]
+    rows = []
+    for row_line in table_lines[2:]:  # skip separator
+        cells = [c.strip() for c in row_line.split("|") if c.strip() != ""]
+        if cells:
+            row = {}
+            for i, h in enumerate(headers_raw):
+                row[h] = cells[i] if i < len(cells) else ""
+            rows.append(row)
+    return rows
+
+
+# ── Slide Builders ──────────────────────────────────────────────────────
+
+def _slide_cover(prs, state, meta):
+    s = _slide(prs)
+    session_name = meta.get("session_name") or "Untitled Session"
+    _rect(s, 2.5, 1.3, 8.3, 0.5, HPE_GREEN_D)
+    _tb(s, 2.5, 1.32, 8.3, 0.5, "BMI WORKFLOW REPORT", FH, 13, BG_DARK, True, PP_ALIGN.CENTER)
+    # Derive a title from the VoC data — use first meaningful phrase
+    voc = state.get("voc_data", "")
+    first_heading = ""
+    for line in voc.split("\n"):
+        if line.startswith("## ") and "Perspective" not in line:
+            first_heading = line.replace("## ", "").strip()
+            break
+    title = first_heading or session_name
+    _tb(s, 0.8, 2.5, 11.7, 0.8, title, FH, 36, WHITE, True, PP_ALIGN.CENTER)
+
+    patterns = state.get("selected_patterns", [])
+    direction = state.get("pattern_direction", "")
+    subtitle = f"Direction: {direction.upper()}  \u00b7  {', '.join(patterns)}" if patterns else ""
+    if subtitle:
+        _tb(s, 0.8, 3.5, 11.7, 0.5, subtitle, FH, 20, HPE_GREEN, True, PP_ALIGN.CENTER)
+
+    info_lines = [
+        f"Session: {meta.get('session_id', '')[:12]}\u2026",
+        f"Date: {meta.get('created', 'N/A')}  \u00b7  Backend: {meta.get('llm_backend', '')}",
+        f"Status: {meta.get('status', '')}",
+    ]
+    _multi_tb(s, 2.5, 4.5, 8.3, 1.2, info_lines, FB, 13, MUTED, align=PP_ALIGN.CENTER, sp=6)
+    _footer(s)
+    return s
+
+
+def _slide_signals(prs, signals):
+    """Slide: Detected Signals summary cards."""
+    s = _slide(prs)
+    _section_label(s, 0.3, "STEP 1 — SOC RADAR")
+    _section_title(s, 0.3, "Detected Signals")
+
+    max_cards = min(len(signals), 5)
+    if max_cards == 0:
+        _tb(s, 1, 3, 11, 1, "No signals detected.", FB, 16, MUTED)
+        _footer(s)
+        return s
+
+    # Layout: up to 5 cards in a grid
+    if max_cards <= 3:
+        cols, rows_n = max_cards, 1
+    else:
+        cols, rows_n = 3, 2
+
+    cw = 3.7
+    ch = 2.2
+    gx, gy = 0.35, 0.3
+    total_w = cols * cw + (cols - 1) * gx
+    sx = (13.33 - total_w) / 2
+    sy = 1.5
+
+    zone_colors = {
+        "Business Model Anomaly": HPE_ORANGE,
+        "Nonconsumption": HPE_GREEN,
+        "Overserved Customers": HPE_BLUE,
+        "Low-End Foothold": HPE_PURPLE,
+        "New-Market Foothold": HPE_CYAN,
+        "Enabling Technology": HPE_YELLOW,
+        "Regulatory / Policy Shift": HPE_ORANGE,
+    }
+
+    for idx, sig in enumerate(signals[:max_cards]):
+        col = idx % cols
+        row = idx // cols
+        x = sx + col * (cw + gx)
+        y = sy + row * (ch + gy)
+        zone = sig.get("zone", "")
+        accent = zone_colors.get(zone, HPE_GREEN)
+
+        _rect(s, x, y, cw, ch, CARD_BG, CARD_BORDER)
+        _bar(s, x, y, cw, 0.05, accent)
+        _tb(s, x + 0.15, y + 0.15, cw - 0.3, 0.25, zone, FH, 8, accent, True)
+        _tb(s, x + 0.15, y + 0.45, cw - 0.3, 0.8,
+            _trunc(sig.get("signal", ""), 100), FB, 10, WHITE)
+        evidence = sig.get("evidence", [])
+        if evidence:
+            _tb(s, x + 0.15, y + 1.3, cw - 0.3, 0.8,
+                _trunc(evidence[0], 90), FB, 8, MUTED)
+
+    _footer(s)
+    _notes(s, "Signals detected from VoC data using the SOC Radar methodology. "
+           "Each zone represents a different type of disruption signal.")
+    return s
+
+
+def _slide_priority(prs, matrix):
+    """Slide: Priority Matrix."""
+    s = _slide(prs)
+    _section_label(s, 0.3, "STEP 1 — SOC RADAR")
+    _section_title(s, 0.3, "Priority Matrix")
+
+    if not matrix:
+        _tb(s, 1, 3, 11, 1, "No priority matrix available.", FB, 16, MUTED)
+        _footer(s)
+        return s
+
+    # Render as horizontal bar-cards sorted by score
+    sorted_matrix = sorted(matrix, key=lambda x: x.get("score", 0), reverse=True)
+    y = 1.5
+    for idx, p in enumerate(sorted_matrix[:5]):
+        tier = p.get("tier", "Monitor")
+        accent = TIER_COLORS.get(tier, MID_GRAY)
+        score = p.get("score", 0)
+
+        _rect(s, 0.7, y, 11.9, 0.85, CARD_BG, CARD_BORDER)
+        _bar(s, 0.7, y, 0.08, 0.85, accent)
+
+        # Score circle
+        _rect(s, 0.95, y + 0.1, 0.65, 0.65, accent, radius=True)
+        _tb(s, 0.95, y + 0.12, 0.65, 0.65, str(score), FH, 18, BG_DARK, True, PP_ALIGN.CENTER)
+
+        # Signal text
+        _tb(s, 1.8, y + 0.05, 7.5, 0.4,
+            _trunc(p.get("signal", ""), 80), FB, 11, WHITE, True)
+        _tb(s, 1.8, y + 0.45, 7.5, 0.35,
+            _trunc(p.get("rationale", ""), 100), FB, 9, MUTED)
+
+        # Tier badge
+        _rect(s, 10.5, y + 0.2, 1.8, 0.4, accent)
+        _tb(s, 10.5, y + 0.22, 1.8, 0.4, tier.upper(), FH, 11, BG_DARK, True, PP_ALIGN.CENTER)
+
+        y += 1.0
+
+    _footer(s)
+    return s
+
+
+def _slide_pattern(prs, state):
+    """Slide: Pattern Selection."""
+    s = _slide(prs)
+    _section_label(s, 0.3, "STEP 2 — PATTERN SELECTION")
+    _section_title(s, 0.3, "Innovation Direction & Patterns")
+
+    direction = state.get("pattern_direction", "").upper()
+    patterns = state.get("selected_patterns", [])
+
+    # Big direction badge
+    _rect(s, 4.2, 1.5, 5.0, 0.6, HPE_GREEN_D)
+    _tb(s, 4.2, 1.52, 5.0, 0.6, f"DIRECTION: {direction}", FH, 18, BG_DARK, True, PP_ALIGN.CENTER)
+
+    # Pattern cards
+    pcw = 4.0
+    total_p = len(patterns) * pcw + (len(patterns) - 1) * 0.4 if patterns else 0
+    px = (13.33 - total_p) / 2
+    for j, pat in enumerate(patterns):
+        x = px + j * (pcw + 0.4)
+        _rect(s, x, 2.5, pcw, 0.6, CARD_BG, HPE_GREEN)
+        _tb(s, x, 2.52, pcw, 0.6, pat, FH, 15, WHITE, True, PP_ALIGN.CENTER)
+
+    # Recommendation text
+    rec = state.get("agent_recommendation", "")
+    if rec:
+        # Strip the first line if it repeats the pattern info
+        rec_lines = rec.strip().split("\n")
+        clean_rec = "\n".join(rec_lines)
+        _tb(s, 0.7, 3.5, 11.9, 3.0, _trunc(clean_rec, 600), FB, 11, MUTED)
+
+    _footer(s)
+    return s
+
+
+def _slide_customer_profile(prs, profile_md):
+    """Slide: Customer Empathy Profile — Jobs, Pains, Gains cards."""
+    s = _slide(prs)
+    _section_label(s, 0.3, "STEP 3 — EMPATHIZE")
+    _section_title(s, 0.3, "Customer Empathy Profile")
+
+    # Extract segment description
+    seg_match = re.search(r"### Customer Segment\n(.+?)(?:\n###|\Z)", profile_md, re.DOTALL)
+    segment = seg_match.group(1).strip().split("\n")[0] if seg_match else ""
+    if segment:
+        _tb(s, 0.7, 1.3, 11.9, 0.4, _trunc(segment, 150), FB, 11, MUTED)
+
+    # Parse Jobs, Pains, Gains tables
+    sections = {
+        "Jobs": {"accent": HPE_GREEN, "label": "CUSTOMER JOBS"},
+        "Pains": {"accent": HPE_ORANGE, "label": "CUSTOMER PAINS"},
+        "Gains": {"accent": HPE_BLUE, "label": "CUSTOMER GAINS"},
+    }
+
+    cw = 3.8
+    gx = 0.35
+    total_w = 3 * cw + 2 * gx
+    sx = (13.33 - total_w) / 2
+    sy = 1.9
+    ch = 4.5
+
+    for j, (key, cfg) in enumerate(sections.items()):
+        x = sx + j * (cw + gx)
+        _rect(s, x, sy, cw, ch, CARD_BG, CARD_BORDER)
+        _bar(s, x, sy, cw, 0.05, cfg["accent"])
+        _tb(s, x + 0.2, sy + 0.15, cw - 0.4, 0.3, cfg["label"], FH, 10, cfg["accent"], True)
+
+        # Parse the matching table
+        table_match = re.search(
+            rf"### Customer {key}\n(\|.+?)(?=\n###|\n---|\Z)", profile_md, re.DOTALL
+        )
+        if table_match:
+            rows = _parse_md_table(table_match.group(1))
+            lines = []
+            for row in rows[:5]:
+                type_val = row.get("Type", "")
+                # Get the main content column (Job, Pain, or Gain)
+                content = row.get("Job") or row.get("Pain") or row.get("Gain") or ""
+                importance = row.get("Importance") or row.get("Severity") or row.get("Relevance") or ""
+                lines.append(f"[{type_val}] {_trunc(content, 70)}")
+                lines.append(f"    {importance}")
+            if lines:
+                _multi_tb(s, x + 0.2, sy + 0.55, cw - 0.4, ch - 0.7,
+                          lines, FB, 9, MUTED, sp=2)
+
+    _footer(s)
+    return s
+
+
+def _slide_value_driver_tree(prs, vdt_md):
+    """Slide: Value Driver Tree."""
+    s = _slide(prs)
+    _section_label(s, 0.3, "STEP 4 — MEASURE")
+    _section_title(s, 0.3, "Value Driver Tree")
+
+    # Parse outcome
+    outcome_match = re.search(r"### Customer Business Outcome\n(.+?)(?:\n###|\Z)", vdt_md, re.DOTALL)
+    outcome = outcome_match.group(1).strip().split("\n")[0] if outcome_match else ""
+    if outcome:
+        _rect(s, 0.7, 1.4, 11.9, 0.5, CARD_BG2)
+        _tb(s, 0.9, 1.42, 11.5, 0.5, _trunc(outcome, 150), FB, 11, WHITE)
+
+    # Parse deliverables table
+    table_match = re.search(
+        r"### Key Deliverables.*?\n(\|.+?)(?=\n###|\n---|\Z)", vdt_md, re.DOTALL
+    )
+    if table_match:
+        rows = _parse_md_table(table_match.group(1))
+        y = 2.2
+        for idx, row in enumerate(rows[:4]):
+            deliv = row.get("Key Deliverable", "")
+            measure = row.get("Success Measure", "")
+            baseline = row.get("Baseline", "")
+            target = row.get("Target", "")
+            driver = row.get("Driver Type", "")
+
+            _rect(s, 0.7, y, 11.9, 1.3, CARD_BG, CARD_BORDER)
+            accent = [HPE_GREEN, HPE_BLUE, HPE_PURPLE, HPE_ORANGE][idx % 4]
+            _bar(s, 0.7, y, 0.08, 1.3, accent)
+
+            _tb(s, 1.0, y + 0.05, 8.5, 0.35, _trunc(deliv, 100), FB, 10, WHITE, True)
+            _tb(s, 1.0, y + 0.4, 8.5, 0.3, f"Measure: {_trunc(measure, 90)}", FB, 9, MUTED)
+            _tb(s, 1.0, y + 0.7, 5.0, 0.3, f"Baseline: {_trunc(baseline, 50)}", FB, 9, MUTED)
+            _tb(s, 6.0, y + 0.7, 5.0, 0.3, f"Target: {_trunc(target, 50)}", FB, 9, HPE_GREEN)
+
+            # Driver type badge
+            _rect(s, 10.5, y + 0.05, 1.8, 0.35, accent)
+            _tb(s, 10.5, y + 0.07, 1.8, 0.35, driver, FH, 9, BG_DARK, True, PP_ALIGN.CENTER)
+
+            y += 1.5
+
+    _footer(s)
+    return s
+
+
+def _slide_actionable_insights(prs, insights_md):
+    """Slide: Actionable Insights + Problem Statements."""
+    s = _slide(prs)
+    _section_label(s, 0.3, "STEP 4 — DEFINE")
+    _section_title(s, 0.3, "Actionable Insights")
+
+    # Parse the XYZ insight statement
+    xyz_match = re.search(r"\*\*(.+?)\*\* DOES \*\*(.+?)\*\* BECAUSE \*\*(.+?)\*\* BUT \*\*(.+?)\*\*",
+                          insights_md)
+    if xyz_match:
+        who, does, because, but = xyz_match.groups()
+        _rect(s, 0.7, 1.4, 11.9, 1.3, CARD_BG2)
+        _tb(s, 0.9, 1.45, 11.5, 0.3, _trunc(who, 80), FH, 11, HPE_GREEN, True)
+        _tb(s, 0.9, 1.75, 11.5, 0.25, f"DOES: {_trunc(does, 100)}", FB, 10, WHITE)
+        _tb(s, 0.9, 2.0, 11.5, 0.25, f"BECAUSE: {_trunc(because, 100)}", FB, 10, MUTED)
+        _tb(s, 0.9, 2.25, 11.5, 0.3, f"BUT: {_trunc(but, 100)}", FB, 10, HPE_ORANGE)
+
+    # Parse problem statements
+    prob_match = re.search(r"### Problem Statements\n(\|.+?)(?=\n---|\Z)", insights_md, re.DOTALL)
+    if prob_match:
+        rows = _parse_md_table(prob_match.group(1))
+        y = 3.0
+        for idx, row in enumerate(rows[:3]):
+            num = row.get("#", str(idx + 1))
+            stmt = row.get("Problem Statement", "")
+            priority = row.get("Priority", "")
+            priority_clr = HPE_ORANGE if priority == "High" else HPE_YELLOW if priority == "Medium" else MUTED
+
+            _rect(s, 0.7, y, 11.9, 1.1, CARD_BG, CARD_BORDER)
+            _rect(s, 0.9, y + 0.1, 0.5, 0.5, priority_clr, radius=True)
+            _tb(s, 0.9, y + 0.12, 0.5, 0.5, num, FH, 16, BG_DARK, True, PP_ALIGN.CENTER)
+            _tb(s, 1.6, y + 0.1, 9.5, 0.8, _trunc(stmt, 150), FB, 10, WHITE)
+            _rect(s, 10.8, y + 0.1, 1.5, 0.35, priority_clr)
+            _tb(s, 10.8, y + 0.12, 1.5, 0.35, priority, FH, 9, BG_DARK, True, PP_ALIGN.CENTER)
+
+            y += 1.25
+
+    _footer(s)
+    return s
+
+
+def _slide_vpc(prs, vpc_md):
+    """Slide: Value Proposition Canvas."""
+    s = _slide(prs)
+    _section_label(s, 0.3, "STEP 5 — VALUE PROPOSITION")
+    _section_title(s, 0.3, "Value Proposition Canvas — Value Map")
+
+    # Parse Products, Pain Relievers, Gain Creators
+    card_defs = [
+        ("Products & Services", "PRODUCTS & SERVICES", HPE_GREEN, r"#### Products & Services\n(\|.+?)(?=\n####|\n###|\Z)"),
+        ("Pain Relievers", "PAIN RELIEVERS", HPE_ORANGE, r"#### Pain Relievers\n(\|.+?)(?=\n####|\n###|\Z)"),
+        ("Gain Creators", "GAIN CREATORS", HPE_BLUE, r"#### Gain Creators\n(\|.+?)(?=\n####|\n###|\Z)"),
+    ]
+
+    cw = 3.8
+    gx = 0.35
+    total_w = 3 * cw + 2 * gx
+    sx = (13.33 - total_w) / 2
+    sy = 1.4
+    ch = 3.5
+
+    for j, (key, label, accent, pattern) in enumerate(card_defs):
+        x = sx + j * (cw + gx)
+        _rect(s, x, sy, cw, ch, CARD_BG, CARD_BORDER)
+        _bar(s, x, sy, cw, 0.05, accent)
+        _tb(s, x + 0.15, sy + 0.12, cw - 0.3, 0.3, label, FH, 9, accent, True)
+
+        match = re.search(pattern, vpc_md, re.DOTALL)
+        if match:
+            rows = _parse_md_table(match.group(1))
+            lines = []
+            for row in rows[:4]:
+                # Get main content
+                content = (row.get("Product/Service") or row.get("Pain Reliever")
+                           or row.get("Gain Creator") or "")
+                relevance = row.get("Relevance", "")
+                lines.append(f"\u2022 {_trunc(content, 65)}")
+                lines.append(f"   [{relevance}]")
+            if lines:
+                _multi_tb(s, x + 0.15, sy + 0.5, cw - 0.3, ch - 0.7,
+                          lines, FB, 8, MUTED, sp=2)
+
+    # Ad-Lib at bottom
+    adlib_match = re.search(r"> \*\*OUR\*\*(.+?)(?=Context anchor|\Z)", vpc_md, re.DOTALL)
+    if adlib_match:
+        adlib = adlib_match.group(1).strip().replace("> ", "").replace("\n", " ")[:200]
+        _rect(s, 0.7, 5.2, 11.9, 1.3, CARD_BG2)
+        _tb(s, 0.8, 5.2, 0.9, 0.3, "AD-LIB", FH, 8, HPE_GREEN, True)
+        _tb(s, 0.8, 5.5, 11.7, 0.9, _trunc(adlib, 200), FB, 9, MUTED)
+
+    _footer(s)
+    return s
+
+
+def _slide_bmc(prs, bmc_md):
+    """Slide: Business Model Canvas."""
+    s = _slide(prs)
+    _section_label(s, 0.3, "STEP 6 — DESIGN")
+    _section_title(s, 0.3, "Business Model Canvas")
+
+    bmc_sections = [
+        ("Desirability", HPE_GREEN, ["Customer Segments", "Value Proposition", "Channels", "Customer Relationships"]),
+        ("Feasibility", HPE_BLUE, ["Key Partnerships", "Key Activities", "Key Resources"]),
+        ("Viability", HPE_PURPLE, ["Revenue Streams", "Cost Structure"]),
+    ]
+
+    cw = 3.8
+    gx = 0.35
+    total_w = 3 * cw + 2 * gx
+    sx = (13.33 - total_w) / 2
+    sy = 1.4
+
+    for j, (dim, accent, blocks) in enumerate(bmc_sections):
+        x = sx + j * (cw + gx)
+        ch = 5.0
+        _rect(s, x, sy, cw, ch, CARD_BG, CARD_BORDER)
+        _bar(s, x, sy, cw, 0.05, accent)
+        _tb(s, x + 0.15, sy + 0.12, cw - 0.3, 0.3, dim.upper(), FH, 10, accent, True)
+
+        # Parse table for this dimension
+        dim_match = re.search(rf"### {dim}\n(\|.+?)(?=\n###|\n---|\Z)", bmc_md, re.DOTALL)
+        if dim_match:
+            rows = _parse_md_table(dim_match.group(1))
+            lines = []
+            for row in rows:
+                block = row.get("Building Block", "")
+                desc = row.get("Description", "")
+                lines.append(f"{block}:")
+                lines.append(f"  {_trunc(desc, 80)}")
+                lines.append("")
+            if lines:
+                _multi_tb(s, x + 0.15, sy + 0.5, cw - 0.3, ch - 0.7,
+                          lines, FB, 8, MUTED, sp=1)
+
+    _footer(s)
+    return s
+
+
+def _slide_fit(prs, fit_md):
+    """Slide: Fit Assessment."""
+    s = _slide(prs)
+    _section_label(s, 0.3, "STEP 6 — FIT ASSESSMENT")
+    _section_title(s, 0.3, "Problem-Solution / Product-Market / Business Model Fit")
+
+    fit_types = [
+        ("Problem-Solution Fit", HPE_GREEN, r"### Problem-Solution Fit\n(\|.+?)(?=\n###|\Z)"),
+        ("Product-Market Fit", HPE_BLUE, r"### Product-Market Fit Status\n(\|.+?)(?=\n###|\Z)"),
+        ("Business Model Fit", HPE_PURPLE, r"### Business Model Fit Status\n(\|.+?)(?=\n###|\Z)"),
+    ]
+
+    cw = 3.8
+    gx = 0.35
+    total_w = 3 * cw + 2 * gx
+    sx = (13.33 - total_w) / 2
+    sy = 1.5
+    ch = 4.8
+
+    for j, (title, accent, pattern) in enumerate(fit_types):
+        x = sx + j * (cw + gx)
+        _rect(s, x, sy, cw, ch, CARD_BG, CARD_BORDER)
+        _bar(s, x, sy, cw, 0.05, accent)
+        _tb(s, x + 0.15, sy + 0.12, cw - 0.3, 0.3, title.upper(), FH, 9, accent, True)
+
+        match = re.search(pattern, fit_md, re.DOTALL)
+        if match:
+            rows = _parse_md_table(match.group(1))
+            lines = []
+            for row in rows[:5]:
+                # Adapt to different column names
+                need = (row.get("Customer Need (Job/Pain/Gain)") or row.get("Criterion")
+                        or row.get("Dimension") or "")
+                status = row.get("Fit?") or row.get("Status") or ""
+                evidence = row.get("Evidence") or row.get("Mapped Value Proposition Element") or ""
+                status_icon = "\u2705" if status in ("Strong", "Validated") else "\u26A0\uFE0F" if status in ("Partial", "Assumed") else "\u2753"
+                lines.append(f"{status_icon} {_trunc(need, 55)}")
+                lines.append(f"   {status}: {_trunc(evidence, 60)}")
+                lines.append("")
+            if lines:
+                _multi_tb(s, x + 0.15, sy + 0.5, cw - 0.3, ch - 0.7,
+                          lines, FB, 8, MUTED, sp=1)
+
+    _footer(s)
+    return s
+
+
+def _slide_assumptions(prs, assumptions_md):
+    """Slide: Assumptions & Risk Map."""
+    s = _slide(prs)
+    _section_label(s, 0.3, "STEP 7 — DE-RISK")
+    _section_title(s, 0.3, "Assumptions & Importance × Evidence Map")
+
+    # Parse the quadrant map table
+    map_match = re.search(
+        r"## Importance.*?Evidence Map.*?\n(\|.+?)(?=\n---|\n##|\Z)", assumptions_md, re.DOTALL
+    )
+    if map_match:
+        rows = _parse_md_table(map_match.group(1))
+        # Group by quadrant
+        quadrants: dict[str, list[dict]] = {}
+        for row in rows:
+            q = row.get("Suggested Quadrant", "Unknown")
+            quadrants.setdefault(q, []).append(row)
+
+        quad_colors = {
+            "Test first": HPE_ORANGE,
+            "Monitor": HPE_YELLOW,
+            "Defer": MID_GRAY,
+            "Already validated": HPE_GREEN,
+        }
+
+        y = 1.5
+        for quad_name, q_rows in quadrants.items():
+            accent = quad_colors.get(quad_name, MUTED)
+            _rect(s, 0.7, y, 11.9, 0.35, accent)
+            _tb(s, 0.9, y + 0.02, 11.5, 0.35, quad_name.upper(), FH, 11, BG_DARK, True)
+            y += 0.45
+
+            for row in q_rows[:4]:
+                assumption = row.get("Assumption", "")
+                category = row.get("Category", "")
+                cat_color = CAT_COLORS.get(category, MUTED)
+
+                _rect(s, 0.7, y, 11.9, 0.55, CARD_BG, CARD_BORDER)
+                _bar(s, 0.7, y, 0.06, 0.55, cat_color)
+                _tb(s, 1.0, y + 0.05, 9.5, 0.45, _trunc(assumption, 100), FB, 9, WHITE)
+                _rect(s, 10.8, y + 0.08, 1.6, 0.35, cat_color)
+                _tb(s, 10.8, y + 0.1, 1.6, 0.35, category, FH, 8, BG_DARK, True, PP_ALIGN.CENTER)
+                y += 0.6
+
+            y += 0.15
+    else:
+        # Fallback: show D/V/F tables
+        _tb(s, 0.7, 1.5, 11.9, 1, "See speaker notes for full assumption tables.", FB, 12, MUTED)
+        _notes(s, assumptions_md[:3000])
+
+    _footer(s)
+    return s
+
+
+def _slide_dvf_tensions(prs, assumptions_md):
+    """Slide: DVF Tensions."""
+    tension_match = re.search(r"## DVF Tensions\n(\|.+?)(?=\n##|\Z)", assumptions_md, re.DOTALL)
+    if not tension_match:
+        return None
+    rows = _parse_md_table(tension_match.group(1))
+    if not rows:
+        return None
+
+    s = _slide(prs)
+    _section_label(s, 0.3, "STEP 7 — DE-RISK")
+    _section_title(s, 0.3, "DVF Tensions")
+
+    y = 1.5
+    for idx, row in enumerate(rows[:4]):
+        tension = row.get("Tension", "")
+        categories = row.get("Categories", "")
+
+        _rect(s, 0.7, y, 11.9, 1.3, CARD_BG, CARD_BORDER)
+        _bar(s, 0.7, y, 0.08, 1.3, HPE_ORANGE)
+        _tb(s, 1.0, y + 0.05, 11.3, 0.9, _trunc(tension, 200), FB, 9, WHITE)
+        _tb(s, 1.0, y + 0.9, 11.3, 0.3, categories, FH, 9, HPE_ORANGE, True)
+        y += 1.5
+
+    _footer(s)
+    return s
+
+
+def _slide_experiments(prs, experiment_cards):
+    """Slide: Experiment Selection summary."""
+    s = _slide(prs)
+    _section_label(s, 0.3, "STEP 8 — TEST")
+    _section_title(s, 0.3, "Experiment Selection")
+
+    if not experiment_cards:
+        _tb(s, 1, 3, 11, 1, "No experiments selected.", FB, 16, MUTED)
+        _footer(s)
+        return s
+
+    # Group by category
+    by_cat: dict[str, list[dict]] = {}
+    for card in experiment_cards:
+        cat = card.get("category", "Unknown")
+        by_cat.setdefault(cat, []).append(card)
+
+    cols = list(by_cat.keys())
+    n_cols = len(cols)
+    cw = min(3.8, (12.0 - (n_cols - 1) * 0.35) / n_cols)
+    gx = 0.35
+    total_w = n_cols * cw + (n_cols - 1) * gx
+    sx = (13.33 - total_w) / 2
+    sy = 1.5
+    ch = 4.8
+
+    for j, cat in enumerate(cols):
+        x = sx + j * (cw + gx)
+        accent = CAT_COLORS.get(cat, HPE_GREEN)
+        cards_in_cat = by_cat[cat]
+
+        _rect(s, x, sy, cw, ch, CARD_BG, CARD_BORDER)
+        _bar(s, x, sy, cw, 0.05, accent)
+        _tb(s, x + 0.15, sy + 0.12, cw - 0.3, 0.3, cat.upper(), FH, 10, accent, True)
+
+        lines = []
+        for c in cards_in_cat:
+            assumption = c.get("assumption", "")
+            card_name = c.get("card_name", "")
+            strength = c.get("evidence_strength", "")
+            lines.append(f"\u25B6 {card_name} [{strength}]")
+            lines.append(f"  {_trunc(assumption, 65)}")
+            # Evidence path
+            path = c.get("evidence_path", [])
+            if path:
+                path_str = " \u2192 ".join(p.get("card_name", "") for p in path)
+                lines.append(f"  Path: {_trunc(path_str, 60)}")
+            lines.append("")
+
+        if lines:
+            _multi_tb(s, x + 0.15, sy + 0.5, cw - 0.3, ch - 0.7,
+                      lines, FB, 8, MUTED, sp=1)
+
+    _footer(s)
+    return s
+
+
+def _slide_experiment_worksheets(prs, worksheets_md):
+    """Slide(s): Experiment Worksheets — one card per worksheet."""
+    # Split by "## Experiment Worksheet"
+    chunks = re.split(r"## Experiment Worksheet\b", worksheets_md)
+    chunks = [c.strip() for c in chunks if c.strip()]
+
+    if not chunks:
+        return []
+
+    slides = []
+    for idx, chunk in enumerate(chunks[:4]):  # max 4 worksheets
+        s = _slide(prs)
+        _section_label(s, 0.3, "STEP 8 — EXPERIMENT WORKSHEET")
+
+        # Parse key fields
+        card_match = re.search(r"\*\*Experiment card:\*\* (.+)", chunk)
+        cat_match = re.search(r"\*\*Category:\*\* (.+)", chunk)
+        assumption_match = re.search(r"\*\*Assumption statement:\*\* (.+)", chunk)
+        primary_metric_match = re.search(r"\*\*Primary metric:\*\* (.+)", chunk)
+        success_match = re.search(r"\*\*Success looks like:\*\* (.+)", chunk)
+        failure_match = re.search(r"\*\*Failure looks like:\*\* (.+)", chunk)
+        timebox_match = re.search(r"\*\*Timebox:\*\* (.+)", chunk)
+        sample_match = re.search(r"\*\*Sample size target:\*\* (.+)", chunk)
+
+        card_name = card_match.group(1) if card_match else f"Experiment {idx + 1}"
+        category = cat_match.group(1) if cat_match else ""
+        assumption = assumption_match.group(1) if assumption_match else ""
+        accent = CAT_COLORS.get(category, HPE_GREEN)
+
+        _section_title(s, 0.3, f"{card_name} — {category}")
+
+        # Main card
+        _rect(s, 0.7, 1.5, 11.9, 5.0, CARD_BG, CARD_BORDER)
+        _bar(s, 0.7, 1.5, 11.9, 0.05, accent)
+
+        # Assumption
+        _tb(s, 0.9, 1.65, 0.9, 0.25, "ASSUMPTION", FH, 8, accent, True)
+        _tb(s, 0.9, 1.9, 11.5, 0.4, _trunc(assumption, 150), FB, 10, WHITE)
+
+        # Two-column layout
+        col1_x, col2_x = 0.9, 6.8
+        col_w = 5.5
+
+        # Left column: Design
+        _tb(s, col1_x, 2.5, col_w, 0.25, "EXPERIMENT DESIGN", FH, 9, accent, True)
+        design_lines = []
+        if primary_metric_match:
+            design_lines.append(f"Primary metric: {_trunc(primary_metric_match.group(1), 60)}")
+        if sample_match:
+            design_lines.append(f"Sample size: {sample_match.group(1)}")
+        if timebox_match:
+            design_lines.append(f"Timebox: {timebox_match.group(1)}")
+        if design_lines:
+            _multi_tb(s, col1_x, 2.8, col_w, 1.5, design_lines, FB, 9, MUTED, sp=4, bullet=True)
+
+        # Right column: Criteria
+        _tb(s, col2_x, 2.5, col_w, 0.25, "DECISION CRITERIA", FH, 9, accent, True)
+        criteria_lines = []
+        if success_match:
+            criteria_lines.append(f"\u2705 Success: {_trunc(success_match.group(1), 60)}")
+        if failure_match:
+            criteria_lines.append(f"\u274C Failure: {_trunc(failure_match.group(1), 60)}")
+        if criteria_lines:
+            _multi_tb(s, col2_x, 2.8, col_w, 1.5, criteria_lines, FB, 9, MUTED, sp=4)
+
+        # Execution steps
+        exec_match = re.search(r"### Execution Plan\n((?:\d+\..*\n?)+)", chunk)
+        if exec_match:
+            _tb(s, col1_x, 4.2, 11, 0.25, "EXECUTION PLAN", FH, 9, accent, True)
+            steps = [l.strip() for l in exec_match.group(1).strip().split("\n") if l.strip()]
+            _multi_tb(s, col1_x, 4.5, 11, 1.5, steps[:5], FB, 9, MUTED, sp=2)
+
+        # Sequencing
+        seq_pos_match = re.search(r"\*\*If signal is positive, move next to:\*\* (.+)", chunk)
+        seq_mix_match = re.search(r"\*\*If signal is weak or mixed, move next to:\*\* (.+)", chunk)
+        if seq_pos_match:
+            _tb(s, col1_x, 5.8, 11, 0.25, "SEQUENCING", FH, 9, accent, True)
+            seq_lines = [f"\u2192 If positive: {seq_pos_match.group(1)}"]
+            if seq_mix_match:
+                seq_lines.append(f"\u2192 If mixed: {seq_mix_match.group(1)}")
+            _multi_tb(s, col1_x, 6.05, 11, 0.5, seq_lines, FB, 9, MUTED, sp=2)
+
+        _footer(s)
+        slides.append(s)
+
+    return slides
+
+
+# ── Main ────────────────────────────────────────────────────────────────
+
+def generate_report_pptx(
+    state: dict[str, Any],
+    meta: dict[str, Any],
+    template_path: str = TEMPLATE,
+    output_path: str | None = None,
+) -> str:
+    """Generate a PowerPoint report from workflow state.
+
+    Args:
+        state: The workflow state dict (from state_json).
+        meta: Dict with session_id, session_name, created, status, llm_backend, input_type.
+        template_path: Path to the HPE PPTX template.
+        output_path: Output file path. Defaults to reports/<session_id>_report.pptx.
+
+    Returns:
+        The output file path.
+    """
+    prs = _init_prs(template_path)
+
+    # Slide 1: Cover
+    _slide_cover(prs, state, meta)
+
+    # Slide 2: Signals
+    _slide_signals(prs, state.get("signals", []))
+
+    # Slide 3: Priority Matrix
+    _slide_priority(prs, state.get("priority_matrix", []))
+
+    # Slide 4: Pattern Selection
+    _slide_pattern(prs, state)
+
+    # Slide 5: Customer Profile
+    if state.get("customer_profile"):
+        _slide_customer_profile(prs, state["customer_profile"])
+
+    # Slide 6: Value Driver Tree
+    if state.get("value_driver_tree"):
+        _slide_value_driver_tree(prs, state["value_driver_tree"])
+
+    # Slide 7: Actionable Insights
+    if state.get("actionable_insights"):
+        _slide_actionable_insights(prs, state["actionable_insights"])
+
+    # Slide 8: Value Proposition Canvas
+    if state.get("value_proposition_canvas"):
+        _slide_vpc(prs, state["value_proposition_canvas"])
+
+    # Slide 9: Business Model Canvas
+    if state.get("business_model_canvas"):
+        _slide_bmc(prs, state["business_model_canvas"])
+
+    # Slide 10: Fit Assessment
+    if state.get("fit_assessment"):
+        _slide_fit(prs, state["fit_assessment"])
+
+    # Slide 11: Assumptions & Risk Map
+    if state.get("assumptions"):
+        _slide_assumptions(prs, state["assumptions"])
+        # Slide 12: DVF Tensions
+        _slide_dvf_tensions(prs, state["assumptions"])
+
+    # Slide 13: Experiments
+    _slide_experiments(prs, state.get("experiment_cards", []))
+
+    # Slides 14+: Experiment Worksheets
+    if state.get("experiment_worksheets"):
+        _slide_experiment_worksheets(prs, state["experiment_worksheets"])
+
+    # Save
+    if output_path is None:
+        output_path = f"reports/{meta.get('session_id', 'report')}_report.pptx"
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    prs.save(output_path)
+    return output_path
+
+
+# ── CLI ─────────────────────────────────────────────────────────────────
+
+def main():
+    import typer
+
+    from backend.app.db.models import WorkflowRun
+    from backend.app.db.session import SessionLocal
+
+    app = typer.Typer()
+
+    @app.command()
+    def generate(
+        session_id: str | None = typer.Option(None, "--session-id"),
+        output: str | None = typer.Option(None, "--output", "-o"),
+        template: str = typer.Option(TEMPLATE, "--template"),
+    ):
+        """Generate a PowerPoint report from a workflow session."""
+        sess = SessionLocal()
+        try:
+            if session_id:
+                run = sess.query(WorkflowRun).filter_by(session_id=session_id).first()
+                if not run:
+                    typer.echo(f"Error: session '{session_id}' not found.", err=True)
+                    raise typer.Exit(code=1)
+            else:
+                run = (
+                    sess.query(WorkflowRun)
+                    .filter_by(status="completed")
+                    .order_by(WorkflowRun.created_at.desc())
+                    .first()
+                )
+                if not run:
+                    run = sess.query(WorkflowRun).order_by(WorkflowRun.created_at.desc()).first()
+                if not run:
+                    typer.echo("Error: no workflow runs found.", err=True)
+                    raise typer.Exit(code=1)
+                typer.echo(f"Using most recent session: {run.session_id}")
+
+            state = run.state_json if isinstance(run.state_json, dict) else {}
+            meta = {
+                "session_id": run.session_id,
+                "session_name": run.session_name,
+                "created": run.created_at.strftime("%Y-%m-%d %H:%M UTC") if run.created_at else "N/A",
+                "status": run.status,
+                "llm_backend": run.llm_backend,
+                "input_type": run.input_type,
+            }
+
+            out = generate_report_pptx(state, meta, template_path=template, output_path=output)
+            typer.echo(f"Report saved to {out}")
+        finally:
+            sess.close()
+
+    app()
+
+
+if __name__ == "__main__":
+    main()

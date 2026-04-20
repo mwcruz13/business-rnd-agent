@@ -33,7 +33,10 @@ _VALID_QUADRANTS = {"Test first", "Monitor", "Deprioritize", "Safe zone"}
 class DVFAssumption(BaseModel):
     assumption: str = Field(description="Must start with 'I believe'. Statement about the business model.")
     rationale: str = Field(description="What happens if this assumption is wrong")
-    quadrant: str = Field(description="One of: Test first, Monitor, Deprioritize, Safe zone")
+    suggested_quadrant: str = Field(
+        description="LLM suggestion only — the consultant must confirm placement. "
+        "One of: Test first, Monitor, Deprioritize, Safe zone"
+    )
 
 
 class DVFCategory(BaseModel):
@@ -41,10 +44,20 @@ class DVFCategory(BaseModel):
     assumptions: list[DVFAssumption] = Field(description="Exactly 3 assumptions for this category", min_length=3, max_length=3)
 
 
+class DVFTension(BaseModel):
+    tension: str = Field(description="1-2 sentence description of the strongest conflict")
+    assumption_a: str = Field(description="First assumption involved in the tension, referenced by its text")
+    assumption_b: str = Field(description="Second assumption involved in the tension, referenced by its text")
+    categories_in_conflict: str = Field(description="E.g. 'Desirability vs Viability'")
+
+
 class Step7Output(BaseModel):
     """Complete Step 7 output: 9 DVF assumptions + tension analysis."""
     categories: list[DVFCategory] = Field(description="Exactly 3 categories: Desirability, Viability, Feasibility", min_length=3, max_length=3)
-    dvf_tension: str = Field(description="Analysis of the strongest tension between DVF dimensions")
+    dvf_tensions: list[DVFTension] = Field(
+        description="At least 1 tension between DVF dimensions, referencing specific assumptions",
+        min_length=1
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -57,7 +70,7 @@ def _build_messages(state: BMIWorkflowState) -> list[SystemMessage | HumanMessag
     if not bmc.strip():
         raise ValueError("Business Model Canvas is required for Step 7")
 
-    skill_asset = PromptAssetLoader().load_skill_asset("precoil-emt")
+    skill_asset = PromptAssetLoader().load_step_prompt("step7_risk_map")
     selected_patterns = ", ".join(state.get("selected_patterns", [])) or "approved patterns"
 
     # Load pattern library to validate DVF categories
@@ -75,8 +88,11 @@ def _build_messages(state: BMIWorkflowState) -> list[SystemMessage | HumanMessag
         "- Generate EXACTLY 3 assumptions per category (9 total).\n"
         "- Every assumption MUST start with 'I believe'.\n"
         "- Assign each assumption a quadrant: Test first, Monitor, Deprioritize, or Safe zone.\n"
+        "- Your quadrant assignments are SUGGESTIONS. Label them as such.\n"
+        "- You cannot objectively assess what evidence the organization has. Err toward\n"
+        "  'Test first' for high-impact assumptions where evidence strength is ambiguous.\n"
         "- At least 1 assumption per category should be 'Test first'.\n"
-        "- The DVF tension should identify the strongest conflict between dimensions.\n"
+        "- The DVF tensions should identify conflicts between dimensions, referencing specific assumptions.\n"
         "- Ground assumptions in the actual Business Model Canvas content.\n"
         f"- Reference {selected_patterns} where relevant.\n"
         "- Do not fabricate assumptions unrelated to the business model."
@@ -115,20 +131,28 @@ def _render_assumptions(output: Step7Output, selected_patterns: list[str]) -> st
     # DVF Tensions
     lines.extend([
         "## DVF Tensions",
-        output.dvf_tension,
-        "",
+        "| Tension | Assumptions in Conflict | Categories |",
+        "|---------|------------------------|------------|",
     ])
+    for t in output.dvf_tensions:
+        lines.append(f"| {t.tension} | {t.assumption_a} / {t.assumption_b} | {t.categories_in_conflict} |")
+    lines.append("")
 
     # Importance × Evidence Map — parseable by Step 8
     lines.extend([
-        "## Importance × Evidence Map",
-        "| Assumption | Category | Quadrant |",
-        "|------------|----------|----------|",
+        "## Importance × Evidence Map (Suggested — Review Required)",
+        "",
+        "The following quadrant placements are the LLM's best assessment. The consultant",
+        "should review and adjust based on organizational knowledge about what evidence",
+        "actually exists and which assumptions are truly vital to the business model.",
+        "",
+        "| Assumption | Category | Suggested Quadrant |",
+        "|------------|----------|--------------------|",
     ])
     for cat in output.categories:
         for assumption in cat.assumptions:
             text = assumption.assumption if assumption.assumption.startswith("I believe") else f"I believe {assumption.assumption}"
-            lines.append(f"| {text} | {cat.category} | {assumption.quadrant} |")
+            lines.append(f"| {text} | {cat.category} | {assumption.suggested_quadrant} |")
 
     return "\n".join(lines)
 

@@ -1,0 +1,70 @@
+## HPE Perspective
+
+HPE's AI-at-the-Edge strategy targets the growing demand for real-time inference at the point of data creation. Today, most enterprise AI workloads run in centralized cloud or on-prem data centers, creating latency and bandwidth bottlenecks for time-sensitive applications like visual inspection, predictive maintenance, and autonomous logistics. HPE ProLiant edge servers and GreenLake for Edge already serve a subset of early adopters, but the current sales motion is hardware-first and project-based, leaving recurring revenue on the table.
+
+Competitive pressure: Hyperscalers (AWS Outposts, Azure Stack HCI) are bundling inference runtimes with their edge appliances, and NVIDIA is expanding its Jetson ecosystem into enterprise-grade deployments. If HPE does not offer a managed, model-lifecycle service at the edge, customers will default to hyperscaler ecosystems and HPE risks being reduced to a commodity hardware supplier.
+
+Strategic opportunity: A GreenLake-based Edge AI Inference-as-a-Service (EIaaS) offering would create sticky recurring revenue, increase GreenLake attach rates for edge deployments, and position HPE as the neutral infrastructure partner for multi-model, multi-framework edge AI.
+
+## Customer Perspective
+
+### Manufacturing Customers (Discrete & Process)
+
+"We run YOLO-based visual inspection on three production lines. The models were trained in Azure, but inference must happen on-prem within 50ms. Right now we cobbled together an NVIDIA Jetson cluster ourselves, but we have no way to update models without sending an engineer on-site. Downtime during model updates costs us $12K per hour."
+
+"Our OT team doesn't trust cloud connectivity for safety-critical defect detection. They need air-gapped or intermittent-connectivity support. HPE hardware is already in our factories—if you could manage the AI runtime on top, we'd consolidate vendors."
+
+"We evaluated AWS Panorama, but it locks us into SageMaker for training. We use PyTorch internally and need framework flexibility."
+
+### Retail & Logistics Customers
+
+"We need real-time shelf analytics across 200 stores. Each store has a small server closet, no IT staff. Model updates need to happen over-the-air without store disruption. Our current vendor charges per-camera licensing, which doesn't scale."
+
+"Loss prevention AI is a board-level priority. We piloted a startup solution, but they can't meet our data residency requirements in the EU. HPE's sovereign edge positioning is attractive."
+
+### Healthcare Customers
+
+"Radiology AI inference needs to run inside hospital networks due to HIPAA and patient data sovereignty. Latency to cloud is unacceptable for real-time surgical guidance. We need an on-prem inference platform that our biomedical engineers can manage without deep ML expertise."
+
+"We have 14 different AI models from 5 vendors running on separate appliances. Consolidating onto a single managed platform would reduce our support burden by 60%."
+
+## Root Causes & Barriers
+
+1. No unified MLOps pipeline from cloud training to edge deployment—customers build bespoke bridges.
+2. Edge sites lack IT staff; model lifecycle management (versioning, rollback, A/B testing) is manual.
+3. Security and compliance requirements (air-gap, data sovereignty) are not addressed by hyperscaler edge offerings.
+4. HPE's current edge portfolio is hardware-centric; no differentiated software/service layer for AI workloads.
+5. Internal HPE: Edge sales teams lack AI competency; channel partners are not enabled on inference workloads.
+
+## Impact
+
+Failure to act within 12 months risks ceding the edge AI inference market to hyperscalers and NVIDIA.
+90% of enterprise edge AI projects stall at pilot stage due to operational complexity—HPE can capture this gap.
+TAM for edge AI inference services estimated at $8.2B by 2027, growing 34% CAGR.
+Customer interviews indicate willingness to pay 2-3x hardware-only margins for a managed inference service with guaranteed SLAs.
+
+## Expected Outcomes
+
+Launch EIaaS on GreenLake within 6 months for manufacturing vertical, expand to retail and healthcare within 12 months.
+Achieve $50M ARR in Year 1 from conversion of existing edge hardware customers.
+Reduce customer time-to-inference from weeks to hours via pre-validated model deployment blueprints.
+Increase GreenLake edge attach rate from 12% to 40%.
+Establish HPE as the vendor-neutral alternative to hyperscaler lock-in for edge AI.
+
+## Assumptions About Customer Segments
+
+### Manufacturing (Primary Segment)
+- 300+ existing HPE ProLiant edge customers in discrete manufacturing
+- 70% have active AI/ML initiatives but struggle with edge deployment
+- Willing to pay $2K-$5K/month per site for managed inference
+- Decision maker: VP Manufacturing Operations + CTO jointly
+
+### Retail & Logistics (Secondary Segment)
+- High-volume, low-touch deployment model needed (200+ sites)
+- Per-camera or per-model pricing preferred over per-server
+- 18-month sales cycle due to procurement complexity
+
+### Healthcare (Tertiary Segment)
+- Highest compliance requirements but highest willingness to pay
+- Regulatory approval timelines extend deployment by 6-12 months
+- Strong reference-ability value for other regulated industries

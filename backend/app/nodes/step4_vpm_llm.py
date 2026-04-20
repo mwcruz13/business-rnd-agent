@@ -81,7 +81,7 @@ def _build_messages(state: BMIWorkflowState) -> list[SystemMessage | HumanMessag
     if not customer_profile.strip():
         raise ValueError("Customer profile is required for Step 4")
 
-    skill_asset = PromptAssetLoader().load_skill_asset("cxif-bmi-coach")
+    skill_asset = PromptAssetLoader().load_step_prompt("step4_measure_define")
     selected_patterns = ", ".join(state.get("selected_patterns", [])) or "approved patterns"
     pattern_direction = str(state.get("pattern_direction", ""))
 
@@ -95,8 +95,11 @@ def _build_messages(state: BMIWorkflowState) -> list[SystemMessage | HumanMessag
         "- Success measures should use customer terms (time-to-value, effort, satisfaction, cost).\n"
         "- Reference the selected patterns in the business outcome.\n\n"
         "DEFINE PHASE — produce a Context Analysis:\n"
-        "- Assess the value chain to identify weak links affecting the customer.\n"
-        "- Map customer journey friction points (by phase, touchpoint, experience, friction type).\n"
+        "- You are analyzing the value chain from the SUPPLIER'S perspective — identify where the\n"
+        "  supplier's activities, resources, and partnerships create or fail to create value for the customer.\n"
+        "- Assess the value chain to identify supplier-side weak links affecting the customer.\n"
+        "- Map customer journey friction points caused by supplier operations (by phase, touchpoint, experience, friction type).\n"
+        "- Consider BOTH the customer context AND the supplier context — people, systems, patterns, and problems on both sides.\n"
         "- Synthesize actionable insights as a WHO-DOES-BECAUSE-BUT statement.\n"
         "- Frame at least 1 prioritized problem statement grounded in the empathy profile.\n\n"
         "RULES:\n"

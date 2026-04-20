@@ -222,6 +222,7 @@ def assert_coverage_gaps(step1_result: BMIWorkflowState) -> None:
 )
 def judge_verdict(workflow_state: BMIWorkflowState, step1_result: BMIWorkflowState) -> JudgeVerdict:
     settings = get_settings()
+    settings.llm_backend = workflow_state.get("llm_backend", settings.llm_backend)
     llm = get_chat_model(settings)
     voc_text = str(workflow_state.get("voc_data", ""))
     step1_output = {

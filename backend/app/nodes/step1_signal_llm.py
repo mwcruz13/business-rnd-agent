@@ -38,7 +38,9 @@ class InterpretedSignal(BaseModel):
     classification: str = Field(description="Sustaining or Disruptive — New-Market / Low-End")
     confidence: str = Field(description="Low, Medium, or High")
     rationale: str
-    alternative_explanation: str
+    alternative_explanation: str = Field(
+        description="At least one plausible reason this signal might NOT represent a disruptive trajectory"
+    )
     key_evidence_gap: str
     filters: list[str] = Field(default_factory=list, description="Disruption filter names that apply")
 
@@ -53,12 +55,26 @@ class PriorityEntry(BaseModel):
     rationale: str
 
 
+class SignalRecommendation(BaseModel):
+    signal_id: str
+    action_tier: str = Field(description="Act, Investigate, or Monitor")
+    what_we_know: str = Field(description="2-3 sentence evidence summary")
+    what_we_dont_know: list[str] = Field(description="Critical evidence gaps")
+    experiment_candidate: str = Field(
+        description="Testable assumption starting with 'We believe that...'"
+    )
+
+
 class SignalScanResult(BaseModel):
     """Complete Step 1 output from the SOC Radar agent."""
     signals: list[DetectedSignal]
     interpreted_signals: list[InterpretedSignal]
     priority_matrix: list[PriorityEntry]
     coverage_gaps: list[dict[str, str]] = Field(default_factory=list)
+    recommendations: list[SignalRecommendation] = Field(
+        default_factory=list,
+        description="Recommendations for Investigate and Act tier signals"
+    )
     agent_recommendation: str = Field(description="Summary recommendation for the consultant")
 
 
@@ -76,7 +92,7 @@ def _build_messages(voc_data: str) -> list[SystemMessage | HumanMessage]:
     system_prompt = (
         f"{skill_asset.body}\n\n"
         "You are the SOC Radar agent for the BMI consultant workflow.\n"
-        "Work ONLY with the provided material. Execute Scan, Interpret, and Prioritize phases in one pass.\n"
+        "Work ONLY with the provided material. Execute Scan, Interpret, Prioritize, and Recommend phases in one pass.\n"
         "Return only grounded signals with direct evidence excerpts from the source material.\n"
         "For each signal assign a unique snake_case signal_id.\n\n"
         "VALID SIGNAL ZONES (use exactly one per signal):\n"
@@ -91,7 +107,13 @@ def _build_messages(voc_data: str) -> list[SystemMessage | HumanMessage]:
         "Score impact (1-3) and speed (1-3); compute score = impact * speed.\n"
         "Assign tier: score 7-9 → Act, 4-6 → Investigate, 1-3 → Monitor.\n"
         "If no disruptive signals are found, classify all as Sustaining.\n"
-        "In agent_recommendation, summarize the highest-priority signals and any coverage blind spots."
+        "In agent_recommendation, summarize the highest-priority signals and any coverage blind spots.\n\n"
+        "RECOMMEND PHASE:\n"
+        "For each signal in the Investigate or Act tier, produce a recommendation with:\n"
+        "- What We Know (2-3 sentence evidence summary)\n"
+        "- What We Don't Know (critical evidence gaps)\n"
+        "- Experiment Candidate (a testable assumption starting with 'We believe that...')\n"
+        "If no signals reach Investigate or Act tier, leave recommendations empty."
     )
     user_prompt = (
         "Analyze the following Voice of Customer material and produce SOC Radar outputs.\n\n"
@@ -144,5 +166,6 @@ def run_step1_llm(state: BMIWorkflowState, llm: BaseChatModel) -> BMIWorkflowSta
         "interpreted_signals": [s.model_dump() for s in result.interpreted_signals],
         "priority_matrix": [s.model_dump() for s in result.priority_matrix],
         "coverage_gaps": _build_coverage_gaps(result.signals),
+        "signal_recommendations": [r.model_dump() for r in result.recommendations],
         "agent_recommendation": result.agent_recommendation,
     }

@@ -33,13 +33,13 @@ class ProblemSolutionFitRow(BaseModel):
 
 class FitStatusRow(BaseModel):
     criterion: str
-    status: str = Field(description="Assumed, Demonstrated, or Unknown")
+    status: str = Field(description="Validated, Assumed, or Unknown")
     evidence: str
 
 
 class BusinessModelFitRow(BaseModel):
     dimension: str = Field(description="Desirable, Feasible, or Viable")
-    status: str = Field(description="Assumed, Demonstrated, or Unknown")
+    status: str = Field(description="Validated, Assumed, or Unknown")
     evidence: str
 
 
@@ -68,13 +68,18 @@ def _build_messages(state: BMIWorkflowState) -> list[SystemMessage | HumanMessag
     if not vpc.strip():
         raise ValueError("Value Proposition Canvas is required for Step 6")
 
-    skill_asset = PromptAssetLoader().load_skill_asset("cxif-bmi-coach")
+    skill_asset = PromptAssetLoader().load_step_prompt("step6_business_model")
     selected_patterns = ", ".join(state.get("selected_patterns", [])) or "approved patterns"
     pattern_direction = str(state.get("pattern_direction", ""))
 
     system_prompt = (
         f"{skill_asset.body}\n\n"
         "You are the CXIF Business Model Design agent for the BMI consultant workflow.\n"
+        "You are designing a business model FROM THE SUPPLIER'S PERSPECTIVE.\n"
+        "Feasibility blocks (Key Partnerships, Key Activities, Key Resources) describe the SUPPLIER'S\n"
+        "operational capabilities needed to deliver the value proposition.\n"
+        "Viability blocks (Revenue Streams, Cost Structure) describe the SUPPLIER'S financial model.\n"
+        "Desirability blocks describe how the SUPPLIER reaches and serves the customer.\n\n"
         "Execute the Design phase (Business Model Canvas + Fit Assessment) from the CXIF framework.\n\n"
         "BUSINESS MODEL CANVAS:\n"
         "- Desirability: Customer Segments, Value Proposition, Channels, Customer Relationships.\n"
@@ -87,16 +92,19 @@ def _build_messages(state: BMIWorkflowState) -> list[SystemMessage | HumanMessag
         "- Business Model Fit Status: assess Desirable/Feasible/Viable dimensions.\n\n"
         "RULES:\n"
         "- Ground all outputs in the upstream Value Proposition Canvas and empathy profile.\n"
-        "- Be honest about what is Assumed vs Demonstrated vs Unknown.\n"
+        "- Be honest about what is Assumed vs Validated vs Unknown.\n"
         "- Do not fabricate evidence."
     )
+
+    voc_data = str(state.get('voc_data', ''))[:2000]
 
     user_prompt = (
         f"Pattern direction: {pattern_direction}\n"
         f"Selected patterns: {selected_patterns}\n\n"
         f"Value Proposition Canvas:\n{vpc}\n\n"
         f"Customer Profile:\n{state.get('customer_profile', '')}\n\n"
-        f"Actionable Insights:\n{state.get('actionable_insights', '')}"
+        f"Actionable Insights:\n{state.get('actionable_insights', '')}\n\n"
+        f"Original Voice of Customer evidence (reference for grounding):\n{voc_data}"
     )
     return [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
 

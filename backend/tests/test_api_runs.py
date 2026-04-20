@@ -53,6 +53,7 @@ def test_run_endpoint_accepts_raw_csv_text() -> None:
             "input_text": "Reference,Overall Comments\nACME-1,Slow onboarding with too many manual steps\nACME-2,We need faster time-to-value\n",
             "input_format": "csv",
             "session_id": session_id,
+            "llm_backend": "azure",
             "pause_at_checkpoints": False,
         },
     )
@@ -147,6 +148,7 @@ def test_resume_rejects_checkpoint_1_5_edit_without_pattern_direction() -> None:
         json={
             "input_text": "Customers report onboarding friction, too many manual steps, and delays before they reach value.",
             "session_id": session_id,
+            "llm_backend": "azure",
             "pause_at_checkpoints": True,
         },
     )

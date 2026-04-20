@@ -74,14 +74,27 @@ EMPATHY_TRIGGER_QUESTIONS: dict[str, list[tuple[str, str]]] = {
 
 
 def check_empathy_gate(profile: CustomerEmpathyProfile) -> dict[str, list[tuple[str, str]]]:
-    """Return CXIF trigger questions for any section that has zero items."""
+    """Return CXIF trigger questions for any section that has zero items or lacks type diversity."""
     gaps: dict[str, list[tuple[str, str]]] = {}
+
     if not profile.jobs:
         gaps["jobs"] = EMPATHY_TRIGGER_QUESTIONS["jobs"]
+    elif len({j.type for j in profile.jobs}) < 2:
+        existing_types = {j.type for j in profile.jobs}
+        gaps["jobs"] = [(t, q) for t, q in EMPATHY_TRIGGER_QUESTIONS["jobs"] if t not in existing_types]
+
     if not profile.pains:
         gaps["pains"] = EMPATHY_TRIGGER_QUESTIONS["pains"]
+    elif len({p.type for p in profile.pains}) < 2:
+        existing_types = {p.type for p in profile.pains}
+        gaps["pains"] = [(t, q) for t, q in EMPATHY_TRIGGER_QUESTIONS["pains"] if t not in existing_types]
+
     if not profile.gains:
         gaps["gains"] = EMPATHY_TRIGGER_QUESTIONS["gains"]
+    elif len({g.type for g in profile.gains}) < 2:
+        existing_types = {g.type for g in profile.gains}
+        gaps["gains"] = [(t, q) for t, q in EMPATHY_TRIGGER_QUESTIONS["gains"] if t not in existing_types]
+
     return gaps
 
 
@@ -117,7 +130,7 @@ def _build_messages(
     if not normalized:
         raise ValueError("Workflow input cannot be empty")
 
-    skill_asset = PromptAssetLoader().load_skill_asset("cxif-bmi-coach")
+    skill_asset = PromptAssetLoader().load_step_prompt("step3_empathize")
 
     system_prompt = (
         f"{skill_asset.body}\n\n"
@@ -129,6 +142,7 @@ def _build_messages(
         "- Generate jobs, pains, and gains proportional to the evidence available.\n"
         "- Produce at least 1 of each where evidence exists. Do not fabricate items without supporting evidence.\n"
         "- Cover multiple types (Functional, Social, Emotional, etc.) where the evidence supports it.\n"
+        "- Aim for at least 2 distinct types per section (jobs, pains, gains).\n"
         "- Jobs must describe what the CUSTOMER is trying to accomplish, not what the supplier wants.\n"
         "- Pains must describe what annoys the CUSTOMER, not supplier-side concerns.\n"
         "- Gains must describe what the CUSTOMER values, not supplier assumptions.\n"

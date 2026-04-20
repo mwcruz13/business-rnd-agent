@@ -124,7 +124,11 @@ def assert_dvf_tensions(step7_result: BMIWorkflowState) -> None:
 def assert_importance_evidence_matrix(step7_result: BMIWorkflowState) -> None:
     assumptions = step7_result["assumptions"]
     assert "## Importance × Evidence Map" in assumptions
-    assert "| Assumption | Category | Quadrant |" in assumptions
+    assert "| Assumption |" in assumptions and "| Category |" in assumptions
+    import re
+    assert re.search(r"\|\s*(?:Suggested\s+)?Quadrant\s*\|", assumptions), (
+        "Expected a 'Quadrant' or 'Suggested Quadrant' column in the importance-evidence matrix"
+    )
 
 
 @then("the assumptions identify at least one test-first risk")

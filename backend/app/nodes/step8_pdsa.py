@@ -43,6 +43,27 @@ PATH_BY_CATEGORY = {
     "Viability": ["Competitor Analysis", "Mock Sale", "Pre-Order Test"],
 }
 
+# Expanded matrix — supports evidence-aware selection in future releases.
+# Keys: DVF category → evidence level → list of candidate experiment names.
+# Default selection (current behavior) uses the "Weak" tier via PATH_BY_CATEGORY.
+EXPERIMENT_MATRIX = {
+    "Desirability": {
+        "Weak": ["Problem Interviews", "Solution Interviews", "Surveys / Questionnaires"],
+        "Medium": ["Landing Page", "Fake Door", "A/B Testing"],
+        "Strong": [],  # Escalate to Feasibility/Viability
+    },
+    "Feasibility": {
+        "Weak": ["Expert Interviews", "Paper Prototype", "Wireframe Prototype"],
+        "Medium": ["Throwaway Prototype", "Usability Testing", "3D Prototype"],
+        "Strong": ["Concierge Test", "Wizard of Oz", "Single-Feature MVP"],
+    },
+    "Viability": {
+        "Weak": ["Competitor Analysis", "Analogous Markets"],
+        "Medium": ["Mock Sale", "Letter of Intent", "Price Testing"],
+        "Strong": ["Pre-Order Test", "Crowdfunding", "Paid Pilot"],
+    },
+}
+
 
 def _load_assets() -> tuple[dict[str, ExperimentCard], dict[str, object]]:
     pattern_loader = PatternLibraryLoader()
