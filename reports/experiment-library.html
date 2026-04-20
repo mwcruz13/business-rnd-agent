@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing Business Ideas — 44 Experiment Card Library</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+
+  :root {
+    --urgent-red: #F26B43;
+    --deep-navy: #292D3A;
+    --bright-blue: #65AEF9;
+    --light-blue: #B1B9BE;
+    --off-white: #FFFFFF;
+    --green: #00E0AF;
+    --dark-bg: #292D3A;
+    --card-bg: rgba(83, 92, 102, 0.35);
+    --purple: #9B84FC;
+    --cyan: #62E5F6;
+    --mid-gray: #535C66;
+    --orange: #F26B43;
+    --weak-color: #65AEF9;
+    --medium-color: #F2C94C;
+    --strong-color: #00E0AF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'HPE Graphik', 'Inter', -apple-system, sans-serif;
+    background: var(--dark-bg);
+    color: var(--off-white);
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* === HERO === */
+  .hero {
+    position: relative;
+    min-height: 55vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 80px 40px 60px;
+    background: radial-gradient(ellipse at 30% 20%, rgba(0,224,175,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(155,132,252,0.06) 0%, transparent 60%),
+                var(--dark-bg);
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--green), #00B88C);
+    color: var(--deep-navy);
+    padding: 8px 24px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 700;
+    line-height: 1.2;
+    max-width: 900px;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 .hl-green { background: linear-gradient(135deg, var(--green), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero h1 .hl-purple { background: linear-gradient(135deg, var(--purple), var(--bright-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  .hero-subtitle {
+    font-size: 1.15rem;
+    color: var(--light-blue);
+    max-width: 700px;
+    font-weight: 300;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .stat { text-align: center; }
+  .stat-number { font-size: 2.5rem; font-weight: 900; }
+  .stat-label { font-size: 0.8rem; color: var(--light-blue); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+  .scroll-cue {
+    position: absolute;
+    bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--bright-blue);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: bounce 2s ease-in-out infinite;
+    opacity: 0.6;
+  }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+
+  /* === NAV === */
+  .nav-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(41,45,58,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(83,92,102,0.4);
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 20px;
+    flex-wrap: wrap;
+  }
+
+  .nav-tab {
+    background: transparent;
+    border: 1px solid var(--mid-gray);
+    color: var(--light-blue);
+    padding: 8px 24px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .nav-tab:hover { border-color: var(--green); color: var(--off-white); }
+  .nav-tab.active { background: var(--green); color: var(--deep-navy); border-color: var(--green); }
+
+  /* === SECTIONS === */
+  .section {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 60px 40px;
+  }
+
+  .section-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .section-subtitle {
+    font-size: 1rem;
+    color: var(--light-blue);
+    margin-bottom: 40px;
+    max-width: 700px;
+  }
+
+  /* === EVIDENCE BADGE === */
+  .evidence-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .evidence-badge.weak { background: rgba(101,174,249,0.15); color: var(--weak-color); border: 1px solid rgba(101,174,249,0.3); }
+  .evidence-badge.medium { background: rgba(242,201,76,0.15); color: var(--medium-color); border: 1px solid rgba(242,201,76,0.3); }
+  .evidence-badge.strong { background: rgba(0,224,175,0.15); color: var(--strong-color); border: 1px solid rgba(0,224,175,0.3); }
+
+  /* === CATEGORY BADGE === */
+  .cat-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 50px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .cat-badge.desirability { background: rgba(0,224,175,0.12); color: var(--green); border: 1px solid rgba(0,224,175,0.3); }
+  .cat-badge.feasibility { background: rgba(101,174,249,0.12); color: var(--bright-blue); border: 1px solid rgba(101,174,249,0.3); }
+  .cat-badge.viability { background: rgba(155,132,252,0.12); color: var(--purple); border: 1px solid rgba(155,132,252,0.3); }
+
+  /* === CARD GRID === */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid rgba(83,92,102,0.5);
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+  }
+  .card.desirability::before { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+  .card.feasibility::before { background: linear-gradient(90deg, var(--bright-blue), var(--cyan)); }
+  .card.viability::before { background: linear-gradient(90deg, var(--purple), var(--bright-blue)); }
+  .card:hover { border-color: rgba(0,224,175,0.4); transform: translateY(-2px); }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 8px;
+  }
+
+  .card-id {
+    font-size: 11px;
+    color: var(--mid-gray);
+    font-weight: 600;
+  }
+
+  .card-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .card-badges {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .card-field {
+    margin-bottom: 10px;
+  }
+
+  .card-field-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--mid-gray);
+    margin-bottom: 2px;
+  }
+
+  .card-field-value {
+    font-size: 0.9rem;
+    color: var(--light-blue);
+    line-height: 1.5;
+  }
+
+  .sequence-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 4px;
+  }
+
+  .seq-pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 50px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(83,92,102,0.4);
+    color: var(--light-blue);
+    border: 1px solid rgba(83,92,102,0.5);
+  }
+
+  /* === MATRIX TABLE === */
+  .matrix-section {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 60px 40px;
+  }
+
+  .matrix-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(83,92,102,0.5);
+  }
+
+  .matrix-table th {
+    background: rgba(83,92,102,0.4);
+    padding: 14px 20px;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 700;
+    text-align: left;
+    color: var(--light-blue);
+  }
+
+  .matrix-table td {
+    padding: 14px 20px;
+    border-top: 1px solid rgba(83,92,102,0.3);
+    vertical-align: top;
+  }
+
+  .matrix-table tr:hover td { background: rgba(83,92,102,0.15); }
+
+  .matrix-strength {
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .matrix-card-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .matrix-card-pill {
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(83,92,102,0.35);
+    color: var(--off-white);
+    border: 1px solid rgba(83,92,102,0.5);
+  }
+
+  /* === DECISION TREE === */
+  .decision-branch {
+    background: var(--card-bg);
+    border: 1px solid rgba(83,92,102,0.5);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .decision-branch::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+  }
+  .decision-branch.desirability::before { background: var(--green); }
+  .decision-branch.feasibility::before { background: var(--bright-blue); }
+  .decision-branch.viability::before { background: var(--purple); }
+  .decision-branch.discovery::before { background: var(--cyan); }
+
+  .branch-question {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .sub-branch {
+    margin-bottom: 14px;
+    padding-left: 16px;
+    border-left: 2px solid rgba(83,92,102,0.4);
+  }
+
+  .sub-context {
+    font-size: 0.85rem;
+    color: var(--cyan);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  /* === SEQUENCING === */
+  .sequence-rule {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    background: var(--card-bg);
+    border: 1px solid rgba(83,92,102,0.4);
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+
+  .rule-number {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--green);
+    min-width: 32px;
+  }
+
+  .rule-text {
+    font-size: 0.95rem;
+    color: var(--light-blue);
+  }
+
+  /* === FOOTER === */
+  .footer {
+    text-align: center;
+    padding: 40px;
+    color: var(--mid-gray);
+    font-size: 0.8rem;
+    border-top: 1px solid rgba(83,92,102,0.3);
+  }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">TESTING BUSINESS IDEAS</div>
+  <h1><span class="hl-green">44 Experiment Cards</span> for<br><span class="hl-purple">De-Risking Business Ideas</span></h1>
+  <p class="hero-subtitle">The canonical experiment card library from Bland &amp; Osterwalder — organized by Desirability, Feasibility, and Viability with evidence strength progression from Weak → Medium → Strong.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-number" style="color: var(--green)">44</div><div class="stat-label">Experiment Cards</div></div>
+    <div class="stat"><div class="stat-number" style="color: var(--weak-color)">19</div><div class="stat-label">Weak Evidence</div></div>
+    <div class="stat"><div class="stat-number" style="color: var(--medium-color)">14</div><div class="stat-label">Medium Evidence</div></div>
+    <div class="stat"><div class="stat-number" style="color: var(--strong-color)">11</div><div class="stat-label">Strong Evidence</div></div>
+  </div>
+  <div class="scroll-cue">Scroll to explore ↓</div>
+</div>
+
+<!-- NAV -->
+<div class="nav-bar">
+  <button class="nav-tab active" onclick="showSection('all')">All Cards</button>
+  <button class="nav-tab" onclick="showSection('desirability')">Desirability</button>
+  <button class="nav-tab" onclick="showSection('feasibility')">Feasibility</button>
+  <button class="nav-tab" onclick="showSection('viability')">Viability</button>
+  <button class="nav-tab" onclick="showSection('matrix')">Evidence Matrix</button>
+  <button class="nav-tab" onclick="showSection('tree')">Decision Tree</button>
+  <button class="nav-tab" onclick="showSection('sequencing')">Sequencing</button>
+</div>
+
+<!-- ALL CARDS -->
+<div id="sec-all" class="section">
+  <h2 class="section-title">All 44 Experiment Cards</h2>
+  <p class="section-subtitle">Click a category tab to filter, or scroll through the full library.</p>
+  <div class="card-grid" id="card-grid-all"></div>
+</div>
+
+<div id="sec-desirability" class="section hidden">
+  <h2 class="section-title" style="color: var(--green)">Desirability Experiments</h2>
+  <p class="section-subtitle">Do customers really have this problem or want this?</p>
+  <div class="card-grid" id="card-grid-desirability"></div>
+</div>
+
+<div id="sec-feasibility" class="section hidden">
+  <h2 class="section-title" style="color: var(--bright-blue)">Feasibility Experiments</h2>
+  <p class="section-subtitle">Can we actually build and deliver this?</p>
+  <div class="card-grid" id="card-grid-feasibility"></div>
+</div>
+
+<div id="sec-viability" class="section hidden">
+  <h2 class="section-title" style="color: var(--purple)">Viability Experiments</h2>
+  <p class="section-subtitle">Will people pay, and can this become a business?</p>
+  <div class="card-grid" id="card-grid-viability"></div>
+</div>
+
+<!-- MATRIX -->
+<div id="sec-matrix" class="matrix-section hidden">
+  <h2 class="section-title">Evidence × Category Matrix</h2>
+  <p class="section-subtitle" style="margin-bottom: 30px;">Cards organized by evidence strength and DVF category.</p>
+  <table class="matrix-table" id="matrix-table"></table>
+</div>
+
+<!-- DECISION TREE -->
+<div id="sec-tree" class="section hidden">
+  <h2 class="section-title">Experiment Decision Tree</h2>
+  <p class="section-subtitle">Start with the question you need to answer, then choose the context that fits.</p>
+  <div id="decision-tree"></div>
+</div>
+
+<!-- SEQUENCING -->
+<div id="sec-sequencing" class="section hidden">
+  <h2 class="section-title">Sequencing Rules</h2>
+  <p class="section-subtitle">Follow these principles when ordering experiments from weak to strong evidence.</p>
+  <div id="sequencing-rules"></div>
+  <h3 style="margin-top: 40px; font-size: 1.3rem; margin-bottom: 20px;">Suggested Sequence Paths</h3>
+  <div id="sequence-paths"></div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  Source: David J. Bland &amp; Alexander Osterwalder — Testing Business Ideas (2019) · Updated 2026-03-20
+</div>
+
+<script>
+const DATA = {
+  "metadata": {
+    "title": "Testing Business Ideas \u2014 44 Experiment Card Library",
+    "scope": "Canonical experiment card reference for Step 8 (PDSA Experiment Designer) and cross-referenced by precoil-emt (Phase 3) and cxif-bmi-coach (Phase 5 Part C)",
+    "card_count": 44,
+    "updated": "2026-03-20",
+    "methodology": "Testing Business Ideas by David J. Bland and Alexander Osterwalder",
+    "sources": [
+      {
+        "type": "workspace_document",
+        "path": "assistant/docs/experiment-matrix-decision-prompt-table.md",
+        "verified": [
+          "card_names",
+          "dfv_categories",
+          "evidence_strength",
+          "decision_tree"
+        ]
+      },
+      {
+        "type": "workspace_document",
+        "path": "assistant/docs/experiments-worksheet.md",
+        "verified": [
+          "sequencing_transitions",
+          "sequencing_rules"
+        ]
+      },
+      {
+        "type": "workspace_document",
+        "path": "assistant/docs/architecture-recommendation-testing-business-ideas.md",
+        "verified": [
+          "responsibility_split",
+          "quality_principle"
+        ]
+      }
+    ],
+    "quality_note": "Card names normalized from consultant-friendly version. Duplicates from the original source (Search Trends at row 37/44, Ad Campaign at row 7/45) have been resolved to exactly 44 unique entries."
+  },
+  "evidence_strength_levels": [
+    "Weak",
+    "Medium",
+    "Strong"
+  ],
+  "sequencing_rules": [
+    "Move from opinion to behavior",
+    "Move from cheap evidence to expensive evidence",
+    "Move from simulated value to real value",
+    "Move from interest to commitment",
+    "Move from first use to repeat use"
+  ],
+  "experiments": [
+    {
+      "id": 1,
+      "name": "Desk Research",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Existing market facts, customer context, baseline assumptions",
+      "best_used_when": "You need a fast baseline before fieldwork",
+      "usually_runs_after": [],
+      "usually_runs_next": [
+        "Search Trends",
+        "Keyword Research",
+        "Problem Interviews"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Search Trends",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Interest over time, demand signals, language people use",
+      "best_used_when": "You need directional interest evidence",
+      "usually_runs_after": [
+        "Desk Research"
+      ],
+      "usually_runs_next": [
+        "Keyword Research",
+        "Problem Interviews",
+        "Landing Page"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Keyword Research",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Search intent, problem awareness, demand phrasing",
+      "best_used_when": "You need search-intent evidence",
+      "usually_runs_after": [
+        "Desk Research",
+        "Search Trends"
+      ],
+      "usually_runs_next": [
+        "Ad Campaign",
+        "Landing Page",
+        "Problem Interviews"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Patent Search",
+      "category": "Feasibility",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Technical novelty, solution space, IP barriers",
+      "best_used_when": "You need to understand IP or technical space",
+      "usually_runs_after": [
+        "Desk Research"
+      ],
+      "usually_runs_next": [
+        "Expert Interviews",
+        "Throwaway Prototype"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Competitor Analysis",
+      "category": "Viability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Alternatives, market structure, positioning pressure",
+      "best_used_when": "You need baseline market structure understanding",
+      "usually_runs_after": [
+        "Desk Research"
+      ],
+      "usually_runs_next": [
+        "Analogous Markets",
+        "Mock Sale",
+        "Revenue Model Test"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Analogous Markets",
+      "category": "Viability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Comparable models, adoption patterns, transferability",
+      "best_used_when": "You want to infer patterns from similar spaces",
+      "usually_runs_after": [
+        "Desk Research",
+        "Competitor Analysis"
+      ],
+      "usually_runs_next": [
+        "Revenue Model Test",
+        "Channel Test"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Expert Interviews",
+      "category": "Feasibility",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Industry constraints, technical or regulatory insight",
+      "best_used_when": "You need specialist input on technical constraints",
+      "usually_runs_after": [
+        "Desk Research",
+        "Patent Search"
+      ],
+      "usually_runs_next": [
+        "Throwaway Prototype",
+        "Concierge Test",
+        "Paid Pilot"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Problem Interviews",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Whether the problem is real, frequent, painful",
+      "best_used_when": "You need to confirm whether a problem is real and painful",
+      "usually_runs_after": [
+        "Desk Research",
+        "Search Trends"
+      ],
+      "usually_runs_next": [
+        "Customer Observation",
+        "Solution Interviews",
+        "Landing Page"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Solution Interviews",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Initial reaction to a proposed solution",
+      "best_used_when": "You want early reaction to a concept",
+      "usually_runs_after": [
+        "Problem Interviews"
+      ],
+      "usually_runs_next": [
+        "Storyboard",
+        "Explainer Video",
+        "Landing Page"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Customer Observation",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Real behavior in context, workarounds, unmet needs",
+      "best_used_when": "You need real behavior, not opinions",
+      "usually_runs_after": [
+        "Problem Interviews"
+      ],
+      "usually_runs_next": [
+        "Contextual Inquiry",
+        "Journey Mapping",
+        "Concierge Test"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Ethnographic Field Study",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Deep context, latent jobs, environmental constraints",
+      "best_used_when": "Behavior is complex and embedded in context",
+      "usually_runs_after": [
+        "Problem Interviews"
+      ],
+      "usually_runs_next": [
+        "Contextual Inquiry",
+        "Journey Mapping",
+        "Storyboard"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Contextual Inquiry",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Workflow details, edge cases, actual task execution",
+      "best_used_when": "You need to understand task execution in context",
+      "usually_runs_after": [
+        "Problem Interviews",
+        "Customer Observation"
+      ],
+      "usually_runs_next": [
+        "Paper Prototype",
+        "Wireframe Prototype",
+        "Journey Mapping"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "Diary Study",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Repeated behaviors, recurring pains, time-based patterns",
+      "best_used_when": "The behavior unfolds over time",
+      "usually_runs_after": [
+        "Problem Interviews"
+      ],
+      "usually_runs_next": [
+        "Journey Mapping",
+        "Landing Page",
+        "Cohort / Retention Analysis"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "Journey Mapping",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Friction points, handoffs, service gaps",
+      "best_used_when": "You need a clear view of end-to-end friction",
+      "usually_runs_after": [
+        "Customer Observation",
+        "Contextual Inquiry",
+        "Diary Study"
+      ],
+      "usually_runs_next": [
+        "Storyboard",
+        "Paper Prototype",
+        "Concierge Test"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "Focus Groups",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Group reactions, language, themes, objections",
+      "best_used_when": "You want rapid group reaction and language",
+      "usually_runs_after": [
+        "Desk Research",
+        "Problem Interviews"
+      ],
+      "usually_runs_next": [
+        "Surveys / Questionnaires",
+        "Storyboard",
+        "Explainer Video"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "Surveys / Questionnaires",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Pattern detection at scale, stated preferences",
+      "best_used_when": "You need pattern detection at scale",
+      "usually_runs_after": [
+        "Problem Interviews",
+        "Focus Groups"
+      ],
+      "usually_runs_next": [
+        "Forced Ranking",
+        "Landing Page",
+        "Price Testing"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "Forced Ranking",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Priority among features, pains, gains, alternatives",
+      "best_used_when": "You need prioritization across options",
+      "usually_runs_after": [
+        "Surveys / Questionnaires",
+        "Problem Interviews"
+      ],
+      "usually_runs_next": [
+        "Card Sorting",
+        "Landing Page",
+        "Single-Feature MVP"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "Card Sorting",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Mental models, classification logic, usability structure",
+      "best_used_when": "You need to understand mental models",
+      "usually_runs_after": [
+        "Problem Interviews",
+        "Forced Ranking"
+      ],
+      "usually_runs_next": [
+        "Wireframe Prototype",
+        "Storyboard"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "Storyboard",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Whether users understand and relate to the scenario",
+      "best_used_when": "You need to test comprehension of a scenario",
+      "usually_runs_after": [
+        "Solution Interviews",
+        "Journey Mapping"
+      ],
+      "usually_runs_next": [
+        "Explainer Video",
+        "Paper Prototype",
+        "Landing Page"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Paper Prototype",
+      "category": "Feasibility",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Early usability and workflow assumptions",
+      "best_used_when": "You want to test a flow cheaply",
+      "usually_runs_after": [
+        "Contextual Inquiry",
+        "Journey Mapping",
+        "Storyboard"
+      ],
+      "usually_runs_next": [
+        "Wireframe Prototype",
+        "Usability Testing"
+      ]
+    },
+    {
+      "id": 21,
+      "name": "Wireframe Prototype",
+      "category": "Feasibility",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Interaction logic, navigation, flow clarity",
+      "best_used_when": "You need better fidelity without building",
+      "usually_runs_after": [
+        "Paper Prototype",
+        "Card Sorting"
+      ],
+      "usually_runs_next": [
+        "Usability Testing",
+        "Fake Door"
+      ]
+    },
+    {
+      "id": 22,
+      "name": "Throwaway Prototype",
+      "category": "Feasibility",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Functional assumptions without building the real thing",
+      "best_used_when": "You want to simulate functionality quickly",
+      "usually_runs_after": [
+        "Expert Interviews",
+        "Patent Search"
+      ],
+      "usually_runs_next": [
+        "Wizard of Oz",
+        "Concierge Test",
+        "Single-Feature MVP"
+      ]
+    },
+    {
+      "id": 23,
+      "name": "3D Prototype",
+      "category": "Feasibility",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Physical interaction, ergonomics, form-factor assumptions",
+      "best_used_when": "Physical form matters",
+      "usually_runs_after": [
+        "Expert Interviews",
+        "Storyboard"
+      ],
+      "usually_runs_next": [
+        "Usability Testing",
+        "Concierge Test"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "Usability Testing",
+      "category": "Feasibility",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Whether users can successfully use the solution",
+      "best_used_when": "You want to know if users can complete tasks",
+      "usually_runs_after": [
+        "Paper Prototype",
+        "Wireframe Prototype",
+        "3D Prototype"
+      ],
+      "usually_runs_next": [
+        "Fake Door",
+        "Wizard of Oz",
+        "Single-Feature MVP"
+      ]
+    },
+    {
+      "id": 25,
+      "name": "Explainer Video",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Comprehension, resonance, initial interest",
+      "best_used_when": "You need to test whether people understand the idea",
+      "usually_runs_after": [
+        "Solution Interviews",
+        "Storyboard"
+      ],
+      "usually_runs_next": [
+        "Ad Campaign",
+        "Landing Page"
+      ]
+    },
+    {
+      "id": 26,
+      "name": "Ad Campaign",
+      "category": "Desirability",
+      "evidence_strength": "Weak",
+      "what_it_tests": "Click-through interest, audience targeting, message pull",
+      "best_used_when": "You want quick paid traffic evidence",
+      "usually_runs_after": [
+        "Keyword Research",
+        "Explainer Video"
+      ],
+      "usually_runs_next": [
+        "Landing Page",
+        "Fake Door"
+      ]
+    },
+    {
+      "id": 27,
+      "name": "Landing Page",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Interest, sign-up intent, value proposition pull",
+      "best_used_when": "You want behavioral evidence of interest",
+      "usually_runs_after": [
+        "Keyword Research",
+        "Ad Campaign",
+        "Problem Interviews"
+      ],
+      "usually_runs_next": [
+        "Fake Door",
+        "Mock Sale",
+        "Pre-Order Test"
+      ]
+    },
+    {
+      "id": 28,
+      "name": "Fake Door",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Behavioral interest in a feature or offer before building",
+      "best_used_when": "You want to test interest before building",
+      "usually_runs_after": [
+        "Landing Page",
+        "Usability Testing"
+      ],
+      "usually_runs_next": [
+        "Wizard of Oz",
+        "Single-Feature MVP"
+      ]
+    },
+    {
+      "id": 29,
+      "name": "Mock Sale",
+      "category": "Viability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Real purchase intent before full delivery exists",
+      "best_used_when": "You want to test commercial intent before delivery",
+      "usually_runs_after": [
+        "Landing Page",
+        "Solution Interviews"
+      ],
+      "usually_runs_next": [
+        "Price Testing",
+        "Letter of Intent",
+        "Pre-Order Test"
+      ]
+    },
+    {
+      "id": 30,
+      "name": "Pre-Order Test",
+      "category": "Viability",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Commitment to buy before the full product exists",
+      "best_used_when": "You need real commitment before build",
+      "usually_runs_after": [
+        "Mock Sale",
+        "Landing Page"
+      ],
+      "usually_runs_next": [
+        "Presales",
+        "Paid Pilot",
+        "Minimum Viable Product"
+      ]
+    },
+    {
+      "id": 31,
+      "name": "Letter of Intent",
+      "category": "Viability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Commercial seriousness, buying intent, stakeholder alignment",
+      "best_used_when": "You need a stronger buying signal in B2B",
+      "usually_runs_after": [
+        "Mock Sale",
+        "Expert Interviews"
+      ],
+      "usually_runs_next": [
+        "Paid Pilot",
+        "Presales"
+      ]
+    },
+    {
+      "id": 32,
+      "name": "Crowdfunding",
+      "category": "Viability",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Market pull plus willingness to pay in public",
+      "best_used_when": "You want public proof of demand and payment",
+      "usually_runs_after": [
+        "Landing Page",
+        "Explainer Video",
+        "Ad Campaign"
+      ],
+      "usually_runs_next": [
+        "Pre-Order Test",
+        "Minimum Viable Product"
+      ]
+    },
+    {
+      "id": 33,
+      "name": "Concierge Test",
+      "category": "Feasibility",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Whether the value can be delivered manually before automating",
+      "best_used_when": "You want to manually deliver value before automating",
+      "usually_runs_after": [
+        "Customer Observation",
+        "Expert Interviews",
+        "Throwaway Prototype"
+      ],
+      "usually_runs_next": [
+        "Wizard of Oz",
+        "Piecemeal MVP",
+        "Paid Pilot"
+      ]
+    },
+    {
+      "id": 34,
+      "name": "Wizard of Oz",
+      "category": "Feasibility",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Whether users value the output before the backend is built",
+      "best_used_when": "You want users to experience automation before building it",
+      "usually_runs_after": [
+        "Throwaway Prototype",
+        "Usability Testing",
+        "Fake Door"
+      ],
+      "usually_runs_next": [
+        "Single-Feature MVP",
+        "Piecemeal MVP"
+      ]
+    },
+    {
+      "id": 35,
+      "name": "Single-Feature MVP",
+      "category": "Feasibility",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Whether one core capability creates enough value",
+      "best_used_when": "One feature is the core bet",
+      "usually_runs_after": [
+        "Wizard of Oz",
+        "Fake Door",
+        "Forced Ranking"
+      ],
+      "usually_runs_next": [
+        "Minimum Viable Product",
+        "Paid Pilot"
+      ]
+    },
+    {
+      "id": 36,
+      "name": "Piecemeal MVP",
+      "category": "Feasibility",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Whether the offer works using stitched-together tools/manual ops",
+      "best_used_when": "You can stitch existing tools together",
+      "usually_runs_after": [
+        "Concierge Test",
+        "Wizard of Oz"
+      ],
+      "usually_runs_next": [
+        "Minimum Viable Product",
+        "Paid Pilot"
+      ]
+    },
+    {
+      "id": 37,
+      "name": "Minimum Viable Product",
+      "category": "Feasibility",
+      "evidence_strength": "Strong",
+      "what_it_tests": "End-to-end usage, value capture, operational viability",
+      "best_used_when": "You need real usage evidence",
+      "usually_runs_after": [
+        "Single-Feature MVP",
+        "Piecemeal MVP"
+      ],
+      "usually_runs_next": [
+        "Paid Pilot",
+        "Cohort / Retention Analysis"
+      ]
+    },
+    {
+      "id": 38,
+      "name": "Paid Pilot",
+      "category": "Viability",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Whether customers will pay for real-world trial usage",
+      "best_used_when": "You want real usage with payment",
+      "usually_runs_after": [
+        "Letter of Intent",
+        "Concierge Test",
+        "Minimum Viable Product"
+      ],
+      "usually_runs_next": [
+        "Presales",
+        "Cohort / Retention Analysis"
+      ]
+    },
+    {
+      "id": 39,
+      "name": "Presales",
+      "category": "Viability",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Actual commercial commitment before full scale-up",
+      "best_used_when": "You want actual sales conversations and commitments",
+      "usually_runs_after": [
+        "Pre-Order Test",
+        "Letter of Intent"
+      ],
+      "usually_runs_next": [
+        "Paid Pilot",
+        "Minimum Viable Product"
+      ]
+    },
+    {
+      "id": 40,
+      "name": "Price Testing",
+      "category": "Viability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Price sensitivity, acceptable range, pricing objections",
+      "best_used_when": "Pricing is uncertain",
+      "usually_runs_after": [
+        "Mock Sale",
+        "Surveys / Questionnaires"
+      ],
+      "usually_runs_next": [
+        "Pre-Order Test",
+        "Revenue Model Test"
+      ]
+    },
+    {
+      "id": 41,
+      "name": "Revenue Model Test",
+      "category": "Viability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Subscription vs usage vs license vs service logic",
+      "best_used_when": "Business model is uncertain",
+      "usually_runs_after": [
+        "Competitor Analysis",
+        "Analogous Markets",
+        "Price Testing"
+      ],
+      "usually_runs_next": [
+        "Channel Test",
+        "Paid Pilot"
+      ]
+    },
+    {
+      "id": 42,
+      "name": "Channel Test",
+      "category": "Viability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Whether acquisition/distribution channels actually work",
+      "best_used_when": "Go-to-market route is uncertain",
+      "usually_runs_after": [
+        "Revenue Model Test",
+        "Competitor Analysis"
+      ],
+      "usually_runs_next": [
+        "Paid Pilot",
+        "Presales"
+      ]
+    },
+    {
+      "id": 43,
+      "name": "A/B Testing",
+      "category": "Desirability",
+      "evidence_strength": "Medium",
+      "what_it_tests": "Message, offer, design, or flow optimization",
+      "best_used_when": "You are optimizing a live message or flow",
+      "usually_runs_after": [
+        "Landing Page",
+        "Ad Campaign",
+        "Fake Door"
+      ],
+      "usually_runs_next": [
+        "Pre-Order Test",
+        "Minimum Viable Product",
+        "Channel Test"
+      ]
+    },
+    {
+      "id": 44,
+      "name": "Cohort / Retention Analysis",
+      "category": "Viability",
+      "evidence_strength": "Strong",
+      "what_it_tests": "Whether value persists and users keep coming back",
+      "best_used_when": "You need evidence users stay and return",
+      "usually_runs_after": [
+        "Minimum Viable Product",
+        "Paid Pilot"
+      ],
+      "usually_runs_next": [
+        "Revenue Model Test"
+      ]
+    }
+  ],
+  "matrix_by_evidence_and_category": {
+    "Weak": {
+      "Desirability": [
+        "Desk Research",
+        "Search Trends",
+        "Keyword Research",
+        "Problem Interviews",
+        "Solution Interviews",
+        "Journey Mapping",
+        "Focus Groups",
+        "Surveys / Questionnaires",
+        "Forced Ranking",
+        "Card Sorting",
+        "Storyboard",
+        "Explainer Video",
+        "Ad Campaign"
+      ],
+      "Feasibility": [
+        "Patent Search",
+        "Expert Interviews",
+        "Paper Prototype",
+        "Wireframe Prototype"
+      ],
+      "Viability": [
+        "Competitor Analysis",
+        "Analogous Markets"
+      ]
+    },
+    "Medium": {
+      "Desirability": [
+        "Customer Observation",
+        "Ethnographic Field Study",
+        "Contextual Inquiry",
+        "Diary Study",
+        "Landing Page",
+        "Fake Door",
+        "A/B Testing"
+      ],
+      "Feasibility": [
+        "Throwaway Prototype",
+        "3D Prototype",
+        "Usability Testing"
+      ],
+      "Viability": [
+        "Mock Sale",
+        "Letter of Intent",
+        "Price Testing",
+        "Revenue Model Test",
+        "Channel Test"
+      ]
+    },
+    "Strong": {
+      "Desirability": [],
+      "Feasibility": [
+        "Concierge Test",
+        "Wizard of Oz",
+        "Single-Feature MVP",
+        "Piecemeal MVP",
+        "Minimum Viable Product"
+      ],
+      "Viability": [
+        "Pre-Order Test",
+        "Crowdfunding",
+        "Paid Pilot",
+        "Presales",
+        "Cohort / Retention Analysis"
+      ]
+    }
+  },
+  "decision_tree": {
+    "branches": [
+      {
+        "question": "Do customers really have this problem or want this?",
+        "category": "Desirability",
+        "sub_branches": [
+          {
+            "context": "You know very little about the customer/problem",
+            "cards": [
+              "Problem Interviews",
+              "Customer Observation",
+              "Contextual Inquiry",
+              "Ethnographic Field Study"
+            ]
+          },
+          {
+            "context": "You want to test reaction to a solution or message",
+            "cards": [
+              "Solution Interviews",
+              "Storyboard",
+              "Explainer Video",
+              "Landing Page",
+              "Ad Campaign"
+            ]
+          },
+          {
+            "context": "You want behavioral evidence, not opinions",
+            "cards": [
+              "Fake Door",
+              "Landing Page",
+              "A/B Testing"
+            ]
+          },
+          {
+            "context": "You want prioritization among options",
+            "cards": [
+              "Forced Ranking",
+              "Card Sorting",
+              "Surveys / Questionnaires"
+            ]
+          }
+        ]
+      },
+      {
+        "question": "Can we actually build and deliver this?",
+        "category": "Feasibility",
+        "sub_branches": [
+          {
+            "context": "You want to test usability or flow cheaply",
+            "cards": [
+              "Paper Prototype",
+              "Wireframe Prototype",
+              "Usability Testing"
+            ]
+          },
+          {
+            "context": "You want to simulate the experience before building",
+            "cards": [
+              "Throwaway Prototype",
+              "Wizard of Oz",
+              "Concierge Test"
+            ]
+          },
+          {
+            "context": "You want to test physical interaction",
+            "cards": [
+              "3D Prototype"
+            ]
+          },
+          {
+            "context": "You want to test end-to-end delivery",
+            "cards": [
+              "Single-Feature MVP",
+              "Piecemeal MVP",
+              "Minimum Viable Product"
+            ]
+          }
+        ]
+      },
+      {
+        "question": "Will people pay, and can this become a business?",
+        "category": "Viability",
+        "sub_branches": [
+          {
+            "context": "You want to test willingness to pay early",
+            "cards": [
+              "Mock Sale",
+              "Price Testing",
+              "Letter of Intent"
+            ]
+          },
+          {
+            "context": "You want stronger commercial commitment",
+            "cards": [
+              "Pre-Order Test",
+              "Presales",
+              "Paid Pilot",
+              "Crowdfunding"
+            ]
+          },
+          {
+            "context": "You want to test how money will be made",
+            "cards": [
+              "Revenue Model Test"
+            ]
+          },
+          {
+            "context": "You want to test how the offer reaches customers",
+            "cards": [
+              "Channel Test"
+            ]
+          },
+          {
+            "context": "You want to test whether value persists over time",
+            "cards": [
+              "Cohort / Retention Analysis"
+            ]
+          }
+        ]
+      },
+      {
+        "question": "You need background evidence before any field test",
+        "category": "Discovery",
+        "sub_branches": [
+          {
+            "context": "Baseline research",
+            "cards": [
+              "Desk Research",
+              "Search Trends",
+              "Keyword Research",
+              "Competitor Analysis",
+              "Analogous Markets",
+              "Patent Search",
+              "Expert Interviews"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "quick_selection_rules": [
+    {
+      "question": "Do they care?",
+      "start_with": [
+        "Problem Interviews",
+        "Customer Observation",
+        "Search Trends"
+      ],
+      "move_next_to": [
+        "Landing Page",
+        "Fake Door",
+        "A/B Testing"
+      ]
+    },
+    {
+      "question": "Can they use it?",
+      "start_with": [
+        "Paper Prototype",
+        "Wireframe Prototype",
+        "Usability Testing"
+      ],
+      "move_next_to": [
+        "Wizard of Oz",
+        "Concierge Test",
+        "Minimum Viable Product"
+      ]
+    },
+    {
+      "question": "Will they pay?",
+      "start_with": [
+        "Price Testing",
+        "Mock Sale",
+        "Letter of Intent"
+      ],
+      "move_next_to": [
+        "Pre-Order Test",
+        "Paid Pilot",
+        "Presales"
+      ]
+    },
+    {
+      "question": "Can this scale as a business?",
+      "start_with": [
+        "Revenue Model Test",
+        "Channel Test"
+      ],
+      "move_next_to": [
+        "Paid Pilot",
+        "Cohort / Retention Analysis"
+      ]
+    },
+    {
+      "question": "Is this technically realistic?",
+      "start_with": [
+        "Expert Interviews",
+        "Patent Search",
+        "Throwaway Prototype"
+      ],
+      "move_next_to": [
+        "Wizard of Oz",
+        "Single-Feature MVP"
+      ]
+    }
+  ],
+  "suggested_sequence_paths": {
+    "desirability": {
+      "primary": [
+        "Desk Research",
+        "Search Trends",
+        "Keyword Research",
+        "Problem Interviews",
+        "Customer Observation",
+        "Contextual Inquiry",
+        "Journey Mapping",
+        "Solution Interviews",
+        "Storyboard",
+        "Explainer Video",
+        "Ad Campaign",
+        "Landing Page",
+        "Fake Door",
+        "A/B Testing"
+      ],
+      "discovery_alternative": [
+        "Problem Interviews",
+        "Ethnographic Field Study",
+        "Diary Study",
+        "Journey Mapping",
+        "Storyboard"
+      ],
+      "prioritization_alternative": [
+        "Problem Interviews",
+        "Surveys / Questionnaires",
+        "Forced Ranking",
+        "Card Sorting",
+        "Wireframe Prototype"
+      ]
+    },
+    "feasibility": {
+      "primary": [
+        "Patent Search",
+        "Expert Interviews",
+        "Throwaway Prototype",
+        "Paper Prototype",
+        "Wireframe Prototype",
+        "Usability Testing",
+        "Wizard of Oz",
+        "Concierge Test",
+        "Single-Feature MVP",
+        "Piecemeal MVP",
+        "Minimum Viable Product"
+      ],
+      "physical_product": [
+        "Expert Interviews",
+        "Storyboard",
+        "3D Prototype",
+        "Usability Testing",
+        "Concierge Test"
+      ]
+    },
+    "viability": {
+      "primary": [
+        "Competitor Analysis",
+        "Analogous Markets",
+        "Mock Sale",
+        "Price Testing",
+        "Letter of Intent",
+        "Pre-Order Test",
+        "Presales",
+        "Paid Pilot",
+        "Revenue Model Test",
+        "Channel Test",
+        "Cohort / Retention Analysis"
+      ],
+      "consumer_payment": [
+        "Explainer Video",
+        "Ad Campaign",
+        "Landing Page",
+        "Crowdfunding",
+        "Pre-Order Test",
+        "Minimum Viable Product"
+      ]
+    }
+  },
+  "agent_usage_guidance": {
+    "step_8_behavior": [
+      "Use only the 44 canonical experiment card names defined in this file \u2014 never invent new ones.",
+      "Match cards to assumptions by DVF category first, then by evidence strength appropriate to current confidence level.",
+      "Recommend evidence strength progression: Weak \u2192 Medium \u2192 Strong. Never recommend Strong evidence experiments when no prior evidence exists.",
+      "Use the sequencing transitions (usually_runs_after, usually_runs_next) to recommend experiment order.",
+      "Use the decision tree to help users select experiments when they describe what they're unsure about.",
+      "When recommending cards for precoil-emt Phase 3, include 1-3 cards with evidence strength ratings and one sentence on why each fits the assumption."
+    ],
+    "cross_agent_integration": {
+      "precoil_emt_phase_3": "After generating an experiment brief, recommend 1-3 specific cards from this library matched to the assumption category and evidence level.",
+      "cxif_bmi_coach_phase_5c": "When designing PDSA experiments from canvas-derived assumptions, recommend specific cards matched to the DVF category of each assumption."
+    }
+  }
+};
+
+function renderCard(exp) {
+  const catClass = exp.category.toLowerCase();
+  const evClass = exp.evidence_strength.toLowerCase();
+  const afterPills = (exp.usually_runs_after || []).map(n => `<span class="seq-pill">${n}</span>`).join('');
+  const nextPills = (exp.usually_runs_next || []).map(n => `<span class="seq-pill">${n}</span>`).join('');
+  return `
+    <div class="card ${catClass}">
+      <div class="card-header">
+        <div><div class="card-id">#${exp.id}</div><div class="card-name">${exp.name}</div></div>
+      </div>
+      <div class="card-badges">
+        <span class="cat-badge ${catClass}">${exp.category}</span>
+        <span class="evidence-badge ${evClass}">${exp.evidence_strength}</span>
+      </div>
+      <div class="card-field"><div class="card-field-label">What It Tests</div><div class="card-field-value">${exp.what_it_tests}</div></div>
+      <div class="card-field"><div class="card-field-label">Best Used When</div><div class="card-field-value">${exp.best_used_when}</div></div>
+      ${exp.usually_runs_after.length ? `<div class="card-field"><div class="card-field-label">Usually Runs After</div><div class="sequence-pills">${afterPills}</div></div>` : ''}
+      ${exp.usually_runs_next.length ? `<div class="card-field"><div class="card-field-label">Usually Runs Next</div><div class="sequence-pills">${nextPills}</div></div>` : ''}
+    </div>`;
+}
+
+function init() {
+  const experiments = DATA.experiments;
+  // All cards
+  document.getElementById('card-grid-all').innerHTML = experiments.map(renderCard).join('');
+  // Category views
+  ['desirability','feasibility','viability'].forEach(cat => {
+    const filtered = experiments.filter(e => e.category.toLowerCase() === cat);
+    document.getElementById('card-grid-' + cat).innerHTML = filtered.map(renderCard).join('');
+  });
+
+  // Matrix
+  const matrix = DATA.matrix_by_evidence_and_category;
+  let mhtml = '<thead><tr><th>Evidence</th><th style="color:var(--green)">Desirability</th><th style="color:var(--bright-blue)">Feasibility</th><th style="color:var(--purple)">Viability</th></tr></thead><tbody>';
+  ['Weak','Medium','Strong'].forEach(level => {
+    const colorVar = level === 'Weak' ? 'var(--weak-color)' : level === 'Medium' ? 'var(--medium-color)' : 'var(--strong-color)';
+    mhtml += `<tr><td><span class="matrix-strength" style="color:${colorVar}">${level}</span></td>`;
+    ['Desirability','Feasibility','Viability'].forEach(cat => {
+      const cards = matrix[level][cat] || [];
+      const pills = cards.map(c => `<span class="matrix-card-pill">${c}</span>`).join('');
+      mhtml += `<td><div class="matrix-card-list">${pills || '<span style="color:var(--mid-gray)">—</span>'}</div></td>`;
+    });
+    mhtml += '</tr>';
+  });
+  mhtml += '</tbody>';
+  document.getElementById('matrix-table').innerHTML = mhtml;
+
+  // Decision tree
+  let thtml = '';
+  DATA.decision_tree.branches.forEach(branch => {
+    const bcat = branch.category.toLowerCase();
+    thtml += `<div class="decision-branch ${bcat}"><div class="branch-question">${branch.question}</div>`;
+    branch.sub_branches.forEach(sb => {
+      const pills = sb.cards.map(c => `<span class="seq-pill">${c}</span>`).join('');
+      thtml += `<div class="sub-branch"><div class="sub-context">${sb.context}</div><div class="sequence-pills">${pills}</div></div>`;
+    });
+    thtml += '</div>';
+  });
+  document.getElementById('decision-tree').innerHTML = thtml;
+
+  // Sequencing rules
+  let shtml = '';
+  DATA.sequencing_rules.forEach((rule, i) => {
+    shtml += `<div class="sequence-rule"><div class="rule-number">${i+1}</div><div class="rule-text">${rule}</div></div>`;
+  });
+  document.getElementById('sequencing-rules').innerHTML = shtml;
+
+  // Sequence paths
+  const paths = DATA.suggested_sequence_paths;
+  let phtml = '';
+  Object.entries(paths).forEach(([cat, routes]) => {
+    const color = cat === 'desirability' ? 'var(--green)' : cat === 'feasibility' ? 'var(--bright-blue)' : 'var(--purple)';
+    phtml += `<div style="margin-bottom: 24px;"><h4 style="color:${color}; text-transform:capitalize; margin-bottom: 10px;">${cat}</h4>`;
+    Object.entries(routes).forEach(([name, cards]) => {
+      const pills = cards.map(c => `<span class="seq-pill">${c}</span>`).join(' → ');
+      phtml += `<div style="margin-bottom: 10px;"><div class="card-field-label">${name.replace(/_/g,' ')}</div><div class="sequence-pills" style="gap: 4px;">${pills}</div></div>`;
+    });
+    phtml += '</div>';
+  });
+  document.getElementById('sequence-paths').innerHTML = phtml;
+}
+
+function showSection(name) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  ['all','desirability','feasibility','viability','matrix','tree','sequencing'].forEach(s => {
+    document.getElementById('sec-' + s).classList.toggle('hidden', s !== name);
+  });
+}
+
+init();
+</script>
+</body>
+</html>

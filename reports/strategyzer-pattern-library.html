@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategyzer Pattern Library — INVENT &amp; SHIFT</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+
+  :root {
+    --urgent-red: #F26B43;
+    --deep-navy: #292D3A;
+    --bright-blue: #65AEF9;
+    --light-blue: #B1B9BE;
+    --off-white: #FFFFFF;
+    --green: #00E0AF;
+    --dark-bg: #292D3A;
+    --card-bg: rgba(83, 92, 102, 0.35);
+    --purple: #9B84FC;
+    --cyan: #62E5F6;
+    --mid-gray: #535C66;
+    --orange: #F26B43;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'HPE Graphik', 'Inter', -apple-system, sans-serif;
+    background: var(--dark-bg);
+    color: var(--off-white);
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* === HERO === */
+  .hero {
+    position: relative;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 80px 40px 60px;
+    background: radial-gradient(ellipse at 30% 20%, rgba(0,224,175,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(155,132,252,0.06) 0%, transparent 60%),
+                var(--dark-bg);
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--green), #00B88C);
+    color: var(--deep-navy);
+    padding: 8px 24px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .hero h1 {
+    font-family: 'HPE Graphik Semibold', 'Inter', sans-serif;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 700;
+    line-height: 1.2;
+    max-width: 900px;
+    margin-bottom: 20px;
+  }
+
+  .hero h1 .hl-green {
+    background: linear-gradient(135deg, var(--green), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero h1 .hl-purple {
+    background: linear-gradient(135deg, var(--purple), var(--bright-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-subtitle {
+    font-size: 1.15rem;
+    color: var(--light-blue);
+    max-width: 700px;
+    font-weight: 300;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    margin-top: 40px;
+  }
+
+  .stat { text-align: center; }
+  .stat-number {
+    font-family: 'HPE Graphik Semibold', 'Inter', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+  }
+  .stat-label {
+    font-size: 0.8rem;
+    color: var(--light-blue);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .scroll-cue {
+    position: absolute;
+    bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--bright-blue);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: bounce 2s ease-in-out infinite;
+    opacity: 0.6;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(6px); }
+  }
+
+  /* === NAV TABS === */
+  .nav-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(41,45,58,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(83,92,102,0.4);
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 20px;
+  }
+
+  .nav-tab {
+    background: transparent;
+    border: 1px solid var(--mid-gray);
+    color: var(--light-blue);
+    padding: 8px 24px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .nav-tab:hover { border-color: var(--bright-blue); color: var(--off-white); }
+  .nav-tab.active-invent { background: var(--green); color: var(--deep-navy); border-color: var(--green); }
+  .nav-tab.active-shift { background: var(--purple); color: var(--off-white); border-color: var(--purple); }
+
+  /* === SECTION COMMON === */
+  .pattern-section {
+    max-width: 1260px;
+    margin: 0 auto;
+    padding: 60px 40px 80px;
+  }
+
+  .pattern-section[data-hidden="true"] { display: none; }
+
+  .section-label {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-family: 'HPE Graphik Semibold', 'Inter', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .section-desc {
+    font-size: 0.95rem;
+    color: var(--light-blue);
+    max-width: 700px;
+    margin-bottom: 48px;
+  }
+
+  /* === CATEGORY HEADERS === */
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 48px 0 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(83,92,102,0.4);
+  }
+
+  .category-header:first-of-type { margin-top: 0; }
+
+  .category-icon { font-size: 1.6rem; }
+
+  .category-name {
+    font-family: 'HPE Graphik Semibold', 'Inter', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  .category-desc {
+    font-size: 0.82rem;
+    color: var(--light-blue);
+    margin-left: auto;
+    max-width: 400px;
+    text-align: right;
+  }
+
+  /* === PATTERN CARDS === */
+  .patterns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 20px;
+  }
+
+  .pattern-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(83,92,102,0.5);
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.3s;
+  }
+
+  .pattern-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(101,174,249,0.4);
+  }
+
+  .pattern-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  /* Color coding by category */
+  .pattern-card[data-cat="Frontstage Disruption"]::before,
+  .pattern-card[data-cat="Value Proposition Shifts"]::before { background: var(--green); }
+  .pattern-card[data-cat="Backstage Disruption"]::before,
+  .pattern-card[data-cat="Backstage Driven Shifts"]::before { background: var(--bright-blue); }
+  .pattern-card[data-cat="Profit Formula Disruption"]::before,
+  .pattern-card[data-cat="Profit Formula Driven Shifts"]::before { background: var(--purple); }
+  .pattern-card[data-cat="Frontstage Driven Shifts"]::before { background: var(--cyan); }
+
+  .pattern-name {
+    font-family: 'HPE Graphik Semibold', 'Inter', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .pattern-imperative {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.7;
+  }
+
+  .pattern-desc {
+    font-size: 0.85rem;
+    color: var(--light-blue);
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+
+  .pattern-question {
+    background: rgba(0,224,175,0.06);
+    border-left: 3px solid var(--green);
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.82rem;
+    color: var(--cyan);
+    font-style: italic;
+    margin-bottom: 16px;
+  }
+
+  .pattern-question.shift-q {
+    background: rgba(155,132,252,0.06);
+    border-left-color: var(--purple);
+    color: var(--purple);
+  }
+
+  .pattern-question.reverse-q {
+    background: rgba(242,107,67,0.06);
+    border-left-color: var(--orange);
+    color: var(--orange);
+    margin-top: 8px;
+  }
+
+  .question-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.6;
+    font-style: normal;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* === FLAVORS === */
+  .flavors-toggle {
+    background: none;
+    border: 1px solid var(--mid-gray);
+    color: var(--light-blue);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .flavors-toggle:hover { border-color: var(--bright-blue); color: var(--off-white); }
+
+  .flavors-panel {
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(83,92,102,0.3);
+  }
+
+  .flavors-panel.open { display: block; }
+
+  .flavor {
+    margin-bottom: 14px;
+    padding-left: 12px;
+    border-left: 2px solid rgba(101,174,249,0.2);
+  }
+
+  .flavor-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--bright-blue);
+    margin-bottom: 2px;
+  }
+
+  .flavor-desc {
+    font-size: 0.78rem;
+    color: var(--light-blue);
+    line-height: 1.5;
+  }
+
+  .flavor-trigger {
+    font-size: 0.75rem;
+    color: var(--cyan);
+    font-style: italic;
+    margin-top: 4px;
+  }
+
+  .flavor-examples {
+    font-size: 0.72rem;
+    color: var(--mid-gray);
+    margin-top: 2px;
+  }
+
+  .flavor-examples span {
+    display: inline-block;
+    background: rgba(101,174,249,0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 4px;
+    margin-top: 3px;
+  }
+
+  /* === SHIFT EXAMPLE === */
+  .pattern-example {
+    display: inline-block;
+    font-size: 0.72rem;
+    background: rgba(155,132,252,0.1);
+    border: 1px solid rgba(155,132,252,0.2);
+    padding: 3px 10px;
+    border-radius: 6px;
+    color: var(--purple);
+    margin-top: 8px;
+  }
+
+  /* === FOOTER === */
+  .footer {
+    text-align: center;
+    padding: 40px;
+    font-size: 0.75rem;
+    color: var(--mid-gray);
+    border-top: 1px solid rgba(83,92,102,0.3);
+  }
+
+  .footer a { color: var(--bright-blue); text-decoration: none; }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 768px) {
+    .hero-stats { flex-direction: column; gap: 20px; }
+    .patterns-grid { grid-template-columns: 1fr; }
+    .category-header { flex-direction: column; text-align: center; }
+    .category-desc { margin-left: 0; text-align: center; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <div class="hero-badge">STRATEGYZER PATTERN LIBRARY</div>
+  <h1><span class="hl-green">INVENT</span> New Growth &amp; <span class="hl-purple">SHIFT</span> Existing Models</h1>
+  <p class="hero-subtitle">21 business model patterns from <em>The Invincible Company</em> — the canonical playbook for innovation portfolio strategy.</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-number" style="color: var(--green);">9</div>
+      <div class="stat-label">INVENT Patterns</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number" style="color: var(--purple);">27</div>
+      <div class="stat-label">INVENT Flavors</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number" style="color: var(--purple);">12</div>
+      <div class="stat-label">SHIFT Patterns</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number" style="color: var(--off-white);">21</div>
+      <div class="stat-label">Total Patterns</div>
+    </div>
+  </div>
+  <div class="scroll-cue">
+    <span>EXPLORE THE LIBRARY</span>
+    <span style="font-size:20px;">↓</span>
+  </div>
+</div>
+
+<!-- ===== STICKY NAV ===== -->
+<nav class="nav-bar">
+  <button class="nav-tab active-invent" onclick="showSection('invent', this)">⚡ INVENT — 9 Patterns</button>
+  <button class="nav-tab" onclick="showSection('shift', this)">🔄 SHIFT — 12 Patterns</button>
+</nav>
+
+<!-- ===== INVENT SECTION ===== -->
+<section class="pattern-section" id="invent-section">
+  <div class="section-label" style="color: var(--green);">DIRECTION: INVENT</div>
+  <div class="section-title">Create New-Growth Business Models</div>
+  <p class="section-desc">9 patterns with 27 flavors for innovators building entirely new value propositions, channels, and revenue engines.</p>
+
+  <!-- Frontstage Disruption -->
+  <div class="category-header">
+    <span class="category-icon">🎯</span>
+    <span class="category-name" style="color: var(--green);">Frontstage Disruption</span>
+    <span class="category-desc">Customer-facing innovations that change how value is delivered and captured.</span>
+  </div>
+  <div class="patterns-grid" id="invent-frontstage"></div>
+
+  <!-- Backstage Disruption -->
+  <div class="category-header">
+    <span class="category-icon">⚙️</span>
+    <span class="category-name" style="color: var(--bright-blue);">Backstage Disruption</span>
+    <span class="category-desc">Operations and resource innovations that change how value is created behind the scenes.</span>
+  </div>
+  <div class="patterns-grid" id="invent-backstage"></div>
+
+  <!-- Profit Formula Disruption -->
+  <div class="category-header">
+    <span class="category-icon">💰</span>
+    <span class="category-name" style="color: var(--purple);">Profit Formula Disruption</span>
+    <span class="category-desc">Revenue, cost, and margin innovations that change the financial architecture.</span>
+  </div>
+  <div class="patterns-grid" id="invent-profit"></div>
+</section>
+
+<!-- ===== SHIFT SECTION ===== -->
+<section class="pattern-section" id="shift-section" data-hidden="true">
+  <div class="section-label" style="color: var(--purple);">DIRECTION: SHIFT</div>
+  <div class="section-title">Transform Existing Business Models</div>
+  <p class="section-desc">12 transformation patterns for incumbents evolving their value propositions, operations, and profit formulas.</p>
+
+  <!-- Value Proposition Shifts -->
+  <div class="category-header">
+    <span class="category-icon">💎</span>
+    <span class="category-name" style="color: var(--green);">Value Proposition Shifts</span>
+    <span class="category-desc">Transformations that fundamentally change what the company offers.</span>
+  </div>
+  <div class="patterns-grid" id="shift-vp"></div>
+
+  <!-- Frontstage Driven Shifts -->
+  <div class="category-header">
+    <span class="category-icon">🎯</span>
+    <span class="category-name" style="color: var(--cyan);">Frontstage Driven Shifts</span>
+    <span class="category-desc">Driven by changes in customer segments, channels, or relationships.</span>
+  </div>
+  <div class="patterns-grid" id="shift-frontstage"></div>
+
+  <!-- Backstage Driven Shifts -->
+  <div class="category-header">
+    <span class="category-icon">⚙️</span>
+    <span class="category-name" style="color: var(--bright-blue);">Backstage Driven Shifts</span>
+    <span class="category-desc">Driven by changes in resources, activities, or partnerships.</span>
+  </div>
+  <div class="patterns-grid" id="shift-backstage"></div>
+
+  <!-- Profit Formula Driven Shifts -->
+  <div class="category-header">
+    <span class="category-icon">💰</span>
+    <span class="category-name" style="color: var(--purple);">Profit Formula Driven Shifts</span>
+    <span class="category-desc">Driven by changes in revenue model, cost structure, or margins.</span>
+  </div>
+  <div class="patterns-grid" id="shift-profit"></div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<div class="footer">
+  Source: Osterwalder, Pigneur, Etiemble, Smith — <em>The Invincible Company</em> (2020)
+  &nbsp;·&nbsp; 9 INVENT patterns &middot; 27 flavors &middot; 12 SHIFT patterns
+  &nbsp;·&nbsp; Generated for the BMI Consultant Workflow
+</div>
+
+<script>
+// ===== DATA (embedded from strategyzer-pattern-library.json) =====
+const DATA = {
+  "invent": {
+    "categories": [
+      { "name": "Frontstage Disruption", "gridId": "invent-frontstage" },
+      { "name": "Backstage Disruption", "gridId": "invent-backstage" },
+      { "name": "Profit Formula Disruption", "gridId": "invent-profit" }
+    ],
+    "patterns": [
+      {"name":"Market Explorers","category":"Frontstage Disruption","strategic_imperative":"Unlock Markets","description":"Develop innovative value propositions that create, unleash, or unlock completely new, untapped, or underserved markets with large potential.","trigger_question":"How could we tap into new, untapped, or underserved markets with large potential?","flavors":[{"name":"Visionaries","description":"Use imagination to see a large market potential where others don't.","trigger_question":"Which unproven needs of a large market might be worth exploring?","examples":["Tesla","iPhone","Nintendo Wii"]},{"name":"Repurposers","description":"Find innovative ways to tap into proven market demand by repurposing existing technology and infrastructure.","trigger_question":"How could we repurpose an existing technology or infrastructure to unlock proven, but so far inaccessible, customer needs?","examples":["M-Pesa","AWS"]},{"name":"Democratizers","description":"Democratize access to products, services, and technologies previously only accessible to high-end customers.","trigger_question":"How could we unlock products, services, and technologies that are limited to a niche market and make them more widely available?","examples":["Sears","Azuri","M-Pesa","AWS"]}]},
+      {"name":"Channel Kings","category":"Frontstage Disruption","strategic_imperative":"Access Customers","description":"Radically change how to reach and acquire a large number of customers. Pioneer innovative new channels.","trigger_question":"How could we increase market access and build strong and direct channels to our end customers?","flavors":[{"name":"Disintermediators","description":"Establish direct channels to customers where intermediaries previously dominated market access.","trigger_question":"How could we cut out the middleman and create a direct access to our end-customers?","examples":["Dollar Shave Club","Nespresso","Gore-Tex"]},{"name":"Opportunity Builders","description":"Create business opportunities for others to sell the company's products and services.","trigger_question":"How could we make it attractive for a large number of people or third-party businesses to sell our products and services?","examples":["Tupperware","Grameen Phone","J. Hilburn"]}]},
+      {"name":"Gravity Creators","category":"Frontstage Disruption","strategic_imperative":"Lock In Customers","description":"Make it difficult for customers to leave or switch. Create switching costs and turn transactional industries into long-term relationships.","trigger_question":"How could we make it difficult for customers to leave and increase switching costs in a positive way?","flavors":[{"name":"Stickiness Scalers","description":"Increase stickiness by making it inconvenient for customers to leave.","trigger_question":"How can we increase customer stickiness?","examples":["Microsoft Windows"]},{"name":"Superglue Makers","description":"Make it difficult for customers to leave by locking them in via contracts, sunk costs, or cancellation fees.","trigger_question":"How can we lock in customers?","examples":["Microsoft Xbox","Nespresso"]}]},
+      {"name":"Resource Castles","category":"Backstage Disruption","strategic_imperative":"Build Moats","description":"Build competitive advantage with key resources that are difficult or impossible for competitors to copy.","trigger_question":"How could we make difficult-to-copy resources a key pillar of our business model?","flavors":[{"name":"User Base Castles","description":"Create network effects where a large user base equals relative value for other users.","trigger_question":"How could we establish a competitive advantage rooted in a large user base and network effects?","examples":[]},{"name":"Platform Castles","description":"Create multisided platform network effects with two or more large user bases.","trigger_question":"How could we create a multisided platform that depends on two or more large user bases?","examples":[]},{"name":"IP Castles","description":"Use protected intellectual property to outcompete others.","trigger_question":"How could we use protected IP as a competitive advantage?","examples":[]},{"name":"Brand Castles","description":"Use a strong brand to outcompete others in areas where brand hasn't mattered.","trigger_question":"How could we make brand a relevant competitive advantage?","examples":[]}]},
+      {"name":"Activity Differentiators","category":"Backstage Disruption","strategic_imperative":"Better Configure Activities","description":"Radically change which activities you perform and how you combine them to create and deliver value.","trigger_question":"Could we create significantly more value by performing new activities or configuring them in innovative ways?","flavors":[{"name":"Efficiency Disruptors","description":"Radically change activity configuration to become radically more efficient.","trigger_question":"How can we radically change the configuration of our activities to compete with a disruptive cost structure?","examples":[]},{"name":"Speed Masters","description":"Build radically new activity configurations focused on speed.","trigger_question":"How might we put speed at the center of our activity configuration?","examples":[]},{"name":"Sustainability Masters","description":"Adjust activities to be environmentally friendly and positively impact society.","trigger_question":"How might we reconfigure our activities to have a positive environmental and social impact?","examples":[]},{"name":"Build-to-Order","description":"Configure products to match exact customer specifications, only starting after order confirmation.","trigger_question":"How might we reconfigure activities to build to order?","examples":[]}]},
+      {"name":"Scalers","category":"Backstage Disruption","strategic_imperative":"Grow Faster","description":"Find radically new ways to scale where others stay stuck in conventional nonscalable business models.","trigger_question":"What could we do differently to make our business model more scalable?","flavors":[{"name":"Delegators","description":"Increase scalability by getting others to do key activities for free.","trigger_question":"In which areas could we leverage customers or third parties to create value for free?","examples":["IKEA","Facebook","Red Hat"]},{"name":"Licensors","description":"Increase scalability by getting licensees to perform value-creating activities.","trigger_question":"How could we use licensing to make our business model more scalable?","examples":["ARM","Disney"]},{"name":"Franchisors","description":"Create scalability by licensing your business concept to franchisees.","trigger_question":"How could we use franchising to make our business model more scalable?","examples":["McDonald's","Ritz Carlton"]}]},
+      {"name":"Revenue Differentiators","category":"Profit Formula Disruption","strategic_imperative":"Boost Revenues","description":"Find innovative ways to capture value, unlock previously unprofitable markets, and boost revenues.","trigger_question":"Which new revenue streams or pricing mechanisms could we introduce?","flavors":[{"name":"Recurring Revenue","description":"Generate recurring revenues from one-time sales for compound growth and predictability.","trigger_question":"How could we generate long-term recurring revenues rather than transactional ones?","examples":[]},{"name":"Bait & Hook","description":"Lock customers in with a base product to generate recurring revenues from a consumable.","trigger_question":"How could we create recurring revenues with a base product and a consumable?","examples":[]},{"name":"Freemium Providers","description":"Offer basic products free and premium features for a fee.","trigger_question":"How could we split our value proposition into a free and a premium offer?","examples":[]},{"name":"Subsidizers","description":"Offer the full value proposition free or cheap, subsidized by alternative revenue.","trigger_question":"How could we give away our main value proposition for free by generating alternative revenue?","examples":[]}]},
+      {"name":"Cost Differentiators","category":"Profit Formula Disruption","strategic_imperative":"Kill Costs","description":"Build a game-changing cost structure by doing things in disruptive new ways.","trigger_question":"Could we change our cost structure significantly with different resources and activities?","flavors":[{"name":"Resource Dodgers","description":"Eliminate the most costly resources to create a game-changing cost structure.","trigger_question":"How could we create a resource-light business model?","examples":["Airbnb","Uber","Bharti Airtel"]},{"name":"Technologists","description":"Use technology in radically new ways to create a game-changing cost structure.","trigger_question":"How could we use technology to replace activities and resources?","examples":["WhatsApp","Skype"]},{"name":"Low Cost","description":"Combine activities, resources, and partners in radically new ways for disruptively low prices.","trigger_question":"How could we radically recombine to significantly lower costs and pricing?","examples":["easyJet","Ryanair","Trader Joe's"]}]},
+      {"name":"Margin Masters","category":"Profit Formula Disruption","strategic_imperative":"Boost Margins","description":"Achieve significantly higher margins by focusing on what customers pay for most, while keeping costs in check.","trigger_question":"How could we eliminate costly aspects while focusing on value customers will pay most for?","flavors":[{"name":"Contrarians","description":"Reduce costs and increase value simultaneously by eliminating costly elements and compensating with high-value, affordable features.","trigger_question":"Which costly elements could we eliminate and replace with extremely valuable but affordable elements?","examples":["Citizen M","Cirque du Soleil","Nintendo Wii"]},{"name":"High Enders","description":"Create high-end products for a broad range of premium customers to maximize margins.","trigger_question":"What could we modify to significantly increase value and price without substantially increasing costs?","examples":["iPhone"]}]}
+    ]
+  },
+  "shift": {
+    "categories": [
+      { "name": "Value Proposition Shifts", "gridId": "shift-vp" },
+      { "name": "Frontstage Driven Shifts", "gridId": "shift-frontstage" },
+      { "name": "Backstage Driven Shifts", "gridId": "shift-backstage" },
+      { "name": "Profit Formula Driven Shifts", "gridId": "shift-profit" }
+    ],
+    "patterns": [
+      {"name":"Product to Recurring Service","category":"Value Proposition Shifts","description":"Shift from manufacturing/buying/selling products toward providing a recurring service with predictable, exponentially growing revenues.","strategic_reflection":"How might we grow recurring and predictable revenues by providing a recurring service, rather than selling a product?","reverse_reflection":"How might we add scalable products to our services to increase share of wallet and lifetime value?","example":"Hilti"},
+      {"name":"Low Tech to High Tech","category":"Value Proposition Shifts","description":"Shift from basic, labour-intensive, low-tech value propositions toward technology-based ones to scale reach and boost revenues.","strategic_reflection":"How might we scale our reach, increase price, and boost revenues by transforming a low-tech value proposition into a high-tech one?","reverse_reflection":"How might we leverage low-tech activities to provide value that technology can't offer?","example":"Netflix"},
+      {"name":"Sales to Platform","category":"Value Proposition Shifts","description":"Shift from selling products toward becoming a platform for third-party products and value-added services with network effects.","strategic_reflection":"How might we gain a competitive advantage by establishing ourselves as the platform connecting customers with third-party providers?","reverse_reflection":"How might we add our own scalable products and services to our platform?","example":"iPhone & App Store"},
+      {"name":"Niche Market to Mass Market","category":"Frontstage Driven Shifts","description":"Shift from niche to mass market by simplifying the value proposition, compensating lower price with higher volume.","strategic_reflection":"How might we simplify our value proposition to break out of a niche market and cater to a mass market?","reverse_reflection":"How might we create niche value propositions for a series of segments with specific needs?","example":"TED"},
+      {"name":"B2B to B2(B2)C","category":"Frontstage Driven Shifts","description":"Shift from invisible B2B supplier toward a brand that matters to the consumer with B2C brand development.","strategic_reflection":"How might we increase revenues by becoming more relevant to consumers if we are a hidden B2B supplier?","reverse_reflection":"How might we use our B2C expertise to create value for B2B customers?","example":"Intel Inside"},
+      {"name":"Low Touch to High Touch","category":"Frontstage Driven Shifts","description":"Shift from standardized, low-touch toward customized, high-touch value propositions commanding premium prices.","strategic_reflection":"How might we increase price and revenues by turning a low-touch value proposition into a high-touch one?","reverse_reflection":"How might we maintain customer value while shifting from high-touch to low-touch?","example":"Apple Genius Bar"},
+      {"name":"Dedicated Resources to Multi-Usage","category":"Backstage Driven Shifts","description":"Shift from using a resource for one value proposition toward using it for a completely different one targeting new customers.","strategic_reflection":"How might we monetize one of our most important key resources with a new value proposition for a new customer segment?","reverse_reflection":"How might we refocus resources to serve one value proposition only?","example":"Fujifilm"},
+      {"name":"Asset Heavy to Asset Light","category":"Backstage Driven Shifts","description":"Shift from high fixed costs and capital expenditures toward an asset-light business with variable costs.","strategic_reflection":"How might we free up capital from building and maintaining assets toward service provisioning and customer acquisition?","reverse_reflection":"How might we leverage light assets like IP and brand to invest in heavy assets for competitive advantage?","example":"Bharti Airtel"},
+      {"name":"Closed to Open Innovation","category":"Backstage Driven Shifts","description":"Shift from closed to open approach for developing value propositions using external R&D and IP.","strategic_reflection":"How might we make more usage of external R&D and IP or share internal R&D with outside partners?","reverse_reflection":"How might we create competitive advantage by internalizing R&D, IP, and activities?","example":"Microsoft"},
+      {"name":"High Cost to Low Cost","category":"Profit Formula Driven Shifts","description":"Shift toward efficient activity and resource configuration to decrease costs and offer low-price value propositions.","strategic_reflection":"Which new, price-conscious customer segment might we conquer with a low-price value proposition?","reverse_reflection":"How might we create value for price-insensitive customer segments with a high-value proposition?","example":"Dow Corning Xiameter"},
+      {"name":"Transactional to Recurring Revenue","category":"Profit Formula Driven Shifts","description":"Shift from continuous cost of sales toward acquiring customers once for recurring revenues.","strategic_reflection":"How might we shift from transactional revenues to recurring revenues by addressing a recurring customer job?","reverse_reflection":"How might we add transactional revenues to recurring ones to improve share of wallet?","example":"Adobe"},
+      {"name":"Conventional to Contrarian","category":"Profit Formula Driven Shifts","description":"Reduce costs and increase value simultaneously by eliminating costly elements and focusing on features customers love.","strategic_reflection":"Which costliest activities and resources might we eliminate or reduce? How might we replace lost value with cheap value creators?","reverse_reflection":"How might we add costly resources to increase value and luxury feel? Or strip to pure low-cost?","example":"Apple iMac"}
+    ]
+  }
+};
+
+// ===== RENDER FUNCTIONS =====
+
+function renderInventCard(p) {
+  const flavorsHtml = (p.flavors || []).map(f => {
+    const exHtml = f.examples.length
+      ? `<div class="flavor-examples">${f.examples.map(e => `<span>${e}</span>`).join('')}</div>`
+      : '';
+    return `
+      <div class="flavor">
+        <div class="flavor-name">${f.name}</div>
+        <div class="flavor-desc">${f.description}</div>
+        <div class="flavor-trigger">"${f.trigger_question}"</div>
+        ${exHtml}
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="pattern-card" data-cat="${p.category}">
+      <div class="pattern-name">${p.name}</div>
+      <div class="pattern-imperative" style="color: var(--green);">↑ ${p.strategic_imperative}</div>
+      <div class="pattern-desc">${p.description}</div>
+      <div class="pattern-question">
+        <span class="question-label">Trigger Question</span>
+        ${p.trigger_question}
+      </div>
+      ${p.flavors && p.flavors.length ? `
+        <button class="flavors-toggle" onclick="this.nextElementSibling.classList.toggle('open'); this.textContent = this.nextElementSibling.classList.contains('open') ? '▾ Hide ${p.flavors.length} Flavors' : '▸ Show ${p.flavors.length} Flavors';">
+          ▸ Show ${p.flavors.length} Flavors
+        </button>
+        <div class="flavors-panel">${flavorsHtml}</div>
+      ` : ''}
+    </div>`;
+}
+
+function renderShiftCard(p) {
+  return `
+    <div class="pattern-card" data-cat="${p.category}">
+      <div class="pattern-name">${p.name}</div>
+      <div class="pattern-imperative" style="color: var(--purple);">↔ SHIFT</div>
+      <div class="pattern-desc">${p.description}</div>
+      <div class="pattern-question shift-q">
+        <span class="question-label">Strategic Reflection</span>
+        ${p.strategic_reflection}
+      </div>
+      <div class="pattern-question reverse-q">
+        <span class="question-label">Reverse Reflection</span>
+        ${p.reverse_reflection}
+      </div>
+      <div class="pattern-example">📌 ${p.example}</div>
+    </div>`;
+}
+
+function renderAll() {
+  // INVENT
+  DATA.invent.categories.forEach(cat => {
+    const grid = document.getElementById(cat.gridId);
+    const patterns = DATA.invent.patterns.filter(p => p.category === cat.name);
+    grid.innerHTML = patterns.map(renderInventCard).join('');
+  });
+  // SHIFT
+  DATA.shift.categories.forEach(cat => {
+    const grid = document.getElementById(cat.gridId);
+    const patterns = DATA.shift.patterns.filter(p => p.category === cat.name);
+    grid.innerHTML = patterns.map(renderShiftCard).join('');
+  });
+}
+
+function showSection(which, btn) {
+  document.querySelectorAll('.nav-tab').forEach(t => { t.className = 'nav-tab'; });
+  btn.classList.add(which === 'invent' ? 'active-invent' : 'active-shift');
+  document.getElementById('invent-section').dataset.hidden = which !== 'invent' ? 'true' : 'false';
+  document.getElementById('shift-section').dataset.hidden = which !== 'shift' ? 'true' : 'false';
+}
+
+renderAll();
+</script>
+</body>
+</html>
