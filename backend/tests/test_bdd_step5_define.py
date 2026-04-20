@@ -127,3 +127,27 @@ def assert_gain_mapping(step5_result: BMIWorkflowState) -> None:
 def assert_ad_lib_count(step5_result: BMIWorkflowState) -> None:
     value_proposition_canvas = step5_result["value_proposition_canvas"]
     assert value_proposition_canvas.count("**OUR**") >= 2
+
+
+@then("the value proposition canvas includes at least 2 products or services")
+def assert_products_count(step5_result: BMIWorkflowState) -> None:
+    vpc = step5_result["value_proposition_canvas"]
+    section = vpc.split("#### Products & Services")[1].split("####")[0]
+    data_rows = [r for r in section.strip().splitlines() if r.startswith("|") and "---" not in r and "Type" not in r]
+    assert len(data_rows) >= 2, f"Expected at least 2 products/services, found {len(data_rows)}"
+
+
+@then("the value proposition canvas includes at least 2 pain relievers")
+def assert_pain_relievers_count(step5_result: BMIWorkflowState) -> None:
+    vpc = step5_result["value_proposition_canvas"]
+    section = vpc.split("#### Pain Relievers")[1].split("####")[0]
+    data_rows = [r for r in section.strip().splitlines() if r.startswith("|") and "---" not in r and "Type" not in r]
+    assert len(data_rows) >= 2, f"Expected at least 2 pain relievers, found {len(data_rows)}"
+
+
+@then("the value proposition canvas includes at least 2 gain creators")
+def assert_gain_creators_count(step5_result: BMIWorkflowState) -> None:
+    vpc = step5_result["value_proposition_canvas"]
+    section = vpc.split("#### Gain Creators")[1].split("###")[0]
+    data_rows = [r for r in section.strip().splitlines() if r.startswith("|") and "---" not in r and "Type" not in r]
+    assert len(data_rows) >= 2, f"Expected at least 2 gain creators, found {len(data_rows)}"

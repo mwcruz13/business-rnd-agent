@@ -1,4 +1,4 @@
-from pytest_bdd import given, scenarios, then, when
+from pytest_bdd import given, parsers, scenarios, then, when
 
 from backend.app.nodes.step4_vpm import run_step
 from backend.app.state import BMIWorkflowState
@@ -114,3 +114,80 @@ def assert_who_does_because_but(step4_result: BMIWorkflowState) -> None:
     assert " DOES " in actionable_insights
     assert " BECAUSE " in actionable_insights
     assert " BUT " in actionable_insights
+
+
+@then(parsers.parse('every success measure driver type is one of "{valid_types}"'))
+def assert_valid_driver_types(step4_result: BMIWorkflowState, valid_types: str) -> None:
+    import re
+    allowed = {t.strip() for t in valid_types.split(",")}
+    vdt = step4_result["value_driver_tree"]
+    # Parse the success measures table under "### Key Deliverables and Success Measures"
+    section = vdt.split("### Key Deliverables and Success Measures")[1] if "### Key Deliverables and Success Measures" in vdt else vdt
+    rows = re.findall(r"^\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|$", section, re.MULTILINE)
+    data_rows = [r for r in rows if "---" not in r[0] and "Key Deliverable" not in r[0]]
+    assert len(data_rows) >= 2, f"Expected at least 2 success measure rows, found {len(data_rows)}"
+    for row in data_rows:
+        driver_type = row[4].strip() if len(row) > 4 else row[-1].strip()
+        assert driver_type in allowed, f"Invalid driver type '{driver_type}'. Allowed: {allowed}"
+
+
+@then(parsers.parse('every friction point friction type is one of "{valid_types}"'))
+def assert_valid_friction_types(step4_result: BMIWorkflowState, valid_types: str) -> None:
+    import re
+    allowed = {t.strip() for t in valid_types.split(",")}
+    insights = step4_result["actionable_insights"]
+    # Parse the friction points table under "### Customer Journey Friction Points"
+    section = insights.split("### Customer Journey Friction Points")[1] if "### Customer Journey Friction Points" in insights else insights
+    # Stop at next section
+    if "###" in section[1:]:
+        section = section[:section.index("###", 1)]
+    rows = re.findall(r"^\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|$", section, re.MULTILINE)
+    data_rows = [r for r in rows if "---" not in r[0] and "Journey Phase" not in r[0] and "Phase" not in r[0]]
+    assert len(data_rows) >= 1, f"Expected at least 1 friction point row, found {len(data_rows)}"
+    for row in data_rows:
+        friction_type = row[3].strip()
+        assert friction_type in allowed, f"Invalid friction type '{friction_type}'. Allowed: {allowed}"
+
+
+@then("the value driver tree includes at least 3 success measures")
+def assert_success_measure_count(step4_result: BMIWorkflowState) -> None:
+    import re
+    vdt = step4_result["value_driver_tree"]
+    section = vdt.split("### Key Deliverables and Success Measures")[1] if "### Key Deliverables and Success Measures" in vdt else ""
+    rows = re.findall(r"^\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|$", section, re.MULTILINE)
+    data_rows = [r for r in rows if "---" not in r[0] and "Key Deliverable" not in r[0]]
+    assert len(data_rows) >= 3, f"Expected at least 3 success measures, found {len(data_rows)}"
+
+
+@then("every success measure has a non-empty baseline and target")
+def assert_baseline_and_target(step4_result: BMIWorkflowState) -> None:
+    import re
+    vdt = step4_result["value_driver_tree"]
+    section = vdt.split("### Key Deliverables and Success Measures")[1] if "### Key Deliverables and Success Measures" in vdt else ""
+    rows = re.findall(r"^\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|$", section, re.MULTILINE)
+    data_rows = [r for r in rows if "---" not in r[0] and "Key Deliverable" not in r[0]]
+    for row in data_rows:
+        baseline = row[2].strip()
+        target = row[3].strip()
+        assert baseline and baseline != "-", f"Empty baseline in success measure: {row[0].strip()}"
+        assert target and target != "-", f"Empty target in success measure: {row[0].strip()}"
+
+
+@then("the actionable insights include at least 1 problem statement")
+def assert_problem_statement_count(step4_result: BMIWorkflowState) -> None:
+    insights = step4_result["actionable_insights"]
+    assert "### Problem Statements" in insights
+    section = insights.split("### Problem Statements")[1].split("###")[0] if "###" in insights.split("### Problem Statements")[1][1:] else insights.split("### Problem Statements")[1]
+    data_rows = [r for r in section.strip().splitlines() if r.startswith("|") and "---" not in r and "Problem Statement" not in r and "#" not in r]
+    assert len(data_rows) >= 1, f"Expected at least 1 problem statement, found {len(data_rows)}"
+
+
+@then("the actionable insights include at least 1 friction point")
+def assert_friction_point_count(step4_result: BMIWorkflowState) -> None:
+    insights = step4_result["actionable_insights"]
+    assert "### Customer Journey Friction Points" in insights
+    section = insights.split("### Customer Journey Friction Points")[1]
+    if "###" in section[1:]:
+        section = section[:section.index("###", 1)]
+    data_rows = [r for r in section.strip().splitlines() if r.startswith("|") and "---" not in r and "Journey Phase" not in r and "Phase" not in r]
+    assert len(data_rows) >= 1, f"Expected at least 1 friction point, found {len(data_rows)}"

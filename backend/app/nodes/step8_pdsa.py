@@ -48,21 +48,57 @@ PATH_BY_CATEGORY = {
 # Default selection (current behavior) uses the "Weak" tier via PATH_BY_CATEGORY.
 EXPERIMENT_MATRIX = {
     "Desirability": {
-        "Weak": ["Problem Interviews", "Solution Interviews", "Surveys / Questionnaires"],
-        "Medium": ["Landing Page", "Fake Door", "A/B Testing"],
-        "Strong": [],  # Escalate to Feasibility/Viability
+        "Weak": [
+            "Problem Interviews", "Solution Interviews", "Surveys / Questionnaires",
+            "Desk Research", "Search Trends", "Keyword Research",
+            "Journey Mapping", "Focus Groups", "Forced Ranking",
+            "Card Sorting", "Storyboard", "Explainer Video", "Ad Campaign",
+        ],
+        "Medium": [
+            "Landing Page", "Fake Door", "A/B Testing",
+            "Customer Observation", "Ethnographic Field Study",
+            "Contextual Inquiry", "Diary Study",
+        ],
+        "Strong": [],  # No Strong-evidence Desirability cards in the library
     },
     "Feasibility": {
-        "Weak": ["Expert Interviews", "Paper Prototype", "Wireframe Prototype"],
+        "Weak": ["Expert Interviews", "Paper Prototype", "Wireframe Prototype", "Patent Search"],
         "Medium": ["Throwaway Prototype", "Usability Testing", "3D Prototype"],
-        "Strong": ["Concierge Test", "Wizard of Oz", "Single-Feature MVP"],
+        "Strong": [
+            "Concierge Test", "Wizard of Oz", "Single-Feature MVP",
+            "Piecemeal MVP", "Minimum Viable Product",
+        ],
     },
     "Viability": {
         "Weak": ["Competitor Analysis", "Analogous Markets"],
-        "Medium": ["Mock Sale", "Letter of Intent", "Price Testing"],
-        "Strong": ["Pre-Order Test", "Crowdfunding", "Paid Pilot"],
+        "Medium": [
+            "Mock Sale", "Letter of Intent", "Price Testing",
+            "Revenue Model Test", "Channel Test",
+        ],
+        "Strong": [
+            "Pre-Order Test", "Crowdfunding", "Paid Pilot",
+            "Presales", "Cohort / Retention Analysis",
+        ],
     },
 }
+
+_STOP_WORDS = frozenset({
+    "a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
+    "has", "he", "in", "is", "it", "its", "of", "on", "or", "that",
+    "the", "to", "was", "were", "will", "with", "you", "whether",
+    "this", "not", "can", "do", "does", "i", "we", "they", "my",
+    "our", "believe",
+})
+
+
+def _score_card_fit(assumption_text: str, card: ExperimentCard) -> float:
+    """Score how well a card matches an assumption based on word overlap."""
+    assumption_words = set(assumption_text.lower().split()) - _STOP_WORDS
+    card_words = set(card.what_it_tests.lower().split()) - _STOP_WORDS
+    card_words |= set(card.best_used_when.lower().split()) - _STOP_WORDS
+    if not assumption_words or not card_words:
+        return 0.0
+    return len(assumption_words & card_words) / len(assumption_words)
 
 
 def _load_assets() -> tuple[dict[str, ExperimentCard], dict[str, object]]:
@@ -91,12 +127,27 @@ def _load_assets() -> tuple[dict[str, ExperimentCard], dict[str, object]]:
     return cards, precoil_library
 
 
-def _extract_top_assumptions(assumptions: str) -> list[TopAssumption]:
+def _extract_top_assumptions(assumptions: str, step7_structured: dict[str, object] | None = None) -> list[TopAssumption]:
+    """Extract test-first assumptions, preferring structured data over markdown parsing."""
+    if step7_structured:
+        rows: list[TopAssumption] = []
+        for cat in step7_structured.get("categories", []):
+            category = cat.get("category", "")
+            for a in cat.get("assumptions", []):
+                if a.get("suggested_quadrant") == "Test first":
+                    text = a.get("assumption", "")
+                    if not text.startswith("I believe"):
+                        text = f"I believe {text}"
+                    rows.append(TopAssumption(assumption=text, category=category, quadrant="Test first"))
+        if rows:
+            return rows
+
+    # Fallback: parse markdown for backward compatibility
     if "## Importance × Evidence Map" not in assumptions:
         return []
 
     matrix_lines = assumptions.split("## Importance × Evidence Map", 1)[1].splitlines()
-    rows: list[TopAssumption] = []
+    rows = []
     for line in matrix_lines:
         stripped = line.strip()
         if not stripped.startswith("|"):
@@ -112,22 +163,70 @@ def _extract_top_assumptions(assumptions: str) -> list[TopAssumption]:
     return rows
 
 
-def _get_category_path(category: str, cards: dict[str, ExperimentCard]) -> list[ExperimentCard]:
-    path_names = PATH_BY_CATEGORY.get(category)
-    if not path_names:
+def _select_experiment_path(
+    assumption: TopAssumption,
+    cards: dict[str, ExperimentCard],
+) -> list[ExperimentCard]:
+    """Select a content-aware experiment path from EXPERIMENT_MATRIX.
+
+    Uses word overlap between assumption text and card descriptions to pick
+    the best-fit cards at each evidence level, following library sequencing
+    relationships where possible.  Falls back to PATH_BY_CATEGORY when the
+    matrix yields no candidates.
+    """
+    category = assumption.category
+    matrix = EXPERIMENT_MATRIX.get(category)
+    if not matrix:
         raise ValueError(f"Unexpected assumption category: {category}")
 
-    path = [cards[name] for name in path_names]
-    for index, card in enumerate(path):
-        if card.category != category:
-            raise ValueError(f"Experiment {card.name} does not match category {category}")
-        if index == 0:
-            continue
-        previous = path[index - 1]
-        if card.name not in previous.usually_runs_next and previous.name not in card.usually_runs_after:
-            raise ValueError(f"Experiment path for {category} is not logically sequenced")
-        if EVIDENCE_ORDER[card.evidence_strength] < EVIDENCE_ORDER[previous.evidence_strength]:
+    def _pick_best(
+        candidates: list[ExperimentCard],
+        exclude: set[str] | None = None,
+        prefer_next_of: ExperimentCard | None = None,
+    ) -> ExperimentCard | None:
+        if exclude:
+            candidates = [c for c in candidates if c.name not in exclude]
+        if not candidates:
+            return None
+        if prefer_next_of:
+            preferred = [
+                c for c in candidates
+                if c.name in prefer_next_of.usually_runs_next
+                or prefer_next_of.name in c.usually_runs_after
+            ]
+            if preferred:
+                candidates = preferred
+        scored = sorted(
+            candidates,
+            key=lambda c: _score_card_fit(assumption.assumption, c),
+            reverse=True,
+        )
+        return scored[0]
+
+    weak_cards = [cards[n] for n in matrix.get("Weak", []) if n in cards]
+    medium_cards = [cards[n] for n in matrix.get("Medium", []) if n in cards]
+    strong_cards = [cards[n] for n in matrix.get("Strong", []) if n in cards]
+
+    first = _pick_best(weak_cards)
+    if not first:
+        path_names = PATH_BY_CATEGORY.get(category, [])
+        return [cards[n] for n in path_names]
+
+    second = _pick_best(medium_cards, prefer_next_of=first)
+
+    if strong_cards:
+        third = _pick_best(strong_cards, prefer_next_of=second)
+    elif medium_cards and second:
+        third = _pick_best(medium_cards, exclude={second.name}, prefer_next_of=first)
+    else:
+        third = None
+
+    path = [c for c in (first, second, third) if c is not None]
+
+    for i in range(1, len(path)):
+        if EVIDENCE_ORDER[path[i].evidence_strength] < EVIDENCE_ORDER[path[i - 1].evidence_strength]:
             raise ValueError(f"Experiment path for {category} violates evidence ordering")
+
     return path
 
 
@@ -152,11 +251,26 @@ def _format_selection(assumption: TopAssumption, path: list[ExperimentCard]) -> 
         lines.append(
             f"| {priority} | {card.name} | {card.evidence_strength} | {why_this_fits} | {what_it_reduces} |"
         )
+    if len(path) >= 3:
+        escalation = (
+            f"The path then escalates through {path[1].name} and {path[2].name} "
+            f"only if the earlier signals justify stronger investment."
+        )
+    elif len(path) == 2:
+        escalation = (
+            f"The path then escalates to {path[1].name} "
+            f"only if the earlier signal justifies stronger investment."
+        )
+    else:
+        escalation = ""
     lines.extend(
         [
             "",
             "### Selection rationale",
-            f"This sequence starts with {path[0].name} because the assumption currently has no direct evidence and needs the cheapest credible signal first. The path then escalates through {path[1].name} and {path[2].name} only if the earlier signals justify stronger investment.",
+            (
+                f"This sequence starts with {path[0].name} because the assumption currently "
+                f"has no direct evidence and needs the cheapest credible signal first. {escalation}"
+            ).rstrip(),
         ]
     )
     return "\n".join(lines)
@@ -491,14 +605,17 @@ def _build_outputs(state: BMIWorkflowState) -> tuple[str, str, str, list[dict[st
     if "step_8_behavior" not in precoil_library.get("agent_usage_guidance", {}):
         raise ValueError("Unexpected Precoil step 8 guidance")
 
-    top_assumptions = _extract_top_assumptions(state.get("assumptions", ""))
+    top_assumptions = _extract_top_assumptions(
+        state.get("assumptions", ""),
+        step7_structured=state.get("step7_structured"),
+    )
     selections: list[str] = []
     plans: list[str] = []
     worksheets: list[str] = []
     card_objects: list[dict[str, object]] = []
 
     for assumption in top_assumptions:
-        path = _get_category_path(assumption.category, cards)
+        path = _select_experiment_path(assumption, cards)
         selections.append(_format_selection(assumption, path))
         plans.append(_format_precoil_brief(assumption, path[0]))
         plans.append(_format_implementation_plan(assumption, path[0]))

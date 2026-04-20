@@ -1,4 +1,4 @@
-from pytest_bdd import given, scenarios, then, when
+from pytest_bdd import given, parsers, scenarios, then, when
 
 from backend.app.nodes.step6_design import run_step
 from backend.app.state import BMIWorkflowState
@@ -113,3 +113,54 @@ def assert_status_tables(step6_result: BMIWorkflowState) -> None:
     fit_assessment = step6_result["fit_assessment"]
     assert "| Criterion | Status | Evidence |" in fit_assessment
     assert "| Dimension | Status | Evidence |" in fit_assessment
+
+
+@then("the business model canvas contains all 9 standard BMC building blocks")
+def assert_9_building_blocks(step6_result: BMIWorkflowState) -> None:
+    bmc = step6_result["business_model_canvas"]
+    expected_blocks = [
+        "Customer Segments", "Value Proposition", "Channels", "Customer Relationships",
+        "Key Partnerships", "Key Activities", "Key Resources",
+        "Revenue Streams", "Cost Structure",
+    ]
+    for block in expected_blocks:
+        assert block in bmc, f"Missing BMC building block: {block}"
+
+
+@then(parsers.parse('the desirability section contains "{expected_blocks}"'))
+def assert_desirability_blocks(step6_result: BMIWorkflowState, expected_blocks: str) -> None:
+    bmc = step6_result["business_model_canvas"]
+    section = bmc.split("### Desirability")[1].split("###")[0] if "### Desirability" in bmc else ""
+    for block in expected_blocks.split(", "):
+        assert block.strip() in section, f"Desirability section missing: {block.strip()}"
+
+
+@then(parsers.parse('the feasibility section contains "{expected_blocks}"'))
+def assert_feasibility_blocks(step6_result: BMIWorkflowState, expected_blocks: str) -> None:
+    bmc = step6_result["business_model_canvas"]
+    section = bmc.split("### Feasibility")[1].split("###")[0] if "### Feasibility" in bmc else ""
+    for block in expected_blocks.split(", "):
+        assert block.strip() in section, f"Feasibility section missing: {block.strip()}"
+
+
+@then(parsers.parse('the viability section contains "{expected_blocks}"'))
+def assert_viability_blocks(step6_result: BMIWorkflowState, expected_blocks: str) -> None:
+    bmc = step6_result["business_model_canvas"]
+    section = bmc.split("### Viability")[1] if "### Viability" in bmc else ""
+    for block in expected_blocks.split(", "):
+        assert block.strip() in section, f"Viability section missing: {block.strip()}"
+
+
+@then("the fit assessment includes a problem-solution fit section")
+def assert_problem_solution_fit_section(step6_result: BMIWorkflowState) -> None:
+    assert "### Problem-Solution Fit" in step6_result["fit_assessment"]
+
+
+@then("the fit assessment includes a product-market fit section")
+def assert_product_market_fit_section(step6_result: BMIWorkflowState) -> None:
+    assert "### Product-Market Fit Status" in step6_result["fit_assessment"]
+
+
+@then("the fit assessment includes a business-model fit section")
+def assert_business_model_fit_section(step6_result: BMIWorkflowState) -> None:
+    assert "### Business Model Fit Status" in step6_result["fit_assessment"]

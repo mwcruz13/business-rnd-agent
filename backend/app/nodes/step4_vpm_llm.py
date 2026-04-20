@@ -7,12 +7,14 @@ from the upstream empathy profile and VoC data.
 from __future__ import annotations
 
 import json
+from typing import Literal
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
 from backend.app.skills.loader import PromptAssetLoader
+from backend.app.llm.retry import invoke_with_retry
 from backend.app.state import BMIWorkflowState
 
 
@@ -25,12 +27,12 @@ class SuccessMeasure(BaseModel):
     success_measure: str
     baseline: str
     target: str
-    driver_type: str = Field(description="Time, Effort, Volume, Cost, Satisfaction, or Revenue")
+    driver_type: Literal["Time", "Effort", "Volume", "Cost", "Satisfaction", "Revenue"] = Field(description="Time, Effort, Volume, Cost, Satisfaction, or Revenue")
 
 
 class ValueDriverTree(BaseModel):
     customer_business_outcome: str = Field(description="The measurable business outcome the customer aims to achieve")
-    success_measures: list[SuccessMeasure] = Field(description="At least 2 key deliverables with success criteria")
+    success_measures: list[SuccessMeasure] = Field(min_length=3, description="At least 3 key deliverables with success criteria")
 
 
 class ValueChainEntry(BaseModel):
@@ -44,7 +46,7 @@ class FrictionPoint(BaseModel):
     journey_phase: str
     touchpoint: str
     customer_experience: str
-    friction_type: str = Field(description="Delay, Effort, Confusion, Access, or Cost")
+    friction_type: Literal["Delay", "Effort", "Confusion", "Access", "Cost"] = Field(description="Delay, Effort, Confusion, Access, or Cost")
     opportunity: str
 
 
@@ -183,7 +185,7 @@ def run_step4_llm(state: BMIWorkflowState, llm: BaseChatModel) -> BMIWorkflowSta
     """Run Step 4 CXIF Measure + Define via the LLM."""
     messages = _build_messages(state)
     structured_llm = llm.with_structured_output(Step4Output)
-    result: Step4Output = structured_llm.invoke(messages)
+    result: Step4Output = invoke_with_retry(structured_llm, messages, step_name="step4_vpm")
 
     selected_patterns = state.get("selected_patterns", [])
 

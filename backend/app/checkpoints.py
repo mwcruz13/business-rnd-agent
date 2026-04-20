@@ -25,7 +25,7 @@ CHECKPOINTS_BY_STEP = {
         step_number=1,
     ),
     "step2_pattern": CheckpointDefinition(
-        name="checkpoint_1_5",
+        name="checkpoint_2",
         after_step_name="step2_pattern",
         step_number=2,
         required_state_fields=("pattern_direction",),
@@ -51,7 +51,7 @@ CHECKPOINTS_BY_STEP = {
         step_number=6,
     ),
     "step7_risk": CheckpointDefinition(
-        name="checkpoint_2",
+        name="checkpoint_7",
         after_step_name="step7_risk",
         step_number=7,
     ),
@@ -75,7 +75,7 @@ REQUIRED_UPSTREAM_STATE: dict[str, tuple[str, ...]] = {
     "step5_define": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights"),
     "step6_design": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights", "value_proposition_canvas", "fit_assessment"),
     "step7_risk": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights", "value_proposition_canvas", "fit_assessment", "business_model_canvas"),
-    "step8_pdsa": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights", "value_proposition_canvas", "fit_assessment", "business_model_canvas", "assumptions", "experiment_selections"),
+    "step8_pdsa": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights", "value_proposition_canvas", "fit_assessment", "business_model_canvas", "assumptions"),
 }
 
 

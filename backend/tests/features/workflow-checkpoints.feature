@@ -9,7 +9,7 @@ Feature: Workflow checkpoints
     And the workflow current step is "signal_scan"
     When the consultant approves the current checkpoint
     Then the workflow run status is "paused"
-    And the pending checkpoint is "checkpoint_1_5"
+    And the pending checkpoint is "checkpoint_2"
     And the workflow current step is "pattern_select"
     When the consultant edits the current checkpoint with direction "invent" pattern "Market Explorers" rationale "Consultant selected the new-market exploration path."
     Then the workflow run status is "paused"
@@ -29,7 +29,7 @@ Feature: Workflow checkpoints
     And the workflow current step is "design_fit"
     When the consultant approves the current checkpoint
     Then the workflow run status is "paused"
-    And the pending checkpoint is "checkpoint_2"
+    And the pending checkpoint is "checkpoint_7"
     And the workflow current step is "risk_map"
     When the consultant approves the current checkpoint
     Then the workflow run status is "paused"
@@ -45,7 +45,7 @@ Feature: Workflow checkpoints
   Scenario: Checkpoint 1.5 rejects an edit without pattern direction
     Given a checkpointed workflow already paused at the pattern checkpoint
     When the consultant edits the current checkpoint without pattern direction
-    Then checkpoint resume fails with message "Checkpoint checkpoint_1_5 requires pattern_direction before proceeding"
+    Then checkpoint resume fails with message "Checkpoint checkpoint_2 requires pattern_direction before proceeding"
 
   Scenario: A retry decision reruns the current checkpointed step instead of advancing
     Given a checkpointed workflow input describing onboarding friction

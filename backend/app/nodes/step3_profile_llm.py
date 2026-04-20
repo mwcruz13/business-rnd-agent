@@ -13,6 +13,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
 from backend.app.skills.loader import PromptAssetLoader
+from backend.app.llm.retry import invoke_with_retry
 from backend.app.state import BMIWorkflowState
 
 
@@ -233,7 +234,7 @@ def run_step3_llm(state: BMIWorkflowState, llm: BaseChatModel) -> BMIWorkflowSta
     )
 
     structured_llm = llm.with_structured_output(CustomerEmpathyProfile)
-    result: CustomerEmpathyProfile = structured_llm.invoke(messages)
+    result: CustomerEmpathyProfile = invoke_with_retry(structured_llm, messages, step_name="step3_customer_profile")
 
     customer_profile = _render_profile_markdown(result, selected_patterns)
 

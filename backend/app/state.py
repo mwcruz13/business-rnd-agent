@@ -11,6 +11,7 @@ class BMIWorkflowState(TypedDict, total=False):
     llm_backend: str
     voc_data: str
     signals: list[dict[str, object]]
+    signal_recommendations: list[dict[str, object]]
     interpreted_signals: list[dict[str, object]]
     priority_matrix: list[dict[str, object]]
     coverage_gaps: list[dict[str, str]]
@@ -27,6 +28,7 @@ class BMIWorkflowState(TypedDict, total=False):
     fit_assessment: str
     business_model_canvas: str
     assumptions: str
+    step7_structured: dict[str, object]
     experiment_selections: str
     experiment_plans: str
     experiment_worksheets: str

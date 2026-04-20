@@ -168,6 +168,20 @@ def _render_experiment_cards(cards: list[dict[str, Any]]) -> str:
             lines.append("")
         lines.append(f"**Selection rationale:** {c.get('selection_rationale','')}")
         lines.append("")
+        # Zone B evidence fields (populated after experiment execution)
+        evidence_status = c.get("evidence_status")
+        evidence_decision = c.get("evidence_decision")
+        evidence_summary = c.get("evidence_summary")
+        if evidence_status or evidence_decision or evidence_summary:
+            lines.append("**Evidence Collection:**")
+            lines.append("")
+            if evidence_status:
+                lines.append(f"- **Status:** {evidence_status}")
+            if evidence_decision:
+                lines.append(f"- **Evidence Decision:** {evidence_decision}")
+            if evidence_summary:
+                lines.append(f"- **Summary:** {evidence_summary}")
+            lines.append("")
     return "\n".join(lines)
 
 

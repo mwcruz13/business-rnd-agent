@@ -30,3 +30,22 @@ Feature: Step 8 PDSA experiment designer
     And the experiment plans include implementation plans and evidence sequences
     And the experiment worksheets use the Testing Business Ideas worksheet headings
     And the experiment artifacts reproduce the exact top assumptions
+
+  Scenario: Step 8 reads structured data instead of parsing markdown
+    Given a workflow state with completed Step 7 risk outputs including structured data
+    When the Step 8 PDSA experiment designer node runs
+    Then the experiment cards reference assumptions from the structured step 7 output
+    And the experiment card count matches the number of test-first assumptions in structured output
+
+  Scenario: Step 8 falls back to markdown parsing when structured data is absent
+    Given a workflow state with Step 7 markdown output but no structured data
+    When the Step 8 PDSA experiment designer node runs
+    Then the workflow state contains experiment selections
+    And the workflow state contains structured experiment cards
+
+  Scenario: Step 8 produces empty artifacts when no test-first assumptions exist
+    Given a workflow state with Step 7 output containing zero test-first assumptions
+    When the Step 8 PDSA experiment designer node runs
+    Then the workflow state contains empty experiment selections
+    And the workflow state contains empty experiment cards
+    And the workflow current step is "pdsa_plan"

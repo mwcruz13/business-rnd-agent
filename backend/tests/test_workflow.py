@@ -61,7 +61,7 @@ def test_checkpointed_workflow_pauses_and_resumes_to_completion() -> None:
 
     second_pause = resume_workflow(session_id, decision="approve")
     assert second_pause["run_status"] == "paused"
-    assert second_pause["pending_checkpoint"] == "checkpoint_1_5"
+    assert second_pause["pending_checkpoint"] == "checkpoint_2"
     assert second_pause["current_step"] == "pattern_select"
 
     third_pause = resume_workflow(
@@ -82,7 +82,7 @@ def test_checkpointed_workflow_pauses_and_resumes_to_completion() -> None:
         ("checkpoint_4", "measure_define"),
         ("checkpoint_5", "value_proposition"),
         ("checkpoint_6", "design_fit"),
-        ("checkpoint_2", "risk_map"),
+        ("checkpoint_7", "risk_map"),
         ("checkpoint_8", "pdsa_plan"),
     ]:
         state = resume_workflow(session_id, decision="approve")

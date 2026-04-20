@@ -83,12 +83,12 @@ def test_run_endpoint_pauses_and_resume_endpoint_advances_workflow() -> None:
     assert start_payload["run_status"] == "paused"
     assert start_payload["pending_checkpoint"] == "checkpoint_1"
 
-    # Approve checkpoint_1 → paused at checkpoint_1_5
-    checkpoint_1_5 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
-    assert checkpoint_1_5.status_code == 200
-    assert checkpoint_1_5.json()["pending_checkpoint"] == "checkpoint_1_5"
+    # Approve checkpoint_1 → paused at checkpoint_2
+    checkpoint_2 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
+    assert checkpoint_2.status_code == 200
+    assert checkpoint_2.json()["pending_checkpoint"] == "checkpoint_2"
 
-    # Edit checkpoint_1_5 → paused at checkpoint_3
+    # Edit checkpoint_2 → paused at checkpoint_3
     checkpoint_3 = client.post(
         f"/runs/{session_id}/resume",
         json={
@@ -118,12 +118,12 @@ def test_run_endpoint_pauses_and_resume_endpoint_advances_workflow() -> None:
     assert checkpoint_6.status_code == 200
     assert checkpoint_6.json()["pending_checkpoint"] == "checkpoint_6"
 
-    # Approve checkpoint_6 → paused at checkpoint_2
-    checkpoint_2 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
-    assert checkpoint_2.status_code == 200
-    assert checkpoint_2.json()["pending_checkpoint"] == "checkpoint_2"
+    # Approve checkpoint_6 → paused at checkpoint_7
+    checkpoint_7 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
+    assert checkpoint_7.status_code == 200
+    assert checkpoint_7.json()["pending_checkpoint"] == "checkpoint_7"
 
-    # Approve checkpoint_2 → paused at checkpoint_8
+    # Approve checkpoint_7 → paused at checkpoint_8
     checkpoint_8 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
     assert checkpoint_8.status_code == 200
     assert checkpoint_8.json()["pending_checkpoint"] == "checkpoint_8"
@@ -139,7 +139,7 @@ def test_run_endpoint_pauses_and_resume_endpoint_advances_workflow() -> None:
     assert fetched.json()["run_status"] == "completed"
 
 
-def test_resume_rejects_checkpoint_1_5_edit_without_pattern_direction() -> None:
+def test_resume_rejects_checkpoint_2_edit_without_pattern_direction() -> None:
     client = TestClient(app)
     session_id = f"api-invalid-resume-test-{uuid4()}"
 

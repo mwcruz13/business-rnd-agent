@@ -8,11 +8,42 @@ from backend.app.workflow import start_workflow_from_step
 scenarios("features/start-from-step.feature")
 
 
-STEP_3_UPSTREAM_STATE = {
+STEP_2_UPSTREAM_STATE = {
     "voc_data": "Customer onboarding is slow",
     "signals": [{"signal": "onboarding friction", "source": "survey", "strength": "strong"}],
+}
+
+STEP_3_UPSTREAM_STATE = {
+    **STEP_2_UPSTREAM_STATE,
     "pattern_direction": "shift",
     "selected_patterns": ["Cost Differentiators"],
+}
+
+STEP_4_UPSTREAM_STATE = {
+    **STEP_3_UPSTREAM_STATE,
+    "customer_profile": "Enterprise IT buyers experiencing slow onboarding cycles.",
+}
+
+STEP_5_UPSTREAM_STATE = {
+    **STEP_4_UPSTREAM_STATE,
+    "value_driver_tree": "## Value Driver Tree\n| Driver | Type | Baseline | Target |\n|---|---|---|---|\n| Onboarding speed | Time | 30 days | 7 days |",
+    "actionable_insights": "## Actionable Insights\n- Reduce manual steps in onboarding workflow.",
+}
+
+STEP_6_UPSTREAM_STATE = {
+    **STEP_5_UPSTREAM_STATE,
+    "value_proposition_canvas": "## Value Proposition Canvas\nProducts: Automated onboarding portal.",
+    "fit_assessment": "## Fit Assessment\nProblem-solution fit: strong alignment.",
+}
+
+STEP_7_UPSTREAM_STATE = {
+    **STEP_6_UPSTREAM_STATE,
+    "business_model_canvas": "## Business Model Canvas\nKey Partners: Cloud providers.",
+}
+
+STEP_8_UPSTREAM_STATE = {
+    **STEP_7_UPSTREAM_STATE,
+    "assumptions": "## Importance × Evidence Map\n| Assumption | Quadrant |\n|---|---|\n| Customers want self-serve | Test first |",
 }
 
 
@@ -21,9 +52,39 @@ def initial_state_with_voc_data(voc_data: str) -> dict:
     return {"voc_data": voc_data}
 
 
+@given("initial state with upstream fields for step 2", target_fixture="initial_state")
+def initial_state_for_step_2() -> dict:
+    return dict(STEP_2_UPSTREAM_STATE)
+
+
 @given("initial state with upstream fields for step 3", target_fixture="initial_state")
 def initial_state_for_step_3() -> dict:
     return dict(STEP_3_UPSTREAM_STATE)
+
+
+@given("initial state with upstream fields for step 4", target_fixture="initial_state")
+def initial_state_for_step_4() -> dict:
+    return dict(STEP_4_UPSTREAM_STATE)
+
+
+@given("initial state with upstream fields for step 5", target_fixture="initial_state")
+def initial_state_for_step_5() -> dict:
+    return dict(STEP_5_UPSTREAM_STATE)
+
+
+@given("initial state with upstream fields for step 6", target_fixture="initial_state")
+def initial_state_for_step_6() -> dict:
+    return dict(STEP_6_UPSTREAM_STATE)
+
+
+@given("initial state with upstream fields for step 7", target_fixture="initial_state")
+def initial_state_for_step_7() -> dict:
+    return dict(STEP_7_UPSTREAM_STATE)
+
+
+@given("initial state with upstream fields for step 8", target_fixture="initial_state")
+def initial_state_for_step_8() -> dict:
+    return dict(STEP_8_UPSTREAM_STATE)
 
 
 @when(

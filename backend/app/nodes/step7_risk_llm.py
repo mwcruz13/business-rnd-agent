@@ -8,12 +8,15 @@ is parseable by Step 8.
 """
 from __future__ import annotations
 
+from typing import Literal
+
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
 from backend.app.patterns.loader import PatternLibraryLoader
 from backend.app.skills.loader import PromptAssetLoader
+from backend.app.llm.retry import invoke_with_retry
 from backend.app.state import BMIWorkflowState
 
 
@@ -33,7 +36,7 @@ _VALID_QUADRANTS = {"Test first", "Monitor", "Deprioritize", "Safe zone"}
 class DVFAssumption(BaseModel):
     assumption: str = Field(description="Must start with 'I believe'. Statement about the business model.")
     rationale: str = Field(description="What happens if this assumption is wrong")
-    suggested_quadrant: str = Field(
+    suggested_quadrant: Literal["Test first", "Monitor", "Deprioritize", "Safe zone"] = Field(
         description="LLM suggestion only — the consultant must confirm placement. "
         "One of: Test first, Monitor, Deprioritize, Safe zone"
     )
@@ -165,7 +168,7 @@ def run_step7_llm(state: BMIWorkflowState, llm: BaseChatModel) -> BMIWorkflowSta
     """Run Step 7 Precoil EMT assumption mapping via the LLM."""
     messages = _build_messages(state)
     structured_llm = llm.with_structured_output(Step7Output)
-    result: Step7Output = structured_llm.invoke(messages)
+    result: Step7Output = invoke_with_retry(structured_llm, messages, step_name="step7_risk")
 
     selected_patterns = state.get("selected_patterns", [])
 
@@ -173,4 +176,5 @@ def run_step7_llm(state: BMIWorkflowState, llm: BaseChatModel) -> BMIWorkflowSta
         **state,
         "current_step": "risk_map",
         "assumptions": _render_assumptions(result, selected_patterns),
+        "step7_structured": result.model_dump(),
     }

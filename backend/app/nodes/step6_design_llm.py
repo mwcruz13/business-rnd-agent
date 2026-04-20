@@ -7,11 +7,14 @@ Value Proposition Canvas.
 """
 from __future__ import annotations
 
+from typing import Literal
+
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
 from backend.app.skills.loader import PromptAssetLoader
+from backend.app.llm.retry import invoke_with_retry
 from backend.app.state import BMIWorkflowState
 
 
@@ -20,7 +23,11 @@ from backend.app.state import BMIWorkflowState
 # ---------------------------------------------------------------------------
 
 class BMCBuildingBlock(BaseModel):
-    building_block: str = Field(description="E.g. Customer Segments, Value Proposition, Channels, etc.")
+    building_block: Literal[
+        "Customer Segments", "Value Proposition", "Channels", "Customer Relationships",
+        "Key Partnerships", "Key Activities", "Key Resources",
+        "Revenue Streams", "Cost Structure",
+    ] = Field(description="E.g. Customer Segments, Value Proposition, Channels, etc.")
     description: str
 
 
@@ -189,7 +196,7 @@ def run_step6_llm(state: BMIWorkflowState, llm: BaseChatModel) -> BMIWorkflowSta
     """Run Step 6 CXIF Business Model Canvas + Fit Assessment via the LLM."""
     messages = _build_messages(state)
     structured_llm = llm.with_structured_output(Step6Output)
-    result: Step6Output = structured_llm.invoke(messages)
+    result: Step6Output = invoke_with_retry(structured_llm, messages, step_name="step6_design")
 
     selected_patterns = state.get("selected_patterns", [])
 

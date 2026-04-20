@@ -55,7 +55,7 @@ def test_cli_run_and_resume_support_checkpoint_flow(tmp_path) -> None:
 
     resume_1 = runner.invoke(app, ["resume", "--session-id", session_id, "--decision", "approve"])
     assert resume_1.exit_code == 0
-    assert "pending_checkpoint=checkpoint_1_5" in resume_1.stdout
+    assert "pending_checkpoint=checkpoint_2" in resume_1.stdout
 
     edit_json = tmp_path / "checkpoint-1-5.json"
     edit_json.write_text(

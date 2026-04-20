@@ -16,3 +16,10 @@ Feature: Step 5 define model
     And the value proposition canvas maps pain relievers to customer pains
     And the value proposition canvas maps gain creators to customer gains
     And the value proposition canvas includes at least 2 ad-lib prototypes
+
+  Scenario: Step 5 value proposition canvas distinguishes supplier products from customer needs
+    Given a workflow state with completed Step 4 outputs
+    When the Step 5 define model node runs
+    Then the value proposition canvas includes at least 2 products or services
+    And the value proposition canvas includes at least 2 pain relievers
+    And the value proposition canvas includes at least 2 gain creators

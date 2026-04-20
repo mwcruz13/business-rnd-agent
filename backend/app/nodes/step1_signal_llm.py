@@ -10,6 +10,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
+from backend.app.llm.retry import invoke_with_retry
 from backend.app.skills.loader import PromptAssetLoader
 from backend.app.state import BMIWorkflowState
 
@@ -157,7 +158,7 @@ def run_step1_llm(state: BMIWorkflowState, llm: BaseChatModel) -> BMIWorkflowSta
     messages = _build_messages(voc_data)
 
     structured_llm = llm.with_structured_output(SignalScanResult)
-    result: SignalScanResult = structured_llm.invoke(messages)
+    result: SignalScanResult = invoke_with_retry(structured_llm, messages, step_name="step1_signal_scan")
 
     return {
         **state,

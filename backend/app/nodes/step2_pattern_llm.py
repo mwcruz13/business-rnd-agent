@@ -27,6 +27,7 @@ from backend.app.patterns.pattern_affinity import (
     shortlist_patterns,
 )
 from backend.app.skills.loader import PromptAssetLoader
+from backend.app.llm.retry import invoke_with_retry
 from backend.app.state import BMIWorkflowState
 
 logger = logging.getLogger(__name__)
@@ -232,7 +233,7 @@ def _run_phase2(
             signal, priority, direction, shortlist, pattern_context,
         )
         structured_llm = llm.with_structured_output(PatternReasonerOutput)
-        result: PatternReasonerOutput = structured_llm.invoke(messages)
+        result: PatternReasonerOutput = invoke_with_retry(structured_llm, messages, step_name="step2_pattern_reasoner")
 
         # Validate that selected patterns are from the shortlist
         shortlist_names = {ps.name for ps in shortlist}

@@ -11,6 +11,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
 from backend.app.skills.loader import PromptAssetLoader
+from backend.app.llm.retry import invoke_with_retry
 from backend.app.state import BMIWorkflowState
 
 
@@ -160,7 +161,7 @@ def run_step5_llm(state: BMIWorkflowState, llm: BaseChatModel) -> BMIWorkflowSta
     """Run Step 5 CXIF Value Proposition Canvas via the LLM."""
     messages = _build_messages(state)
     structured_llm = llm.with_structured_output(ValuePropositionCanvas)
-    result: ValuePropositionCanvas = structured_llm.invoke(messages)
+    result: ValuePropositionCanvas = invoke_with_retry(structured_llm, messages, step_name="step5_define")
 
     selected_patterns = state.get("selected_patterns", [])
 
