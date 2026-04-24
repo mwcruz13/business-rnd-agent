@@ -5,8 +5,12 @@ Feature: Workflow checkpoints
     Given a checkpointed workflow input describing onboarding friction
     When the consultant starts the checkpointed workflow
     Then the workflow run status is "paused"
-    And the pending checkpoint is "checkpoint_1"
+    And the pending checkpoint is "checkpoint_1a"
     And the workflow current step is "signal_scan"
+    When the consultant approves the current checkpoint
+    Then the workflow run status is "paused"
+    And the pending checkpoint is "checkpoint_1b"
+    And the workflow current step is "signal_recommend"
     When the consultant approves the current checkpoint
     Then the workflow run status is "paused"
     And the pending checkpoint is "checkpoint_2"
@@ -60,5 +64,5 @@ Feature: Workflow checkpoints
     When the consultant starts the checkpointed workflow
     And the consultant retries the current checkpoint
     Then the workflow run status is "paused"
-    And the pending checkpoint is "checkpoint_1"
+    And the pending checkpoint is "checkpoint_1a"
     And the workflow current step is "signal_scan"

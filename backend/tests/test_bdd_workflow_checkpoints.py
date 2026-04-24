@@ -34,6 +34,9 @@ def paused_at_pattern_checkpoint() -> dict[str, object]:
         llm_backend="azure",
         pause_at_checkpoints=True,
     )
+    # Approve checkpoint_1a → checkpoint_1b
+    context["result"] = resume_workflow(str(context["session_id"]), decision="approve")
+    # Approve checkpoint_1b → checkpoint_2 (pattern checkpoint)
     context["result"] = resume_workflow(str(context["session_id"]), decision="approve")
     return context
 

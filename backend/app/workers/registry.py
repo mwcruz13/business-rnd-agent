@@ -20,7 +20,8 @@ from backend.app.workers.steps import (
     PathSequencingWorker,
     PatternMatcherWorker,
     RiskMapWorker,
-    SignalScannerWorker,
+    SignalRecommendWorker,
+    SignalScanWorker,
     ValueDriverWorker,
     VPIdeationWorker,
     VPScoringWorker,
@@ -37,7 +38,8 @@ class WorkerRegistry:
     def __init__(self) -> None:
         # Workers in workflow execution order
         workers: list[BaseWorker] = [
-            SignalScannerWorker(),
+            SignalScanWorker(),
+            SignalRecommendWorker(),
             PatternMatcherWorker(),
             CustomerProfileWorker(),
             ValueDriverWorker(),

@@ -17,19 +17,17 @@ Feature: Worker abstraction layer
 
   Scenario: Registry resolves a worker by step name
     Given the worker registry
-    When I look up the worker for "step1_signal"
-    Then the returned worker name is "step1_signal"
+    When I look up the worker for "step1a_signal_scan"
+    Then the returned worker name is "step1a_signal_scan"
     And the returned worker step number is 1
 
   Scenario: Worker execute returns valid state updates
     Given a minimal workflow state for step 1
-    When the step1_signal worker executes
+    When the step1a_signal_scan worker executes
     Then the returned state contains "signals"
     And the returned state contains "interpreted_signals"
-    And the returned state contains "priority_matrix"
-    And the returned state contains "agent_recommendation"
 
   Scenario: Worker run tracks completion
     Given a minimal workflow state for step 1
-    When the step1_signal worker runs
-    Then "step1_signal" is in the completed_steps list
+    When the step1a_signal_scan worker runs
+    Then "step1a_signal_scan" is in the completed_steps list

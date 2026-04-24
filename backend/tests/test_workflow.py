@@ -56,15 +56,20 @@ def test_checkpointed_workflow_pauses_and_resumes_to_completion() -> None:
         pause_at_checkpoints=True,
     )
     assert first_pause["run_status"] == "paused"
-    assert first_pause["pending_checkpoint"] == "checkpoint_1"
+    assert first_pause["pending_checkpoint"] == "checkpoint_1a"
     assert first_pause["current_step"] == "signal_scan"
 
     second_pause = resume_workflow(session_id, decision="approve")
     assert second_pause["run_status"] == "paused"
-    assert second_pause["pending_checkpoint"] == "checkpoint_2"
-    assert second_pause["current_step"] == "pattern_select"
+    assert second_pause["pending_checkpoint"] == "checkpoint_1b"
+    assert second_pause["current_step"] == "signal_recommend"
 
-    third_pause = resume_workflow(
+    third_pause = resume_workflow(session_id, decision="approve")
+    assert third_pause["run_status"] == "paused"
+    assert third_pause["pending_checkpoint"] == "checkpoint_2"
+    assert third_pause["current_step"] == "pattern_select"
+
+    fourth_pause = resume_workflow(
         session_id,
         decision="edit",
         edit_state={
@@ -73,9 +78,9 @@ def test_checkpointed_workflow_pauses_and_resumes_to_completion() -> None:
             "pattern_rationale": "Consultant selected the incumbent-transformation path.",
         },
     )
-    assert third_pause["run_status"] == "paused"
-    assert third_pause["pending_checkpoint"] == "checkpoint_3"
-    assert third_pause["current_step"] == "empathize"
+    assert fourth_pause["run_status"] == "paused"
+    assert fourth_pause["pending_checkpoint"] == "checkpoint_3"
+    assert fourth_pause["current_step"] == "empathize"
 
     # Approve through remaining checkpoints (4, 5a, 5b, 6, 7, 8, 9)
     for expected_cp, expected_step in [

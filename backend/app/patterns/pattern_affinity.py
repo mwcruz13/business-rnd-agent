@@ -276,7 +276,9 @@ def _compute_scores(
         original_affinity[pattern_name] = affinity
 
     for f in filters:
-        for pattern_name in filter_bonus.get(f, []):
+        # Support both string filters (legacy) and dict filters (new schema)
+        filter_name = f["filter_name"] if isinstance(f, dict) else f
+        for pattern_name in filter_bonus.get(filter_name, []):
             if pattern_name in scores:
                 scores[pattern_name] += 1.0
 

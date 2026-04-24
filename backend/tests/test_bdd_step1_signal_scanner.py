@@ -103,7 +103,12 @@ def assert_interpreted_signal_uses_soc_filters(step1_result: BMIWorkflowState) -
     }
     for signal in interpreted_signals:
         filters = signal.get("filters") or []
-        invalid = [f for f in filters if f not in valid_filters]
+        # Filters may be a list of strings (legacy) or list of dicts (new schema)
+        filter_names = [
+            f["filter_name"] if isinstance(f, dict) else f
+            for f in filters
+        ]
+        invalid = [f for f in filter_names if f not in valid_filters]
         assert not invalid, (
             f"Invalid filter(s) {invalid} for signal '{signal.get('signal_id')}'. "
             f"Valid filters: {valid_filters}"

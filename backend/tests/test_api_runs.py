@@ -81,9 +81,14 @@ def test_run_endpoint_pauses_and_resume_endpoint_advances_workflow() -> None:
     assert start_response.status_code == 200
     start_payload = start_response.json()
     assert start_payload["run_status"] == "paused"
-    assert start_payload["pending_checkpoint"] == "checkpoint_1"
+    assert start_payload["pending_checkpoint"] == "checkpoint_1a"
 
-    # Approve checkpoint_1 → paused at checkpoint_2
+    # Approve checkpoint_1a → paused at checkpoint_1b
+    checkpoint_1b = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
+    assert checkpoint_1b.status_code == 200
+    assert checkpoint_1b.json()["pending_checkpoint"] == "checkpoint_1b"
+
+    # Approve checkpoint_1b → paused at checkpoint_2
     checkpoint_2 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
     assert checkpoint_2.status_code == 200
     assert checkpoint_2.json()["pending_checkpoint"] == "checkpoint_2"
@@ -163,6 +168,8 @@ def test_resume_rejects_checkpoint_2_edit_without_pattern_direction() -> None:
         },
     )
     client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
+    # Approve checkpoint_1b → checkpoint_2 (pattern checkpoint)
+    client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
 
     invalid_resume = client.post(
         f"/runs/{session_id}/resume",
@@ -188,7 +195,7 @@ def test_start_from_step_endpoint_begins_at_step_1() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["run_status"] == "paused"
-    assert payload["pending_checkpoint"] == "checkpoint_1"
+    assert payload["pending_checkpoint"] == "checkpoint_1a"
 
 
 def test_start_from_step_rejects_missing_upstream_state() -> None:
@@ -238,7 +245,7 @@ def test_get_step_output_returns_persisted_output() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["step_number"] == 1
-    assert payload["step_name"] == "step1_signal"
+    assert payload["step_name"] == "step1a_signal_scan"
 
 
 def test_get_step_output_returns_404_for_missing_step() -> None:

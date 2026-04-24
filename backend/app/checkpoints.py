@@ -19,9 +19,14 @@ class CheckpointDefinition:
 
 
 CHECKPOINTS_BY_STEP = {
-    "step1_signal": CheckpointDefinition(
-        name="checkpoint_1",
-        after_step_name="step1_signal",
+    "step1a_signal_scan": CheckpointDefinition(
+        name="checkpoint_1a",
+        after_step_name="step1a_signal_scan",
+        step_number=1,
+    ),
+    "step1b_signal_recommend": CheckpointDefinition(
+        name="checkpoint_1b",
+        after_step_name="step1b_signal_recommend",
         step_number=1,
     ),
     "step2_pattern": CheckpointDefinition(
@@ -79,7 +84,8 @@ CHECKPOINTS_BY_NAME = {definition.name: definition for definition in CHECKPOINTS
 # Fields that must be present in initial_state to start execution at a given step.
 # Step 1 only needs voc_data (the universal input).
 REQUIRED_UPSTREAM_STATE: dict[str, tuple[str, ...]] = {
-    "step1_signal": ("voc_data",),
+    "step1a_signal_scan": ("voc_data",),
+    "step1b_signal_recommend": ("voc_data", "signals", "interpreted_signals"),
     "step2_pattern": ("voc_data", "signals"),
     "step3_profile": ("voc_data", "signals", "pattern_direction", "selected_patterns"),
     "step4_vpm": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile"),

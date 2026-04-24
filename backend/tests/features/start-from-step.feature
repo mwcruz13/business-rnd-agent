@@ -7,7 +7,7 @@ Feature: Start workflow from any step
     Given initial state with voc_data "Customer onboarding is slow"
     When the workflow is started from step 1
     Then the run status is "paused"
-    And the pending checkpoint is "checkpoint_1"
+    And the pending checkpoint is "checkpoint_1a"
 
   Scenario: Starting at step 2 with complete upstream state succeeds
     Given initial state with upstream fields for step 2

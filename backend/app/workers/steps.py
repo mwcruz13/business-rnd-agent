@@ -11,7 +11,8 @@ from __future__ import annotations
 
 from backend.app.config import get_settings
 from backend.app.llm.factory import get_chat_model
-from backend.app.nodes.step1_signal_llm import run_step1_llm
+from backend.app.nodes.step1a_signal_scan_llm import run_step1a_llm
+from backend.app.nodes.step1b_signal_recommend_llm import run_step1b_llm
 from backend.app.nodes.step2_pattern_llm import run_step2_llm
 from backend.app.nodes.step3_profile_llm import run_step3_llm
 from backend.app.nodes.step4_vpm_llm import run_step4_llm
@@ -28,12 +29,12 @@ from backend.app.state import BMIWorkflowState
 from backend.app.workers.base import BaseWorker
 
 
-class SignalScannerWorker(BaseWorker):
-    """Step 1 — SOC Radar signal scan from VoC input."""
+class SignalScanWorker(BaseWorker):
+    """Step 1a — SOC Radar signal scan and interpretation (Phase 1+2)."""
 
     @property
     def name(self) -> str:
-        return "step1_signal"
+        return "step1a_signal_scan"
 
     @property
     def step_number(self) -> int:
@@ -41,10 +42,29 @@ class SignalScannerWorker(BaseWorker):
 
     @property
     def description(self) -> str:
-        return "SOC Radar signal scan from VoC input"
+        return "SOC Radar signal scan and interpretation from VoC input"
 
     def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
-        return run_step1_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
+        return run_step1a_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
+
+
+class SignalRecommendWorker(BaseWorker):
+    """Step 1b — SOC Radar signal prioritization and recommendation (Phase 3+4)."""
+
+    @property
+    def name(self) -> str:
+        return "step1b_signal_recommend"
+
+    @property
+    def step_number(self) -> int:
+        return 1
+
+    @property
+    def description(self) -> str:
+        return "SOC Radar signal prioritization and recommendation"
+
+    def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
+        return run_step1b_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
 
 
 class PatternMatcherWorker(BaseWorker):

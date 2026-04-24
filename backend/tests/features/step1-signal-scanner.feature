@@ -4,7 +4,7 @@ Feature: Step 1 signal scanner
   Scenario: Step 1 prepares structured signal outputs from VoC input
     Given a workflow state with VoC data "Customers delay onboarding because the current process is too complex"
     When the Step 1 signal scanner node runs
-    Then the workflow current step is "signal_scan"
+    Then the workflow current step is "signal_recommend"
     And the original VoC data is preserved in the workflow state
     And the workflow state contains a signals list
     And the workflow state contains an interpreted signals list

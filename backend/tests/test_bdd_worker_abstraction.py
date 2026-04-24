@@ -101,10 +101,10 @@ def minimal_step1_state() -> BMIWorkflowState:
     return _minimal_step1_state()
 
 
-@when("the step1_signal worker executes", target_fixture="execute_result")
+@when("the step1a_signal_scan worker executes", target_fixture="execute_result")
 def worker_execute(step1_state: BMIWorkflowState) -> BMIWorkflowState:
     registry = WorkerRegistry()
-    worker = registry.get_worker("step1_signal")
+    worker = registry.get_worker("step1a_signal_scan")
     return worker.execute(step1_state)
 
 
@@ -114,10 +114,10 @@ def assert_state_key(execute_result: BMIWorkflowState, key: str) -> None:
     assert execute_result[key], f"Key '{key}' is empty in result state"
 
 
-@when("the step1_signal worker runs", target_fixture="run_result")
+@when("the step1a_signal_scan worker runs", target_fixture="run_result")
 def worker_run(step1_state: BMIWorkflowState) -> BMIWorkflowState:
     registry = WorkerRegistry()
-    worker = registry.get_worker("step1_signal")
+    worker = registry.get_worker("step1a_signal_scan")
     return worker.run(step1_state)
 
 

@@ -51,11 +51,15 @@ def test_cli_run_and_resume_support_checkpoint_flow(tmp_path) -> None:
     )
     assert start.exit_code == 0
     assert "run_status=paused" in start.stdout
-    assert "pending_checkpoint=checkpoint_1" in start.stdout
+    assert "pending_checkpoint=checkpoint_1a" in start.stdout
 
     resume_1 = runner.invoke(app, ["resume", "--session-id", session_id, "--decision", "approve"])
     assert resume_1.exit_code == 0
-    assert "pending_checkpoint=checkpoint_2" in resume_1.stdout
+    assert "pending_checkpoint=checkpoint_1b" in resume_1.stdout
+
+    resume_1b = runner.invoke(app, ["resume", "--session-id", session_id, "--decision", "approve"])
+    assert resume_1b.exit_code == 0
+    assert "pending_checkpoint=checkpoint_2" in resume_1b.stdout
 
     edit_json = tmp_path / "checkpoint-1-5.json"
     edit_json.write_text(

@@ -73,6 +73,9 @@ Classify each signal into one or more of the seven signal zones. Work with whate
 
 ### Rules
 - Extract signals directly from the provided material — do not invent signals not supported by the input
+- Extract at least 7 distinct signals when the input contains 10+ observations. Do not collapse related phenomena into a single signal — a pricing complaint and a portal access complaint may share root causes but represent separate signals with different disruption trajectories
+- For each signal, cite the specific input comment numbers (e.g., Comment 3, Comment 12) that provide supporting evidence. Every input comment should be cited by at least one signal
+- Treat the input as a system of interrelated behaviors, not a flat list of complaints. If multiple comments describe downstream effects of a single root cause, extract both the root cause signal and the effect signals separately
 - Each signal must describe observable behavior, not analyst opinion or speculation
 - If the input contains opinions or predictions rather than observations, flag them as "unverified" and note what evidence would be needed to confirm
 - Classify each signal into exactly one primary zone; note secondary zones only if clearly warranted
@@ -155,7 +158,10 @@ For each signal that passes its litmus test, apply the six disruption filters:
 ```
 
 ### Rules
-- Classify as sustaining or disruptive *before* applying filters. Sustaining signals do not receive disruption filter analysis
+- CLASSIFICATION GATE: Before applying disruption filters, output a sustaining/disruptive classification for EVERY signal. This is a mandatory prerequisite — no signal may receive filter analysis without a classification.
+  - Sustaining signals MUST NOT receive disruption filter analysis. They receive ONLY a `sustaining_rationale` and `competitive_implication`.
+  - Disruptive signals MUST receive the full litmus test AND the 6-filter assessment table.
+  - A signal's zone must be consistent with its classification: Nonconsumption and New-Market Foothold zones imply disruptive potential; Overserved Customers may be either sustaining (execution gap) or disruptive (performance overshoot). Justify explicitly if a signal's zone appears to conflict with its classification.
 - For disruptive signals, determine whether the type is new-market or low-end and apply the corresponding litmus test before filters
 - A signal that passes 4+ of 6 filters has High disruptive potential
 - A signal that passes 2-3 filters has Medium disruptive potential
@@ -165,6 +171,9 @@ For each signal that passes its litmus test, apply the six disruption filters:
 - If trajectory data is missing, mark Trajectory as "Unclear" and flag the gap explicitly. Where possible, request or estimate improvement rates rather than leaving trajectory as a binary yes/no
 - Do not conflate "important industry change" with "disruptive trajectory" — not all change is disruption
 - When assessing Asymmetric Skills (RPV), evaluate all three dimensions: does the entrant have the *resources* (capital, talent, technology), *processes* (ways of working optimized for this market), and *values* (cost structure and priorities that make this opportunity attractive)?
+- For each disruptive signal, you MUST produce a 6-row assessment evaluating ALL six disruption filters. Each row must include: result (Yes/No/Unclear), a 1-2 sentence rationale specific to this signal (not generic), and confidence (Low/Medium/High). Do not list filter names without individual assessments.
+- When assessing Asymmetric Skills (RPV), provide separate evaluations for Resources, Processes, and Values — do not collapse them into a single sentence
+- After the filter table, always output: filters_passed count, overall disruptive potential (Low/Medium/High), value_network_insight, alternative_explanation, and key_evidence_gap. These are mandatory fields, not optional.
 
 ### Transition
 After interpretation, ask:
@@ -209,6 +218,16 @@ Priority = Impact x Speed
 
 ### Priority Rationale
 [For each signal scoring 4+, provide 2-3 sentences explaining why the impact and speed scores were assigned. Reference specific evidence from earlier phases.]
+
+### Signal Reinforcement Map
+After scoring all signals, identify causal chains or reinforcement patterns:
+- If Signal A creates conditions that make Signal B more likely or more impactful, document the relationship
+- Note which sustaining signals act as accelerants for the disruptive signals
+- Identify whether addressing upstream signals in the chain would reduce the urgency of downstream signals
+
+**Chain:** [Signal X] → [Signal Y] → [Signal Z] → [Downstream consequence]
+**Strategic insight:** [1-2 sentences on where intervention is most efficient]
+**Accelerants:** [Which sustaining signals weaken the incumbent's ability to respond to the disruptive chain]
 ```
 
 ### Rules
@@ -217,6 +236,9 @@ Priority = Impact x Speed
 - If impact is ambiguous, score conservatively and explain
 - Prioritization must reference evidence from the Interpret phase, not new inferences
 - Do not inflate scores to make the analysis seem more urgent
+- When scoring speed: if VoC comments use past-tense language describing completed switching actions (e.g., "we moved to Dell," "contributed to switching"), score speed as 3 — the behavioral shift is already underway, not hypothetical
+- When scoring impact: if multiple independent comments cite the same signal as a procurement decision trigger, score impact as 3 — it is affecting core revenue
+- Sustaining signals that are high-urgency (impact=3, speed=3) should be labeled "Sustaining — Act" to distinguish from sustaining signals that are lower urgency. Do not classify sustaining signals as Disruptive to elevate their priority
 
 ### Transition
 After prioritization, ask:
@@ -287,6 +309,9 @@ For each signal in the Investigate or Act tier, provide a structured recommendat
 - Do not recommend "more research" as a standalone action — specify what research, with whom, and what question it answers
 - If the signal connects to an existing Precoil EMT or CXIF workflow in the workspace, note the connection. Otherwise, omit framework references
 - Never frame recommendations as urgent or time-pressured unless the speed score is 3
+- For each Investigate or Act recommendation, the RPV Assessment must evaluate Resources, Processes, and Values as separate items, not as a single combined judgment
+- Each experiment candidate must include: assumption (starting with "We believe that..."), experiment type, what success looks like, and what failure looks like
+- Recommended next steps must include at least 2 actions, each with a suggested owner role and timeframe
 
 ---
 

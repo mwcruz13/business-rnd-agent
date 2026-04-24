@@ -15,6 +15,8 @@ class BMIWorkflowState(TypedDict, total=False):
     interpreted_signals: list[dict[str, object]]
     priority_matrix: list[dict[str, object]]
     coverage_gaps: list[dict[str, str]]
+    reinforcement_map: dict[str, object]
+    watching_briefs: list[dict[str, object]]
     agent_recommendation: str
     pattern_direction: str
     selected_patterns: list[str]

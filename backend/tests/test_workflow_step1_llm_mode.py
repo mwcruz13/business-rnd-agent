@@ -5,8 +5,17 @@ from uuid import uuid4
 
 import pytest
 
-from backend.app.nodes import step1_signal
-from backend.app.nodes.step1_signal_llm import SignalScanResult
+from backend.app.nodes import step1a_signal_scan, step1b_signal_recommend
+from backend.app.nodes.step1a_signal_scan_llm import ScanInterpretResult, DetectedSignal, InterpretedSignal
+from backend.app.nodes.step1b_signal_recommend_llm import (
+    PrioritizeRecommendResult,
+    PriorityEntry,
+    ReinforcementMap,
+    SignalRecommendation,
+    RPVAssessment,
+    NextStep,
+    ExperimentCandidate,
+)
 from backend.app.workers import steps as worker_steps
 from backend.app.llm.factory import get_chat_model
 from backend.app.workflow import get_run_state
@@ -14,79 +23,112 @@ from backend.app.workflow import run_workflow_from_voc_data
 
 
 class FakeStructuredInvoker:
-    def __init__(self, result: SignalScanResult) -> None:
+    def __init__(self, result: object) -> None:
         self.result = result
 
-    def invoke(self, messages: list[object]) -> SignalScanResult:
+    def invoke(self, messages: list[object]) -> object:
         return self.result
 
 
 class FakeStructuredChatModel:
-    def __init__(self, result: SignalScanResult) -> None:
-        self.result = result
+    """Dispatch different results based on which schema is requested."""
+    def __init__(self, results: dict[type, object]) -> None:
+        self.results = results
 
-    def with_structured_output(self, schema: type[SignalScanResult]) -> FakeStructuredInvoker:
-        return FakeStructuredInvoker(self.result)
+    def with_structured_output(self, schema: type) -> FakeStructuredInvoker:
+        return FakeStructuredInvoker(self.results[schema])
 
 
-def _sample_result() -> SignalScanResult:
-    return SignalScanResult.model_validate(
-        {
-            "signals": [
-                {
-                    "signal_id": "self_serve_friction",
-                    "signal": "Customers are asking for a lower-friction self-serve firmware assessment",
-                    "zone": "New-Market Foothold",
-                    "source_type": "Internal VoC",
-                    "observable_behavior": "Customers describe delay and friction in the current firmware assessment process.",
-                    "evidence": [
-                        "Customers report onboarding friction and too many manual steps.",
-                        "Customers need faster time-to-value.",
-                    ],
-                }
-            ],
-            "interpreted_signals": [
-                {
-                    "signal_id": "self_serve_friction",
-                    "signal": "Customers are asking for a lower-friction self-serve firmware assessment",
-                    "zone": "New-Market Foothold",
-                    "classification": "Disruptive — New-Market",
-                    "confidence": "Medium",
-                    "rationale": "The input suggests a simpler access path could unlock customers not well served by the current workflow.",
-                    "alternative_explanation": "This may still be an operational improvement request rather than a true disruptive foothold.",
-                    "key_evidence_gap": "Need evidence of willingness to adopt self-serve over the current consultant-led path.",
-                    "filters": ["Barrier Removal", "Asymmetric Motivation"],
-                }
-            ],
-            "priority_matrix": [
-                {
-                    "signal_id": "self_serve_friction",
-                    "signal": "Customers are asking for a lower-friction self-serve firmware assessment",
-                    "impact": 3,
-                    "speed": 2,
-                    "score": 6,
-                    "tier": "Investigate",
-                    "rationale": "The request appears adjacent to core value delivery and is repeated across the input.",
-                }
-            ],
-            "coverage_gaps": [
-                {
-                    "zone": "Regulatory Shift",
-                    "note": "No direct evidence found in this input.",
-                }
-            ],
-            "agent_recommendation": "Investigate whether a self-serve offer addresses nonconsumption caused by current delivery friction.",
-        }
+def _sample_scan_result() -> ScanInterpretResult:
+    return ScanInterpretResult(
+        signals=[
+            DetectedSignal(
+                signal_id="self_serve_friction",
+                signal="Customers are asking for a lower-friction self-serve firmware assessment",
+                zone="New-Market Foothold",
+                source_type="Internal VoC",
+                observable_behavior="Customers describe delay and friction in the current firmware assessment process.",
+                evidence=[
+                    "Customers report onboarding friction and too many manual steps.",
+                    "Customers need faster time-to-value.",
+                ],
+                supporting_comments=[1, 2],
+            )
+        ],
+        interpreted_signals=[
+            InterpretedSignal(
+                signal_id="self_serve_friction",
+                signal="Customers are asking for a lower-friction self-serve firmware assessment",
+                zone="New-Market Foothold",
+                classification="Disruptive — New-Market",
+                confidence="Medium",
+                litmus_test="Pass — nonconsumers exist who cannot access the current workflow",
+                filters=[],
+                filters_passed=0,
+                disruptive_potential="Medium",
+                value_network_insight="The incumbent's value network is optimized for consultant-led delivery.",
+                alternative_explanation="This may still be an operational improvement request rather than a true disruptive foothold.",
+                key_evidence_gap="Need evidence of willingness to adopt self-serve over the current consultant-led path.",
+            ),
+        ],
+    )
+
+
+def _sample_recommend_result() -> PrioritizeRecommendResult:
+    return PrioritizeRecommendResult(
+        priority_matrix=[
+            PriorityEntry(
+                signal_id="self_serve_friction",
+                signal="Customers are asking for a lower-friction self-serve firmware assessment",
+                classification="Disruptive — New-Market",
+                impact=3,
+                speed=2,
+                score=6,
+                tier="Investigate",
+                rationale="The request appears adjacent to core value delivery and is repeated across the input.",
+            )
+        ],
+        reinforcement_map=ReinforcementMap(
+            chain=["self_serve_friction"],
+            strategic_insight="Reducing friction is the primary intervention point.",
+        ),
+        recommendations=[
+            SignalRecommendation(
+                signal_id="self_serve_friction",
+                action_tier="Investigate",
+                what_we_know="Onboarding is slow.",
+                what_we_dont_know=["How many customers are affected"],
+                rpv_assessment=RPVAssessment(
+                    resources="Incumbent has engineering resources.",
+                    processes="Current processes favor consultant-led delivery.",
+                    values="Margin expectations make self-serve unattractive.",
+                    assessment="Would choose not to respond",
+                ),
+                next_steps=[
+                    NextStep(action="Interview 5 customers", owner="CX Lead", timeframe="30 days"),
+                    NextStep(action="Map self-serve journey", owner="Product Manager", timeframe="45 days"),
+                ],
+                experiment_candidate=ExperimentCandidate(
+                    assumption="We believe that early adopters will switch within 30 days",
+                    experiment_type="Customer Interview",
+                    success="5+ customers express willingness",
+                    failure="Fewer than 2 customers interested",
+                ),
+            ),
+        ],
+        agent_recommendation="Investigate whether a self-serve offer addresses nonconsumption caused by current delivery friction.",
     )
 
 
 def test_workflow_service_can_pause_after_step1_in_llm_mode(monkeypatch) -> None:
     session_id = f"workflow-step1-llm-mode-{uuid4()}"
-    fake_model = FakeStructuredChatModel(_sample_result())
+    fake_model = FakeStructuredChatModel({
+        ScanInterpretResult: _sample_scan_result(),
+        PrioritizeRecommendResult: _sample_recommend_result(),
+    })
 
-    # Patch both the old node module (for any direct callers) and
-    # the new worker module (which the orchestrator now uses)
-    for target_module in (step1_signal, worker_steps):
+    # Patch the node modules that actually call the LLM
+    for target_module in (step1a_signal_scan, step1b_signal_recommend, worker_steps):
         monkeypatch.setattr(
             target_module,
             "get_settings",
@@ -102,16 +144,14 @@ def test_workflow_service_can_pause_after_step1_in_llm_mode(monkeypatch) -> None
     )
 
     assert first_pause["run_status"] == "paused"
-    assert first_pause["pending_checkpoint"] == "checkpoint_1"
+    assert first_pause["pending_checkpoint"] == "checkpoint_1a"
     assert first_pause["current_step"] == "signal_scan"
     assert first_pause["signals"][0]["zone"] == "New-Market Foothold"
     assert first_pause["interpreted_signals"][0]["classification"] == "Disruptive — New-Market"
-    assert first_pause["priority_matrix"][0]["score"] == 6
-    assert "self-serve" in first_pause["agent_recommendation"]
 
     persisted = get_run_state(session_id)
     assert persisted["run_status"] == "paused"
-    assert persisted["pending_checkpoint"] == "checkpoint_1"
+    assert persisted["pending_checkpoint"] == "checkpoint_1a"
     assert persisted["signals"][0]["signal"] == first_pause["signals"][0]["signal"]
 
 
