@@ -51,10 +51,10 @@ class AdLibPrototype(BaseModel):
 
 class ValuePropositionCanvas(BaseModel):
     """Complete Step 5 output: CXIF Value Proposition Canvas."""
-    products_services: list[ProductService] = Field(description="At least 1 product/service")
-    pain_relievers: list[PainReliever] = Field(description="At least 1 pain reliever mapped to customer pains")
-    gain_creators: list[GainCreator] = Field(description="At least 1 gain creator mapped to customer gains")
-    ad_lib_prototypes: list[AdLibPrototype] = Field(description="At least 2 ad-lib prototype statements")
+    products_services: list[ProductService] = Field(min_length=2, description="At least 2 products or services")
+    pain_relievers: list[PainReliever] = Field(min_length=2, description="At least 2 pain relievers mapped to customer pains")
+    gain_creators: list[GainCreator] = Field(min_length=2, description="At least 2 gain creators mapped to customer gains")
+    ad_lib_prototypes: list[AdLibPrototype] = Field(min_length=2, description="At least 2 ad-lib prototype statements")
 
 
 # ---------------------------------------------------------------------------

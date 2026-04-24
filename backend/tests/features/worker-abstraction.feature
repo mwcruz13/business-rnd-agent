@@ -7,8 +7,8 @@ Feature: Worker abstraction layer
   Scenario: Every registered worker has a valid name and step number
     Given the worker registry
     Then every worker has a non-empty name matching a known step
-    And every worker has a step number between 1 and 8
-    And no two workers share the same name or step number
+    And every worker has a positive step number
+    And no two workers share the same name
 
   Scenario: Registry returns workers in workflow order
     Given the worker registry

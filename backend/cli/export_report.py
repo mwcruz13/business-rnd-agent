@@ -37,6 +37,10 @@ _STEP_TITLES: dict[str, str] = {
     "experiment_selections": "Step 8 — Experiment Selections",
     "experiment_plans": "Step 8 — Experiment Implementation Plans",
     "experiment_worksheets": "Step 8 — Experiment Worksheets",
+    "assumption_evidence_audit": "Step 8a — Evidence Audit",
+    "experiment_card_selections": "Step 8b — Card Selection",
+    "experiment_paths": "Step 8c — Evidence-Progressive Paths",
+    "artifact_designs": "Step 9 — Artifact Designs",
 }
 
 

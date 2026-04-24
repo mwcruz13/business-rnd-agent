@@ -12,7 +12,7 @@ Feature: Step 7 risk mapper
     Given a workflow state with completed Step 6 design outputs
     When the Step 7 risk mapper node runs
     Then the assumptions use the Precoil EMT headings
-    And the assumptions include 9 formatted assumptions
+    And the assumptions include between 6 and 15 formatted assumptions
     And the assumptions include all DVF categories
     And the assumptions include a DVF tension check
     And the assumptions include an importance evidence matrix
@@ -27,8 +27,9 @@ Feature: Step 7 risk mapper
     Given a workflow state with completed Step 6 design outputs
     When the Step 7 risk mapper node runs
     Then the workflow state contains structured step 7 output
-    And the structured output has 3 DVF categories with 3 assumptions each
+    And the structured output has 3 DVF categories with between 2 and 5 assumptions each
     And every structured assumption has a suggested quadrant
+    And every structured assumption has a voc evidence strength
 
   Scenario: Step 7 DVF tensions identify cross-category conflicts
     Given a workflow state with completed Step 6 design outputs

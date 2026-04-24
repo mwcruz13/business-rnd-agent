@@ -1,0 +1,200 @@
+{
+  "signals": [
+    {
+      "signal_id": "hpe_firmware_paywall",
+      "signal": "Customers are switching to competitors like Dell due to HPE's paywall for firmware updates.",
+      "zone": "Business Model Anomaly",
+      "source_type": "Internal VoC",
+      "observable_behavior": "Customers report switching vendors because firmware updates are locked behind support contracts.",
+      "evidence": [
+        "Comment 3: the paywall of firmware updates contributed to switching to Dell.",
+        "Comment 5: SHAME ON YOU! All other leading companies, such as Lenovo, DELL, Fujitsu offer this service for free.",
+        "Comment 12: As Dell did not have that restriction, we started moving toward them as primary vendor."
+      ]
+    },
+    {
+      "signal_id": "ilo_advanced_subscription",
+      "signal": "HPE's decision to charge for iLO Advanced services like email alerting is alienating customers.",
+      "zone": "Overserved Customers",
+      "source_type": "Internal VoC",
+      "observable_behavior": "Customers express dissatisfaction with essential server management features placed behind a paywall.",
+      "evidence": [
+        "Comment 5: You wanted to make money and put this service behind a paywall.",
+        "Comment 19: unnecessary expenses were incurred, such as purchasing iLO Advanced Packs for each server."
+      ]
+    },
+    {
+      "signal_id": "support_quality_decline",
+      "signal": "HPE's support quality is driving customers to reassess partnerships.",
+      "zone": "Nonconsumption",
+      "source_type": "Internal VoC",
+      "observable_behavior": "Customers report unmet expectations for support response times and technical expertise, leading to shifts in loyalty.",
+      "evidence": [
+        "Comment 1: Losing my confidence in being a service company.",
+        "Comment 2: My client gave me hell asking why I sold him HPE product when the support is so bad.",
+        "Comment 10: Support is poor at best."
+      ]
+    },
+    {
+      "signal_id": "competitive_quote_response",
+      "signal": "HPE's slow and unresponsive quoting process pushes customers to consider competitors like Dell.",
+      "zone": "Low-End Foothold",
+      "source_type": "Internal VoC",
+      "observable_behavior": "Customers express frustration over delays in receiving quotes, driving interest in competitors with faster processes.",
+      "evidence": [
+        "Comment 2: Every day for 3 weeks Ive emailed and called the HPE reps.",
+        "Comment 9: Ive been trying to get pricing on some storage and HPE servers since March and still nothing.",
+        "Comment 20: Service contracts are difficult to purchase."
+      ]
+    }
+  ],
+  "interpreted_signals": [
+    {
+      "signal_id": "hpe_firmware_paywall",
+      "signal": "Customers are switching to competitors like Dell due to HPE's paywall for firmware updates.",
+      "zone": "Business Model Anomaly",
+      "classification": "Disruptive — Low-End",
+      "confidence": "Medium",
+      "rationale": "Competitors like Dell and Lenovo offer firmware updates for free, removing barriers for cost-sensitive customers.",
+      "alternative_explanation": "Customers may be exaggerating the impact of paywalls if they still value HPE's hardware quality.",
+      "key_evidence_gap": "Need data on how frequently paywalls directly trigger vendor switching.",
+      "filters": [
+        "Asymmetric Motivation",
+        "Barrier Removal",
+        "Business Model Conflict"
+      ]
+    },
+    {
+      "signal_id": "ilo_advanced_subscription",
+      "signal": "HPE's decision to charge for iLO Advanced services like email alerting is alienating customers.",
+      "zone": "Overserved Customers",
+      "classification": "Disruptive — Low-End",
+      "confidence": "Medium",
+      "rationale": "Customers feel overserved by features locked behind a subscription, creating openings for simpler alternatives.",
+      "alternative_explanation": "Other factors such as total cost of ownership might still favor HPE.",
+      "key_evidence_gap": "Need clarity on whether iLO Advanced subscriptions significantly impact customer retention.",
+      "filters": [
+        "Asymmetric Motivation",
+        "Performance Overshoot",
+        "Barrier Removal",
+        "Business Model Conflict"
+      ]
+    },
+    {
+      "signal_id": "support_quality_decline",
+      "signal": "HPE's support quality is driving customers to reassess partnerships.",
+      "zone": "Nonconsumption",
+      "classification": "Sustaining",
+      "confidence": "Medium",
+      "rationale": "Customers simply expect better service quality for existing products, not a fundamentally different value proposition.",
+      "alternative_explanation": "Declining support quality could be a temporary issue rather than a systemic threat.",
+      "key_evidence_gap": "Need evidence on whether support dissatisfaction is systematic or isolated.",
+      "filters": []
+    },
+    {
+      "signal_id": "competitive_quote_response",
+      "signal": "HPE's slow and unresponsive quoting process pushes customers to consider competitors like Dell.",
+      "zone": "Low-End Foothold",
+      "classification": "Disruptive — Low-End",
+      "confidence": "High",
+      "rationale": "Competitors' faster quoting processes align with the needs of cost-sensitive and time-sensitive customers.",
+      "alternative_explanation": "Frustration over quoting might not translate into actual vendor switching.",
+      "key_evidence_gap": "Need data on how often slow quoting directly leads to lost deals.",
+      "filters": [
+        "Asymmetric Motivation",
+        "Barrier Removal",
+        "Business Model Conflict"
+      ]
+    }
+  ],
+  "priority_matrix": [
+    {
+      "signal_id": "hpe_firmware_paywall",
+      "signal": "Customers are switching to competitors like Dell due to HPE's paywall for firmware updates.",
+      "impact": 2,
+      "speed": 2,
+      "score": 4,
+      "tier": "Investigate",
+      "rationale": "Switching due to firmware paywalls highlights a business model anomaly that risks eroding HPE's cost-sensitive customer base."
+    },
+    {
+      "signal_id": "ilo_advanced_subscription",
+      "signal": "HPE's decision to charge for iLO Advanced services like email alerting is alienating customers.",
+      "impact": 2,
+      "speed": 2,
+      "score": 4,
+      "tier": "Investigate",
+      "rationale": "Alienation over subscription models could further exacerbate churn among overserved customers."
+    },
+    {
+      "signal_id": "support_quality_decline",
+      "signal": "HPE's support quality is driving customers to reassess partnerships.",
+      "impact": 3,
+      "speed": 1,
+      "score": 3,
+      "tier": "Monitor",
+      "rationale": "The issue impacts core customer relationships but lacks evidence of a rapid trajectory."
+    },
+    {
+      "signal_id": "competitive_quote_response",
+      "signal": "HPE's slow and unresponsive quoting process pushes customers to consider competitors like Dell.",
+      "impact": 3,
+      "speed": 3,
+      "score": 9,
+      "tier": "Act",
+      "rationale": "This directly threatens HPE's ability to compete for price-sensitive deals and requires immediate process optimization."
+    }
+  ],
+  "coverage_gaps": [
+    {
+      "zone": "Enabling Technology",
+      "note": "No direct evidence found in this input; treat as an intelligence blind spot rather than proof of absence."
+    },
+    {
+      "zone": "New-Market Foothold",
+      "note": "No direct evidence found in this input; treat as an intelligence blind spot rather than proof of absence."
+    },
+    {
+      "zone": "Regulatory / Policy Shift",
+      "note": "No direct evidence found in this input; treat as an intelligence blind spot rather than proof of absence."
+    }
+  ],
+  "signal_recommendations": [
+    {
+      "signal_id": "hpe_firmware_paywall",
+      "action_tier": "Investigate",
+      "what_we_know": "Numerous customers report switching to Dell and Lenovo due to the paywall for firmware updates.",
+      "what_we_dont_know": [
+        "How many customers have switched vendors due to firmware update paywalls.",
+        "Whether providing free updates would significantly increase retention."
+      ],
+      "experiment_candidate": "We believe that offering a 6-month trial of free firmware updates will increase customer retention among cost-sensitive segments."
+    },
+    {
+      "signal_id": "ilo_advanced_subscription",
+      "action_tier": "Investigate",
+      "what_we_know": "Customers are dissatisfied with essential features like email alerting being locked behind an iLO Advanced subscription.",
+      "what_we_dont_know": [
+        "Whether iLO Advanced subscriptions are a primary driver of customer churn.",
+        "What percentage of customers are overserved by current iLO features."
+      ],
+      "experiment_candidate": "We believe that bundling iLO Advanced features into base server packages will improve customer satisfaction and retention."
+    },
+    {
+      "signal_id": "competitive_quote_response",
+      "action_tier": "Act",
+      "what_we_know": "Customers are losing patience with slow quoting processes, and competitors like Dell and Lenovo offer faster alternatives.",
+      "what_we_dont_know": [
+        "Specific time thresholds that customers consider acceptable for quotes.",
+        "How much revenue is lost annually due to quoting delays."
+      ],
+      "experiment_candidate": "We believe that implementing an automated quoting system will reduce quoting times and improve win rates for price-sensitive deals."
+    }
+  ],
+  "agent_recommendation": "Prioritize immediate action on the competitive_quote_response signal, as it poses a direct, high-impact threat to HPE's ability to compete in cost-sensitive markets. Investigate the hpe_firmware_paywall and ilo_advanced_subscription signals to address potential drivers of customer churn. Monitor the support_quality_decline signal for systemic patterns. Expand data collection in Regulatory / Policy Shift, as no signals were detected in this zone.",
+  "_meta": {
+    "input_file": "/app/backend/scripts/data/soc_extracts/soc_voc_compute.txt",
+    "step": "step1_signal_scan",
+    "llm_backend": "azure"
+  }
+}

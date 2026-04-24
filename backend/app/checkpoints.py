@@ -40,10 +40,16 @@ CHECKPOINTS_BY_STEP = {
         after_step_name="step4_vpm",
         step_number=4,
     ),
-    "step5_define": CheckpointDefinition(
-        name="checkpoint_5",
-        after_step_name="step5_define",
+    "step5a_ideation": CheckpointDefinition(
+        name="checkpoint_5a",
+        after_step_name="step5a_ideation",
         step_number=5,
+    ),
+    "step5b_scoring": CheckpointDefinition(
+        name="checkpoint_5b",
+        after_step_name="step5b_scoring",
+        step_number=5,
+        required_state_fields=("selected_vp_indices",),
     ),
     "step6_design": CheckpointDefinition(
         name="checkpoint_6",
@@ -60,6 +66,11 @@ CHECKPOINTS_BY_STEP = {
         after_step_name="step8_pdsa",
         step_number=8,
     ),
+    "step9_artifact_designer": CheckpointDefinition(
+        name="checkpoint_9",
+        after_step_name="step9_artifact_designer",
+        step_number=9,
+    ),
 }
 
 CHECKPOINTS_BY_NAME = {definition.name: definition for definition in CHECKPOINTS_BY_STEP.values()}
@@ -72,10 +83,15 @@ REQUIRED_UPSTREAM_STATE: dict[str, tuple[str, ...]] = {
     "step2_pattern": ("voc_data", "signals"),
     "step3_profile": ("voc_data", "signals", "pattern_direction", "selected_patterns"),
     "step4_vpm": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile"),
-    "step5_define": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights"),
+    "step5a_ideation": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights"),
+    "step5b_scoring": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights", "vp_alternatives"),
     "step6_design": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights", "value_proposition_canvas", "fit_assessment"),
     "step7_risk": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights", "value_proposition_canvas", "fit_assessment", "business_model_canvas"),
     "step8_pdsa": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights", "value_proposition_canvas", "fit_assessment", "business_model_canvas", "assumptions"),
+    "step8a_evidence_audit": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights", "value_proposition_canvas", "fit_assessment", "business_model_canvas", "assumptions"),
+    "step8b_card_selection": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights", "value_proposition_canvas", "fit_assessment", "business_model_canvas", "assumptions", "assumption_evidence_audit"),
+    "step8c_path_sequencing": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights", "value_proposition_canvas", "fit_assessment", "business_model_canvas", "assumptions", "assumption_evidence_audit", "experiment_card_selections"),
+    "step9_artifact_designer": ("voc_data", "signals", "pattern_direction", "selected_patterns", "customer_profile", "value_driver_tree", "actionable_insights", "value_proposition_canvas", "fit_assessment", "business_model_canvas", "assumptions", "experiment_cards"),
 }
 
 

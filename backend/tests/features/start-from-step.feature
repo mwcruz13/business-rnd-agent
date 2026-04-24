@@ -36,7 +36,7 @@ Feature: Start workflow from any step
     Given initial state with upstream fields for step 5
     When the workflow is started from step 5
     Then the run status is "paused"
-    And the pending checkpoint is "checkpoint_5"
+    And the pending checkpoint is "checkpoint_5a"
 
   Scenario: Starting at step 6 with complete upstream state succeeds
     Given initial state with upstream fields for step 6
@@ -59,9 +59,15 @@ Feature: Start workflow from any step
   Scenario: Starting at step 0 is rejected
     Given initial state with voc_data "Customer onboarding is slow"
     When the workflow is started from step 0
-    Then the start is rejected with a message containing "step_number must be between 1 and 8"
+    Then the start is rejected with a message containing "step_number must be between 1 and 9"
 
-  Scenario: Starting at step 9 is rejected
-    Given initial state with voc_data "Customer onboarding is slow"
+  Scenario: Starting at step 9 with complete upstream state succeeds
+    Given initial state with upstream fields for step 9
     When the workflow is started from step 9
-    Then the start is rejected with a message containing "step_number must be between 1 and 8"
+    Then the run status is "paused"
+    And the pending checkpoint is "checkpoint_9"
+
+  Scenario: Starting at step 10 is rejected
+    Given initial state with voc_data "Customer onboarding is slow"
+    When the workflow is started from step 10
+    Then the start is rejected with a message containing "step_number must be between 1 and 9"

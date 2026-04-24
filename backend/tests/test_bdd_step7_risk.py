@@ -98,13 +98,15 @@ def assert_precoil_headings(step7_result: BMIWorkflowState) -> None:
     assert "## Feasibility" in assumptions
 
 
-@then("the assumptions include 9 formatted assumptions")
+@then("the assumptions include between 6 and 15 formatted assumptions")
 def assert_assumption_count(step7_result: BMIWorkflowState) -> None:
     assumptions = step7_result["assumptions"]
     formatted_rows = assumptions.count("| Desirable | I believe")
     formatted_rows += assumptions.count("| Viable | I believe")
     formatted_rows += assumptions.count("| Feasible | I believe")
-    assert formatted_rows == 9
+    assert 6 <= formatted_rows <= 15, (
+        f"Expected 6-15 assumptions (2-5 per DVF category), got {formatted_rows}"
+    )
 
 
 @then("the assumptions include all DVF categories")
@@ -160,13 +162,26 @@ def assert_structured_output_exists(step7_result: BMIWorkflowState) -> None:
     assert "dvf_tensions" in structured
 
 
-@then("the structured output has 3 DVF categories with 3 assumptions each")
+@then("the structured output has 3 DVF categories with between 2 and 5 assumptions each")
 def assert_structured_categories(step7_result: BMIWorkflowState) -> None:
     structured = step7_result["step7_structured"]
     categories = structured["categories"]
     assert len(categories) == 3, f"Expected 3 categories, got {len(categories)}"
     for cat in categories:
-        assert len(cat["assumptions"]) == 3, f"Expected 3 assumptions in {cat['category']}, got {len(cat['assumptions'])}"
+        n = len(cat["assumptions"])
+        assert 2 <= n <= 5, (
+            f"Expected 2-5 assumptions in {cat['category']}, got {n}"
+        )
+
+
+@then("every structured assumption has a voc evidence strength")
+def assert_voc_evidence_strength(step7_result: BMIWorkflowState) -> None:
+    valid = {"None", "Weak", "Medium"}
+    for cat in step7_result["step7_structured"]["categories"]:
+        for a in cat["assumptions"]:
+            assert a.get("voc_evidence_strength") in valid, (
+                f"voc_evidence_strength must be one of {valid}, got '{a.get('voc_evidence_strength')}'"
+            )
 
 
 @then("every structured assumption has a suggested quadrant")

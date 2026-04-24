@@ -40,11 +40,28 @@ class DVFAssumption(BaseModel):
         description="LLM suggestion only — the consultant must confirm placement. "
         "One of: Test first, Monitor, Deprioritize, Safe zone"
     )
+    voc_evidence_strength: Literal["None", "Weak", "Medium"] = Field(
+        default="None",
+        description=(
+            "How much evidence the upstream Voice-of-Customer / signal data already "
+            "contains for this assumption. 'None' = the VoC is silent on it. 'Weak' = "
+            "anecdotal or indirect references. 'Medium' = direct behavioral observations "
+            "or multiple corroborating signals. Never auto-assign 'Strong' — that requires "
+            "a deliberate experiment."
+        ),
+    )
 
 
 class DVFCategory(BaseModel):
     category: str = Field(description="Desirability, Viability, or Feasibility")
-    assumptions: list[DVFAssumption] = Field(description="Exactly 3 assumptions for this category", min_length=3, max_length=3)
+    assumptions: list[DVFAssumption] = Field(
+        description=(
+            "Between 2 and 5 assumptions for this category. Use fewer when the upstream "
+            "VoC is narrow; use more when it surfaces multiple distinct risks."
+        ),
+        min_length=2,
+        max_length=5,
+    )
 
 
 class DVFTension(BaseModel):
@@ -88,13 +105,21 @@ def _build_messages(state: BMIWorkflowState) -> list[SystemMessage | HumanMessag
         "Your task: extract the riskiest assumptions from the Business Model Canvas and Fit Assessment.\n\n"
         "RULES:\n"
         "- Generate EXACTLY 3 categories: Desirability, Viability, Feasibility.\n"
-        "- Generate EXACTLY 3 assumptions per category (9 total).\n"
+        "- Generate BETWEEN 2 AND 5 assumptions per category. Use fewer when the upstream\n"
+        "  VoC / Business Model Canvas is narrow on that dimension; use more when it\n"
+        "  surfaces multiple distinct risks.\n"
         "- Every assumption MUST start with 'I believe'.\n"
         "- Assign each assumption a quadrant: Test first, Monitor, Deprioritize, or Safe zone.\n"
         "- Your quadrant assignments are SUGGESTIONS. Label them as such.\n"
         "- You cannot objectively assess what evidence the organization has. Err toward\n"
         "  'Test first' for high-impact assumptions where evidence strength is ambiguous.\n"
         "- At least 1 assumption per category should be 'Test first'.\n"
+        "- For each assumption, also set voc_evidence_strength based on what the\n"
+        "  upstream VoC / signal context already contains for that specific assumption:\n"
+        "    * 'None' — the VoC is silent on this assumption.\n"
+        "    * 'Weak' — anecdotal or indirect references appear in the VoC.\n"
+        "    * 'Medium' — direct behavioral observations or multiple corroborating signals.\n"
+        "  Never auto-assign 'Strong'.\n"
         "- The DVF tensions should identify conflicts between dimensions, referencing specific assumptions.\n"
         "- Ground assumptions in the actual Business Model Canvas content.\n"
         f"- Reference {selected_patterns} where relevant.\n"
@@ -116,7 +141,11 @@ def _build_messages(state: BMIWorkflowState) -> list[SystemMessage | HumanMessag
 
 def _render_assumptions(output: Step7Output, selected_patterns: list[str]) -> str:
     pattern_context = ", ".join(selected_patterns) or "approved patterns"
-    lines: list[str] = []
+    lines: list[str] = [
+        "## Pattern Context",
+        f"Selected patterns: {pattern_context}",
+        "",
+    ]
 
     # DVF sections with assumption tables
     for cat in output.categories:

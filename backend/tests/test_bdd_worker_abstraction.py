@@ -51,21 +51,19 @@ def assert_worker_names(registry: WorkerRegistry) -> None:
         )
 
 
-@then("every worker has a step number between 1 and 8")
+@then("every worker has a positive step number")
 def assert_worker_step_numbers(registry: WorkerRegistry) -> None:
     for worker in registry.get_all_workers():
-        assert 1 <= worker.step_number <= 8, (
-            f"Worker '{worker.name}' step_number={worker.step_number} out of range"
+        assert worker.step_number >= 1, (
+            f"Worker '{worker.name}' step_number={worker.step_number} must be positive"
         )
 
 
-@then("no two workers share the same name or step number")
-def assert_no_duplicates(registry: WorkerRegistry) -> None:
+@then("no two workers share the same name")
+def assert_no_duplicate_names(registry: WorkerRegistry) -> None:
     workers = registry.get_all_workers()
     names = [w.name for w in workers]
-    numbers = [w.step_number for w in workers]
     assert len(set(names)) == len(names), f"Duplicate names: {names}"
-    assert len(set(numbers)) == len(numbers), f"Duplicate step_numbers: {numbers}"
 
 
 @when("I list all workers in order", target_fixture="worker_names")

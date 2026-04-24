@@ -21,8 +21,12 @@ Feature: Workflow checkpoints
     And the workflow current step is "measure_define"
     When the consultant approves the current checkpoint
     Then the workflow run status is "paused"
-    And the pending checkpoint is "checkpoint_5"
-    And the workflow current step is "value_proposition"
+    And the pending checkpoint is "checkpoint_5a"
+    And the workflow current step is "vp_ideation"
+    When the consultant approves the current checkpoint
+    Then the workflow run status is "paused"
+    And the pending checkpoint is "checkpoint_5b"
+    And the workflow current step is "vp_scoring"
     When the consultant approves the current checkpoint
     Then the workflow run status is "paused"
     And the pending checkpoint is "checkpoint_6"
@@ -34,6 +38,10 @@ Feature: Workflow checkpoints
     When the consultant approves the current checkpoint
     Then the workflow run status is "paused"
     And the pending checkpoint is "checkpoint_8"
+    And the workflow current step is "pdsa_plan"
+    When the consultant approves the current checkpoint
+    Then the workflow run status is "paused"
+    And the pending checkpoint is "checkpoint_9"
     And the workflow current step is "pdsa_plan"
     When the consultant approves the current checkpoint
     Then the workflow run status is "completed"

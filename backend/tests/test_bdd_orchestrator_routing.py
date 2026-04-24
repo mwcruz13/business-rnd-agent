@@ -32,7 +32,7 @@ def state_with_completed(steps: str) -> BMIWorkflowState:
     return _minimal_state(completed_steps=steps.split(","))
 
 
-@given("a workflow state with all 8 steps completed", target_fixture="routing_state")
+@given("a workflow state with all workflow steps completed", target_fixture="routing_state")
 def state_all_completed() -> BMIWorkflowState:
     return _minimal_state(completed_steps=list(WORKFLOW_STEP_ORDER))
 

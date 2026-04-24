@@ -108,12 +108,17 @@ def test_run_endpoint_pauses_and_resume_endpoint_advances_workflow() -> None:
     assert checkpoint_4.status_code == 200
     assert checkpoint_4.json()["pending_checkpoint"] == "checkpoint_4"
 
-    # Approve checkpoint_4 → paused at checkpoint_5
-    checkpoint_5 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
-    assert checkpoint_5.status_code == 200
-    assert checkpoint_5.json()["pending_checkpoint"] == "checkpoint_5"
+    # Approve checkpoint_4 → paused at checkpoint_5a
+    checkpoint_5a = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
+    assert checkpoint_5a.status_code == 200
+    assert checkpoint_5a.json()["pending_checkpoint"] == "checkpoint_5a"
 
-    # Approve checkpoint_5 → paused at checkpoint_6
+    # Approve checkpoint_5a → paused at checkpoint_5b
+    checkpoint_5b = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
+    assert checkpoint_5b.status_code == 200
+    assert checkpoint_5b.json()["pending_checkpoint"] == "checkpoint_5b"
+
+    # Approve checkpoint_5b → paused at checkpoint_6
     checkpoint_6 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
     assert checkpoint_6.status_code == 200
     assert checkpoint_6.json()["pending_checkpoint"] == "checkpoint_6"
@@ -128,7 +133,12 @@ def test_run_endpoint_pauses_and_resume_endpoint_advances_workflow() -> None:
     assert checkpoint_8.status_code == 200
     assert checkpoint_8.json()["pending_checkpoint"] == "checkpoint_8"
 
-    # Approve checkpoint_8 → completed
+    # Approve checkpoint_8 → paused at checkpoint_9
+    checkpoint_9 = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
+    assert checkpoint_9.status_code == 200
+    assert checkpoint_9.json()["pending_checkpoint"] == "checkpoint_9"
+
+    # Approve checkpoint_9 → completed
     completed = client.post(f"/runs/{session_id}/resume", json={"decision": "approve"})
     assert completed.status_code == 200
     assert completed.json()["run_status"] == "completed"

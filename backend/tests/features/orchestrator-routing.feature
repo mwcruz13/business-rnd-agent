@@ -12,8 +12,8 @@ Feature: Orchestrator routing
     When the orchestrator decides the next step
     Then the next step is "step2_pattern"
 
-  Scenario: Orchestrator routes to END after all 8 steps completed
-    Given a workflow state with all 8 steps completed
+  Scenario: Orchestrator routes to END after all workflow steps completed
+    Given a workflow state with all workflow steps completed
     When the orchestrator decides the next step
     Then the next step is "__end__"
 

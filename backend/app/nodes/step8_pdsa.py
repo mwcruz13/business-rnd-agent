@@ -82,6 +82,49 @@ EXPERIMENT_MATRIX = {
     },
 }
 
+ASSET_BLUEPRINTS = {
+    "Problem Interviews": {
+        "artifact_name": "Interview Guide v1 + Screener",
+        "artifact_spec": "10-question interview script, participant screener form, and evidence capture template.",
+        "acceptance_criteria": "Guide covers trigger, impact, alternatives, urgency, and decision moments with no leading prompts.",
+    },
+    "Landing Page": {
+        "artifact_name": "Single-Offer Landing Page",
+        "artifact_spec": "One-page value proposition page with one CTA, analytics tags, and conversion event instrumentation.",
+        "acceptance_criteria": "Visitors can understand the offer in under 30 seconds and CTA conversion can be measured end to end.",
+    },
+    "Fake Door": {
+        "artifact_name": "In-Product Fake Door Flow",
+        "artifact_spec": "Clickable feature entry point, confirmation screen, and follow-up capture for intent rationale.",
+        "acceptance_criteria": "Clickthrough and post-click intent reasons are recorded with user segment context.",
+    },
+    "Throwaway Prototype": {
+        "artifact_name": "Workflow Throwaway Prototype",
+        "artifact_spec": "Clickable prototype of critical onboarding path with 3-5 tasks and failure-state branches.",
+        "acceptance_criteria": "Prototype allows observation of completion, drop-off points, and manual recovery events.",
+    },
+    "Usability Testing": {
+        "artifact_name": "Usability Test Script + Task Pack",
+        "artifact_spec": "Moderator script, task scenarios, and observation sheet for errors, time on task, and interventions.",
+        "acceptance_criteria": "Tasks map directly to the assumption risk and can produce comparable results across participants.",
+    },
+    "Wizard of Oz": {
+        "artifact_name": "Wizard of Oz Service Runbook",
+        "artifact_spec": "Operator playbook, backstage handoff checklist, and visible user journey script.",
+        "acceptance_criteria": "Backstage steps are repeatable and customer-facing flow appears consistently automated.",
+    },
+    "Mock Sale": {
+        "artifact_name": "Mock Offer Deck + Pricing Script",
+        "artifact_spec": "Offer narrative, pricing options, objection-handling script, and commitment capture form.",
+        "acceptance_criteria": "Sales conversation produces explicit commit/no-commit signal and objection categories.",
+    },
+    "Pre-Order Test": {
+        "artifact_name": "Pre-Order Checkout Package",
+        "artifact_spec": "Pricing page, reservation checkout flow, and terms/fulfillment communication template.",
+        "acceptance_criteria": "Prospects can place a reversible commitment and completion events are captured reliably.",
+    },
+}
+
 _STOP_WORDS = frozenset({
     "a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
     "has", "he", "in", "is", "it", "its", "of", "on", "or", "that",
@@ -409,9 +452,21 @@ def _format_evidence_sequence(assumption: TopAssumption, path: list[ExperimentCa
     return "\n".join(lines)
 
 
+def _asset_blueprint(card: ExperimentCard) -> dict[str, str]:
+    blueprint = ASSET_BLUEPRINTS.get(card.name)
+    if blueprint:
+        return blueprint
+    return {
+        "artifact_name": f"{card.name} Evidence Package",
+        "artifact_spec": f"Execution-ready asset set tailored to {card.name.lower()} with instrumentation for evidence capture.",
+        "acceptance_criteria": "Asset can be executed in one cycle and captures both behavioral signal and decision evidence.",
+    }
+
+
 def _format_worksheet(assumption: TopAssumption, primary_card: ExperimentCard, next_card: ExperimentCard | None) -> str:
     next_if_mixed = next_card.name if next_card else "Refine the same experiment"
     next_if_positive = next_card.name if next_card else "Summarize the evidence and decide whether to stop"
+    asset = _asset_blueprint(primary_card)
     return "\n".join(
         [
             "## Experiment Worksheet",
@@ -440,7 +495,9 @@ def _format_worksheet(assumption: TopAssumption, primary_card: ExperimentCard, n
             "- **Test audience:** The stakeholders closest to the risk described in the assumption.",
             "- **Sample size target:** 8 qualified participants or decision points",
             "- **Channel or environment:** The lowest-cost environment that still produces credible evidence.",
-            f"- **Asset needed:** A runnable artifact tailored for {primary_card.name.lower()}.",
+            f"- **Asset needed:** {asset['artifact_name']}",
+            f"- **Exact artifact scope:** {asset['artifact_spec']}",
+            f"- **Artifact acceptance criteria:** {asset['acceptance_criteria']}",
             "- **Timebox:** 1 week",
             "",
             "### Success And Failure Criteria",
@@ -484,6 +541,7 @@ def _build_card_object(
     card_index: int,
 ) -> dict[str, object]:
     next_card = path[1] if len(path) > 1 else None
+    asset = _asset_blueprint(primary_card)
     return {
         "id": f"exp-{card_index:03d}",
         "assumption": assumption.assumption,
@@ -495,6 +553,9 @@ def _build_card_object(
         "test_audience": "The stakeholders closest to the risk described in the assumption.",
         "sample_size": 8,
         "timebox": "1 week",
+        "asset_needed": asset["artifact_name"],
+        "asset_spec": asset["artifact_spec"],
+        "asset_acceptance_criteria": asset["acceptance_criteria"],
         "primary_metric": PRIMARY_METRICS[assumption.category],
         "secondary_metrics": SECONDARY_METRICS[assumption.category],
         "success_looks_like": "The result clearly strengthens confidence and justifies moving to the next experiment.",
@@ -600,6 +661,24 @@ def update_experiment_card_evidence(
     return result
 
 
+def _path_from_step8c(
+    assumption: TopAssumption,
+    cards: dict[str, ExperimentCard],
+    experiment_paths: list[dict[str, object]],
+) -> list[ExperimentCard] | None:
+    for item in experiment_paths:
+        if str(item.get("assumption", "")).strip() != assumption.assumption:
+            continue
+        path_cards: list[ExperimentCard] = []
+        for card in item.get("path_cards") or []:
+            name = str(card.get("card_name", "")).strip()
+            if name in cards:
+                path_cards.append(cards[name])
+        if path_cards:
+            return path_cards
+    return None
+
+
 def _build_outputs(state: BMIWorkflowState) -> tuple[str, str, str, list[dict[str, object]]]:
     cards, precoil_library = _load_assets()
     if "step_8_behavior" not in precoil_library.get("agent_usage_guidance", {}):
@@ -609,13 +688,15 @@ def _build_outputs(state: BMIWorkflowState) -> tuple[str, str, str, list[dict[st
         state.get("assumptions", ""),
         step7_structured=state.get("step7_structured"),
     )
+    step8c_paths = state.get("experiment_paths") or []
+    pattern_context = ", ".join(state.get("selected_patterns", [])) or "approved patterns"
     selections: list[str] = []
     plans: list[str] = []
     worksheets: list[str] = []
     card_objects: list[dict[str, object]] = []
 
     for assumption in top_assumptions:
-        path = _select_experiment_path(assumption, cards)
+        path = _path_from_step8c(assumption, cards, step8c_paths) or _select_experiment_path(assumption, cards)
         selections.append(_format_selection(assumption, path))
         plans.append(_format_precoil_brief(assumption, path[0]))
         plans.append(_format_implementation_plan(assumption, path[0]))
@@ -623,7 +704,26 @@ def _build_outputs(state: BMIWorkflowState) -> tuple[str, str, str, list[dict[st
         worksheets.append(_format_worksheet(assumption, path[0], path[1] if len(path) > 1 else None))
         card_objects.append(_build_card_object(assumption, path[0], path, len(card_objects) + 1))
 
-    return "\n\n".join(selections), "\n\n".join(plans), "\n\n".join(worksheets), card_objects
+    if not top_assumptions:
+        return "", "", "", []
+
+    selections_text = "\n".join([
+        "## Pattern Context",
+        f"Selected patterns: {pattern_context}",
+        "",
+    ]) + "\n\n" + "\n\n".join(selections)
+    plans_text = "\n".join([
+        "## Pattern Context",
+        f"Selected patterns: {pattern_context}",
+        "",
+    ]) + "\n\n" + "\n\n".join(plans)
+    worksheets_text = "\n".join([
+        "## Pattern Context",
+        f"Selected patterns: {pattern_context}",
+        "",
+    ]) + "\n\n" + "\n\n".join(worksheets)
+
+    return selections_text, plans_text, worksheets_text, card_objects
 
 
 def run_step(state: BMIWorkflowState) -> BMIWorkflowState:

@@ -12,6 +12,8 @@ const STEP_INDEX_BY_NAME = {
   empathize: 2,
   measure_define: 3,
   value_proposition: 4,
+  vp_ideation: 4,
+  vp_scoring: 4,
   design_fit: 5,
   risk_map: 6,
   pdsa_plan: 7,

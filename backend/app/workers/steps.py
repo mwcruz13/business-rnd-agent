@@ -15,10 +15,15 @@ from backend.app.nodes.step1_signal_llm import run_step1_llm
 from backend.app.nodes.step2_pattern_llm import run_step2_llm
 from backend.app.nodes.step3_profile_llm import run_step3_llm
 from backend.app.nodes.step4_vpm_llm import run_step4_llm
-from backend.app.nodes.step5_define_llm import run_step5_llm
+from backend.app.nodes.step5a_ideation_llm import run_step5a_llm
+from backend.app.nodes.step5b_scoring_llm import run_step5b_llm
 from backend.app.nodes.step6_design_llm import run_step6_llm
 from backend.app.nodes.step7_risk_llm import run_step7_llm
+from backend.app.nodes.step8a_evidence_audit import run_step as run_step8a_default
+from backend.app.nodes.step8b_card_selection import run_step as run_step8b_default
+from backend.app.nodes.step8c_path_sequencing import run_step as run_step8c_default
 from backend.app.nodes.step8_pdsa import run_step as run_step8_deterministic
+from backend.app.nodes.step9_artifact_designer import run_step as run_step9_default
 from backend.app.state import BMIWorkflowState
 from backend.app.workers.base import BaseWorker
 
@@ -99,12 +104,12 @@ class ValueDriverWorker(BaseWorker):
         return run_step4_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
 
 
-class ValuePropositionWorker(BaseWorker):
-    """Step 5 — Value Proposition Canvas."""
+class VPIdeationWorker(BaseWorker):
+    """Step 5a — VP Portfolio Ideation."""
 
     @property
     def name(self) -> str:
-        return "step5_define"
+        return "step5a_ideation"
 
     @property
     def step_number(self) -> int:
@@ -112,10 +117,29 @@ class ValuePropositionWorker(BaseWorker):
 
     @property
     def description(self) -> str:
-        return "Value Proposition Canvas"
+        return "VP Portfolio Ideation (pattern-coherent alternatives)"
 
     def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
-        return run_step5_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
+        return run_step5a_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
+
+
+class VPScoringWorker(BaseWorker):
+    """Step 5b — VP Portfolio Scoring."""
+
+    @property
+    def name(self) -> str:
+        return "step5b_scoring"
+
+    @property
+    def step_number(self) -> int:
+        return 5
+
+    @property
+    def description(self) -> str:
+        return "VP Portfolio Scoring and Ranking"
+
+    def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
+        return run_step5b_llm(state, get_chat_model(get_settings(), state.get("llm_backend")))
 
 
 class BusinessModelWorker(BaseWorker):
@@ -173,3 +197,79 @@ class ExperimentPlanWorker(BaseWorker):
 
     def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
         return run_step8_deterministic(state)
+
+
+class EvidenceAuditWorker(BaseWorker):
+    """Step 8a — Evidence audit of Test-first assumptions against VoC/signals."""
+
+    @property
+    def name(self) -> str:
+        return "step8a_evidence_audit"
+
+    @property
+    def step_number(self) -> int:
+        return 8
+
+    @property
+    def description(self) -> str:
+        return "Evidence audit of Test-first assumptions against VoC and signal context"
+
+    def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
+        return run_step8a_default(state)
+
+
+class CardSelectionWorker(BaseWorker):
+    """Step 8b — Evidence-aware experiment card selection."""
+
+    @property
+    def name(self) -> str:
+        return "step8b_card_selection"
+
+    @property
+    def step_number(self) -> int:
+        return 8
+
+    @property
+    def description(self) -> str:
+        return "Evidence-aware card selection from the canonical experiment library"
+
+    def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
+        return run_step8b_default(state)
+
+
+class PathSequencingWorker(BaseWorker):
+    """Step 8c — Sequence an evidence-progressive path from selected cards."""
+
+    @property
+    def name(self) -> str:
+        return "step8c_path_sequencing"
+
+    @property
+    def step_number(self) -> int:
+        return 8
+
+    @property
+    def description(self) -> str:
+        return "Evidence-progressive sequencing of selected experiment cards"
+
+    def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
+        return run_step8c_default(state)
+
+
+class ArtifactDesignerWorker(BaseWorker):
+    """Step 9 — Produce concrete artifact definitions for each experiment card."""
+
+    @property
+    def name(self) -> str:
+        return "step9_artifact_designer"
+
+    @property
+    def step_number(self) -> int:
+        return 9
+
+    @property
+    def description(self) -> str:
+        return "Generate build-ready artifact definitions for selected experiments"
+
+    def execute(self, state: BMIWorkflowState) -> BMIWorkflowState:
+        return run_step9_default(state)

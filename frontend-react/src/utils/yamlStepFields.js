@@ -32,10 +32,13 @@ export const STEP_YAML_FIELDS = [
     { key: 'value_driver_tree', label: 'Value Driver Tree', type: 'text' },
     { key: 'actionable_insights', label: 'Actionable Insights', type: 'text' },
   ],
-  // Step 4 → Step 5 — Value Proposition
+  // Step 4 → Step 5 — Value Proposition Portfolio
   [
+    { key: 'vp_alternatives', label: 'VP Alternatives', type: 'json' },
+    { key: 'vp_rankings', label: 'VP Rankings', type: 'json' },
+    { key: 'selected_vp_indices', label: 'Selected VP Indices', type: 'json' },
     { key: 'value_proposition_canvas', label: 'VP Canvas', type: 'text' },
-    { key: 'fit_assessment', label: 'Fit Assessment', type: 'text' },
+    { key: 'vp_scoring_summary', label: 'Scoring Summary', type: 'text' },
   ],
   // Step 5 → Step 6 — Business Model
   [

@@ -11,14 +11,19 @@ from typing import Callable
 from backend.app.state import BMIWorkflowState
 from backend.app.workers.base import BaseWorker
 from backend.app.workers.steps import (
+    ArtifactDesignerWorker,
     BusinessModelWorker,
+    CardSelectionWorker,
     CustomerProfileWorker,
+    EvidenceAuditWorker,
     ExperimentPlanWorker,
+    PathSequencingWorker,
     PatternMatcherWorker,
     RiskMapWorker,
     SignalScannerWorker,
     ValueDriverWorker,
-    ValuePropositionWorker,
+    VPIdeationWorker,
+    VPScoringWorker,
 )
 
 
@@ -36,10 +41,15 @@ class WorkerRegistry:
             PatternMatcherWorker(),
             CustomerProfileWorker(),
             ValueDriverWorker(),
-            ValuePropositionWorker(),
+            VPIdeationWorker(),
+            VPScoringWorker(),
             BusinessModelWorker(),
             RiskMapWorker(),
+            EvidenceAuditWorker(),
+            CardSelectionWorker(),
+            PathSequencingWorker(),
             ExperimentPlanWorker(),
+            ArtifactDesignerWorker(),
         ]
         self._workers_by_name: dict[str, BaseWorker] = {w.name: w for w in workers}
         self._ordered: list[BaseWorker] = workers

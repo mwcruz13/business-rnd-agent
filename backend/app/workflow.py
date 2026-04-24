@@ -28,6 +28,28 @@ from backend.app.graph import WORKFLOW_STEP_RUNNERS
 from backend.app.ingest.csv import load_csv_rows
 from backend.app.ingest.csv import load_csv_rows_from_text
 from backend.app.ingest.text import load_text
+
+
+# ---------------------------------------------------------------------------
+# Logical step-number → first registry-index mapping
+# ---------------------------------------------------------------------------
+# Workers declare a logical step_number (1-9).  Sub-steps like 5a/5b or
+# 8a/8b/8c share the same logical number.  ``start_workflow_from_step``
+# uses this map so that callers continue to specify step_number=1..9 while
+# the internal registry may contain more entries.
+def _build_logical_step_map() -> dict[int, int]:
+    """Return {logical_step_number: first_registry_index}."""
+    from backend.app.workers.registry import get_worker_registry
+    registry = get_worker_registry()
+    mapping: dict[int, int] = {}
+    for idx, worker in enumerate(registry.get_all_workers()):
+        if worker.step_number not in mapping:
+            mapping[worker.step_number] = idx
+    return mapping
+
+
+_LOGICAL_STEP_MAP = _build_logical_step_map()
+_MAX_LOGICAL_STEP = max(_LOGICAL_STEP_MAP) if _LOGICAL_STEP_MAP else 1
 from backend.app.state import BMIWorkflowState
 
 
@@ -58,7 +80,7 @@ def run_workflow_from_voc_data(
     if pause_at_checkpoints:
         return _start_checkpointed_run(initial_state)
 
-    result = build_graph().invoke(initial_state)
+    result = build_graph().invoke(initial_state, {"recursion_limit": 64})
     final_state = _decorate_state(result, run_status="completed", pending_checkpoint=None)
     _persist_completed_run(final_state)
     return final_state
@@ -225,10 +247,10 @@ def start_workflow_from_step(
     pause_at_checkpoints: bool = True,
 ) -> BMIWorkflowState:
     """Begin execution at an arbitrary step, given pre-filled upstream state."""
-    if step_number < 1 or step_number > len(WORKFLOW_STEP_ORDER):
-        raise ValueError(f"step_number must be between 1 and {len(WORKFLOW_STEP_ORDER)}")
+    if step_number < 1 or step_number > _MAX_LOGICAL_STEP:
+        raise ValueError(f"step_number must be between 1 and {_MAX_LOGICAL_STEP}")
 
-    step_index = step_number - 1
+    step_index = _LOGICAL_STEP_MAP[step_number]
     step_name = WORKFLOW_STEP_ORDER[step_index]
     settings = get_settings()
 
@@ -337,10 +359,10 @@ def restart_from_step(
     re-execution (e.g. the user edited the Business Model Canvas).
     """
     ensure_database_schema()
-    if step_number < 1 or step_number > len(WORKFLOW_STEP_ORDER):
-        raise ValueError(f"step_number must be between 1 and {len(WORKFLOW_STEP_ORDER)}")
+    if step_number < 1 or step_number > _MAX_LOGICAL_STEP:
+        raise ValueError(f"step_number must be between 1 and {_MAX_LOGICAL_STEP}")
 
-    step_index = step_number - 1
+    step_index = _LOGICAL_STEP_MAP[step_number]
 
     with SessionLocal() as session:
         run = session.get(WorkflowRun, session_id)

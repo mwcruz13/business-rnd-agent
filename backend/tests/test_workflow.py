@@ -77,13 +77,15 @@ def test_checkpointed_workflow_pauses_and_resumes_to_completion() -> None:
     assert third_pause["pending_checkpoint"] == "checkpoint_3"
     assert third_pause["current_step"] == "empathize"
 
-    # Approve through remaining checkpoints (4, 5, 6, 2, 8)
+    # Approve through remaining checkpoints (4, 5a, 5b, 6, 7, 8, 9)
     for expected_cp, expected_step in [
         ("checkpoint_4", "measure_define"),
-        ("checkpoint_5", "value_proposition"),
+        ("checkpoint_5a", "vp_ideation"),
+        ("checkpoint_5b", "vp_scoring"),
         ("checkpoint_6", "design_fit"),
         ("checkpoint_7", "risk_map"),
         ("checkpoint_8", "pdsa_plan"),
+        ("checkpoint_9", "pdsa_plan"),
     ]:
         state = resume_workflow(session_id, decision="approve")
         assert state["run_status"] == "paused"
@@ -120,8 +122,8 @@ def test_invent_pattern_selection_propagates_without_shift_leakage() -> None:
             "pattern_rationale": "Consultant selected the new-market exploration path.",
         },
     )
-    # Approve through remaining checkpoints (3, 4, 5, 6, 2, 8)
-    for _ in range(5):
+    # Approve through remaining checkpoints (3, 4, 5a, 5b, 6, 7, 8)
+    for _ in range(6):
         resume_workflow(session_id, decision="approve")
     completed = resume_workflow(session_id, decision="approve")
 

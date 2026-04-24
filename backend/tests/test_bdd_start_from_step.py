@@ -46,6 +46,11 @@ STEP_8_UPSTREAM_STATE = {
     "assumptions": "## Importance × Evidence Map\n| Assumption | Quadrant |\n|---|---|\n| Customers want self-serve | Test first |",
 }
 
+STEP_9_UPSTREAM_STATE = {
+    **STEP_8_UPSTREAM_STATE,
+    "experiment_cards": [{"card_name": "Single Feature MVP", "assumption": "Customers want self-serve"}],
+}
+
 
 @given(parsers.parse('initial state with voc_data "{voc_data}"'), target_fixture="initial_state")
 def initial_state_with_voc_data(voc_data: str) -> dict:
@@ -85,6 +90,11 @@ def initial_state_for_step_7() -> dict:
 @given("initial state with upstream fields for step 8", target_fixture="initial_state")
 def initial_state_for_step_8() -> dict:
     return dict(STEP_8_UPSTREAM_STATE)
+
+
+@given("initial state with upstream fields for step 9", target_fixture="initial_state")
+def initial_state_for_step_9() -> dict:
+    return dict(STEP_9_UPSTREAM_STATE)
 
 
 @when(
