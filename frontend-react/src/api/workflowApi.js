@@ -198,4 +198,23 @@ export async function startRunFromSignal({ signalId, sessionName, llmBackend }) 
   });
 }
 
+
+// ---------------------------------------------------------------------------
+// Portfolio Dashboard API
+// ---------------------------------------------------------------------------
+
+export async function getPortfolio() {
+  return request('GET', '/portfolio');
+}
+
+export async function getPortfolioDetail(sessionId) {
+  return request('GET', `/portfolio/${encodeURIComponent(sessionId)}/detail`);
+}
+
+export async function updatePortfolio(sessionId, updates) {
+  return request('PATCH', `/portfolio/${encodeURIComponent(sessionId)}`, {
+    body: updates,
+  });
+}
+
 export { ApiError };

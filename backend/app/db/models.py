@@ -34,6 +34,7 @@ class WorkflowRun(Base):
     pending_checkpoint: Mapped[str | None] = mapped_column(String, nullable=True)
     voc_data: Mapped[str] = mapped_column(Text, nullable=False)
     state_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
+    portfolio_json: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
 
 
 class StepOutput(Base):

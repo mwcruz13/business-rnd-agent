@@ -8,6 +8,7 @@ import { useWorkflow } from './context/WorkflowContext.jsx';
 import HomePage from './pages/HomePage.jsx';
 import WorkflowPage from './pages/WorkflowPage.jsx';
 import SignalBrowserPage from './pages/SignalBrowserPage.jsx';
+import PortfolioDashboardPage from './pages/PortfolioDashboardPage.jsx';
 
 const AppHeader = () => {
   const { sessionId, sessionName, clearSession } = useWorkflow();
@@ -29,6 +30,7 @@ const AppHeader = () => {
       </Box>
       <Nav direction="row" gap="medium" align="center">
         <Anchor as={Link} to="/signals" label="Signals" size="small" />
+        <Anchor as={Link} to="/portfolio" label="Portfolio" size="small" />
         {onWorkflowPage && sessionId && (
           <Text size="xsmall" color="text-weak">
             {sessionName ? sessionName : `Session: ${sessionId.slice(0, 12)}…`}
@@ -62,6 +64,7 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/signals" element={<SignalBrowserPage />} />
+                <Route path="/portfolio" element={<PortfolioDashboardPage />} />
                 <Route path="/workflow" element={<WorkflowPage />} />
               </Routes>
             </Box>

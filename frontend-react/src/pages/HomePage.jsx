@@ -4,7 +4,7 @@ import {
   Box, Button, Heading, Text, TextArea, TextInput, Select, FileInput,
   Card, CardBody, CardHeader, Notification, ResponsiveContext, DataTable,
 } from 'grommet';
-import { PlayFill, Document } from 'grommet-icons';
+import { PlayFill, Document, Analytics } from 'grommet-icons';
 import { useWorkflow } from '../context/WorkflowContext.jsx';
 
 const ENTRY_STEPS = [
@@ -196,6 +196,24 @@ const HomePage = () => {
         <Text color="text-weak">
           Start a new business model innovation workflow or resume an existing session.
         </Text>
+
+        {/* Portfolio Dashboard quick-access */}
+        <Card background="background-front" elevation="small">
+          <CardBody pad="medium" direction="row" align="center" justify="between">
+            <Box gap="xsmall">
+              <Heading level={4} margin="none">Innovation Portfolio</Heading>
+              <Text size="small" color="text-weak">
+                View the Explore / Exploit quadrant chart for all initiatives.
+              </Text>
+            </Box>
+            <Button
+              secondary
+              label="Open Dashboard"
+              icon={<Analytics size="small" />}
+              onClick={() => navigate('/portfolio')}
+            />
+          </CardBody>
+        </Card>
 
         {error && (
           <Notification
