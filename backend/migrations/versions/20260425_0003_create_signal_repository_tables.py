@@ -70,7 +70,7 @@ def upgrade() -> None:
             ),
             sa.PrimaryKeyConstraint("id"),
             sa.ForeignKeyConstraint(["report_id"], ["signal_reports.id"]),
-            sa.UniqueConstraint("bu", "survey_source", "signal_id", name="uq_signal_bu_source_id"),
+            sa.UniqueConstraint("report_id", "signal_id", name="uq_signal_report_signal_id"),
         )
         op.create_index("ix_signal_records_report_id", "signal_records", ["report_id"])
         op.create_index("ix_signal_records_bu", "signal_records", ["bu"])

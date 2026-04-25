@@ -19,6 +19,7 @@ from backend.app.workflow import update_experiment_card
 from backend.app.workflow import resume_workflow
 from backend.app.workflow import run_workflow_from_csv_text
 from backend.app.workflow import run_workflow_from_path, run_workflow_from_voc_data
+from backend.app.workflow import run_workflow_from_signal
 from backend.app.workflow import start_workflow_from_step
 
 
@@ -63,6 +64,13 @@ class StartFromStepRequest(BaseModel):
     step_number: int
     initial_state: dict[str, Any]
     session_id: str | None = None
+    session_name: str | None = None
+    llm_backend: str | None = None
+    pause_at_checkpoints: bool = True
+
+
+class RunFromSignalRequest(BaseModel):
+    signal_id: int
     session_name: str | None = None
     llm_backend: str | None = None
     pause_at_checkpoints: bool = True
@@ -207,6 +215,25 @@ def start_from_step(request: StartFromStepRequest) -> dict[str, Any]:
         )
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
+    except DatabaseSchemaNotReadyError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    return dict(result)
+
+
+@app.post("/runs/from-signal")
+def run_from_signal(request: RunFromSignalRequest) -> dict[str, Any]:
+    try:
+        result = run_workflow_from_signal(
+            request.signal_id,
+            session_name=request.session_name,
+            llm_backend=request.llm_backend,
+            pause_at_checkpoints=request.pause_at_checkpoints,
+        )
+    except ValueError as error:
+        message = str(error)
+        if "not found" in message:
+            raise HTTPException(status_code=404, detail=message) from error
+        raise HTTPException(status_code=422, detail=message) from error
     except DatabaseSchemaNotReadyError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     return dict(result)

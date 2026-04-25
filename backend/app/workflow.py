@@ -53,6 +53,168 @@ _MAX_LOGICAL_STEP = max(_LOGICAL_STEP_MAP) if _LOGICAL_STEP_MAP else 1
 from backend.app.state import BMIWorkflowState
 
 
+# ---------------------------------------------------------------------------
+# Signal-to-workflow state mapping (Phase 3)
+# ---------------------------------------------------------------------------
+
+def _signal_to_workflow_state(
+    signal_record: dict,
+    sibling_records: list[dict],
+    report: dict,
+) -> BMIWorkflowState:
+    """Translate a SignalRecord + siblings + report into a BMIWorkflowState.
+
+    Pre-populates steps 1a (signal_scan) and 1b (signal_recommend) so that
+    the orchestrator naturally starts execution at step 2 (pattern).
+    """
+    # Build signals list (phase 1 scan data from all siblings)
+    signals = []
+    for rec in sibling_records:
+        fa = rec.get("full_analysis", {})
+        p1 = fa.get("phase_1_scan", {})
+        signals.append({
+            "signal_id": rec.get("signal_id", p1.get("id", "")),
+            "signal": rec.get("signal_title", p1.get("signal", "")),
+            "zone": rec.get("signal_zone", p1.get("signal_zone", "")),
+            "source_type": p1.get("source_type", "Internal VoC"),
+            "observable_behavior": rec.get("observable_behavior", p1.get("observable_behavior", "")),
+            "evidence": p1.get("evidence", []),
+            "supporting_comments": p1.get("supporting_comments", []),
+        })
+
+    # Build interpreted_signals list (phase 2 interpret data)
+    interpreted_signals = []
+    for rec in sibling_records:
+        fa = rec.get("full_analysis", {})
+        p2 = fa.get("phase_2_interpret", {})
+        interpreted_signals.append({
+            "signal_id": rec.get("signal_id", p2.get("signal_id", "")),
+            "signal": rec.get("signal_title", p2.get("signal", "")),
+            "zone": rec.get("signal_zone", ""),
+            "classification": rec.get("classification", p2.get("classification", "")),
+            "confidence": p2.get("confidence", "Medium"),
+            "litmus_test": p2.get("litmus_test", ""),
+            "litmus_rationale": p2.get("litmus_rationale", ""),
+            "filters": p2.get("filters", []),
+            "filters_passed": p2.get("filters_passed", 0),
+            "disruptive_potential": p2.get("disruptive_potential", ""),
+            "value_network_insight": p2.get("value_network_insight", ""),
+            "alternative_explanation": p2.get("alternative_explanation", ""),
+            "key_evidence_gap": p2.get("key_evidence_gap", ""),
+        })
+
+    # Build priority_matrix (phase 3 prioritize data)
+    priority_matrix = []
+    for rec in sibling_records:
+        fa = rec.get("full_analysis", {})
+        p3 = fa.get("phase_3_prioritize", {})
+        priority_matrix.append({
+            "signal_id": rec.get("signal_id", p3.get("signal_id", "")),
+            "signal": rec.get("signal_title", p3.get("signal", "")),
+            "classification": rec.get("classification", p3.get("classification", "")),
+            "impact": p3.get("impact", 1),
+            "speed": p3.get("speed", 1),
+            "score": rec.get("priority_score") or p3.get("priority_score", 1),
+            "tier": rec.get("action_tier", p3.get("action_tier", "Monitor")),
+            "rationale": p3.get("rationale", ""),
+        })
+
+    # Build signal_recommendations from phase 4
+    signal_recommendations = []
+    for rec in sibling_records:
+        fa = rec.get("full_analysis", {})
+        p4 = fa.get("phase_4_recommend", {})
+        if p4:
+            signal_recommendations.append({
+                "signal_id": rec.get("signal_id"),
+                "signal_title": rec.get("signal_title"),
+                "action_tier": rec.get("action_tier", ""),
+                **{k: v for k, v in p4.items() if k != "signal_id"},
+            })
+
+    # Construct voc_data from observable behaviors
+    voc_lines = []
+    for rec in sibling_records:
+        behavior = rec.get("observable_behavior", "")
+        if behavior:
+            voc_lines.append(f"[{rec.get('signal_id', '')}] {behavior}")
+    voc_data = "\n".join(voc_lines) if voc_lines else signal_record.get("signal_title", "")
+
+    # Reinforcement map from the report
+    reinforcement_map = report.get("reinforcement_map") or {}
+
+    return BMIWorkflowState(
+        current_step="from_signal",
+        input_type="signal",
+        voc_data=voc_data,
+        signals=signals,
+        interpreted_signals=interpreted_signals,
+        priority_matrix=priority_matrix,
+        signal_recommendations=signal_recommendations,
+        reinforcement_map=reinforcement_map,
+        completed_steps=steps_completed_before(2),  # step1a + step1b done
+    )
+
+
+def run_workflow_from_signal(
+    record_id: int,
+    *,
+    session_id: str | None = None,
+    session_name: str | None = None,
+    llm_backend: str | None = None,
+    pause_at_checkpoints: bool = True,
+) -> BMIWorkflowState:
+    """Start a CXIF workflow seeded from a stored signal record.
+
+    Loads the signal, its report, and all sibling signals from the same
+    report. Maps them into workflow state with steps 1a/1b pre-completed,
+    so the graph starts at step 2 (pattern direction).
+    """
+    from backend.app.services import signal_repository as repo
+
+    ensure_database_schema()
+    settings = get_settings()
+
+    # Load the selected signal and its report
+    signal_record = repo.get_signal(record_id)
+    report = repo.get_report(signal_record["report_id"])
+
+    # Load all sibling signals from the same report
+    siblings = repo.list_signals(
+        bu=signal_record["bu"],
+        survey_source=signal_record["survey_source"],
+    )
+
+    # Build pre-populated state
+    state = _signal_to_workflow_state(signal_record, siblings, report)
+    state["session_id"] = session_id or str(uuid.uuid4())
+    state["llm_backend"] = llm_backend or settings.llm_backend
+    if session_name:
+        state["session_name"] = session_name
+
+    # Persist and execute
+    sid = str(state["session_id"])
+    with SessionLocal() as session:
+        if session.get(WorkflowRun, sid) is not None:
+            raise ValueError(f"Workflow session already exists: {sid}")
+        session.add(
+            WorkflowRun(
+                session_id=sid,
+                session_name=session_name,
+                input_type="signal",
+                status="in_progress",
+                llm_backend=str(state["llm_backend"]),
+                current_step="from_signal",
+                pending_checkpoint=None,
+                voc_data=str(state.get("voc_data", "")),
+                state_json=dict(state),
+            )
+        )
+        session.commit()
+
+    return _execute_orchestrated(sid, state, pause_at_checkpoints=pause_at_checkpoints)
+
+
 def run_workflow_from_voc_data(
     voc_data: str,
     *,

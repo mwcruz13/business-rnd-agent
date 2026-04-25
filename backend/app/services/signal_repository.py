@@ -16,6 +16,37 @@ def _get_session() -> Session:
 
 
 # ---------------------------------------------------------------------------
+# BU name normalisation — canonical names match bu_classify_pipeline.py
+# ---------------------------------------------------------------------------
+
+CANONICAL_BU_NAMES: dict[str, str] = {
+    "quote to cash": "Quote-to-Cash",
+    "quote-to-cash": "Quote-to-Cash",
+    "cross bu": "Cross-BU",
+    "cross-bu": "Cross-BU",
+    "crossbu": "Cross-BU",
+    "hybrid cloud": "Hybrid Cloud",
+    "hybridcloud": "Hybrid Cloud",
+    "support delivery": "Service and Support Delivery",
+    "service delivery": "Service and Support Delivery",
+    "service and support delivery": "Service and Support Delivery",
+    "networking": "Networking",
+    "compute": "Compute",
+    "services": "Services",
+    "general": "Cross-BU",
+}
+
+
+def normalize_bu(bu: str) -> str:
+    """Normalize a BU name to its canonical form.
+
+    Handles common LLM drift: 'Quote to Cash' → 'Quote-to-Cash', etc.
+    """
+    key = bu.strip().lower()
+    return CANONICAL_BU_NAMES.get(key, bu.strip())
+
+
+# ---------------------------------------------------------------------------
 # Report operations
 # ---------------------------------------------------------------------------
 
@@ -29,6 +60,7 @@ def upsert_report(
     report_date: str | None = None,
     reinforcement_map: dict[str, Any] | None = None,
 ) -> SignalReport:
+    bu = normalize_bu(bu)
     sess = _get_session()
     try:
         existing = sess.query(SignalReport).filter_by(source_file=source_file).first()
@@ -97,11 +129,12 @@ def upsert_signal(
     priority_score: int | None = None,
     observable_behavior: str | None = None,
 ) -> SignalRecord:
+    bu = normalize_bu(bu)
     sess = _get_session()
     try:
         existing = (
             sess.query(SignalRecord)
-            .filter_by(bu=bu, survey_source=survey_source, signal_id=signal_id)
+            .filter_by(report_id=report_id, signal_id=signal_id)
             .first()
         )
         if existing:
@@ -153,6 +186,7 @@ def list_signals(
     survey_source: str | None = None,
     classification: str | None = None,
     action_tier: str | None = None,
+    min_score: int | None = None,
 ) -> list[dict[str, Any]]:
     sess = _get_session()
     try:
@@ -165,6 +199,8 @@ def list_signals(
             query = query.filter(SignalRecord.classification == classification)
         if action_tier:
             query = query.filter(SignalRecord.action_tier == action_tier)
+        if min_score is not None:
+            query = query.filter(SignalRecord.priority_score >= min_score)
         records = query.order_by(SignalRecord.bu, SignalRecord.signal_id).all()
         return [_record_to_dict(r) for r in records]
     finally:

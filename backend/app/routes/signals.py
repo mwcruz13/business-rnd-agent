@@ -44,6 +44,7 @@ def list_signals(
     survey_source: str | None = Query(None),
     classification: str | None = Query(None),
     action_tier: str | None = Query(None),
+    min_score: int | None = Query(None, ge=1, le=9),
 ) -> list[dict[str, Any]]:
     try:
         return repo.list_signals(
@@ -51,6 +52,7 @@ def list_signals(
             survey_source=survey_source,
             classification=classification,
             action_tier=action_tier,
+            min_score=min_score,
         )
     except DatabaseSchemaNotReadyError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error

@@ -158,4 +158,44 @@ export async function downloadExport(sessionId, format) {
   URL.revokeObjectURL(url);
 }
 
+
+// ---------------------------------------------------------------------------
+// Signal Browser API
+// ---------------------------------------------------------------------------
+
+export async function getSignalSummary() {
+  return request('GET', '/signals/summary');
+}
+
+export async function getSignals({ bu, surveySource, classification, actionTier, minScore } = {}) {
+  const params = new URLSearchParams();
+  if (bu) params.set('bu', bu);
+  if (surveySource) params.set('survey_source', surveySource);
+  if (classification) params.set('classification', classification);
+  if (actionTier) params.set('action_tier', actionTier);
+  if (minScore) params.set('min_score', minScore);
+  const qs = params.toString();
+  return request('GET', `/signals${qs ? `?${qs}` : ''}`);
+}
+
+export async function getSignalDetail(id) {
+  return request('GET', `/signals/${encodeURIComponent(id)}`);
+}
+
+export async function getSignalReports() {
+  return request('GET', '/signals/reports');
+}
+
+export async function startRunFromSignal({ signalId, sessionName, llmBackend }) {
+  return request('POST', '/runs/from-signal', {
+    body: {
+      signal_id: signalId,
+      session_name: sessionName || null,
+      llm_backend: llmBackend || 'azure',
+      pause_at_checkpoints: true,
+    },
+    timeout: 900000,
+  });
+}
+
 export { ApiError };

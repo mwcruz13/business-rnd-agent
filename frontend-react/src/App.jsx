@@ -7,6 +7,7 @@ import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 import { useWorkflow } from './context/WorkflowContext.jsx';
 import HomePage from './pages/HomePage.jsx';
 import WorkflowPage from './pages/WorkflowPage.jsx';
+import SignalBrowserPage from './pages/SignalBrowserPage.jsx';
 
 const AppHeader = () => {
   const { sessionId, sessionName, clearSession } = useWorkflow();
@@ -27,6 +28,7 @@ const AppHeader = () => {
         {!isSmall && <Heading level={4} margin="none">BMI Consultant</Heading>}
       </Box>
       <Nav direction="row" gap="medium" align="center">
+        <Anchor as={Link} to="/signals" label="Signals" size="small" />
         {onWorkflowPage && sessionId && (
           <Text size="xsmall" color="text-weak">
             {sessionName ? sessionName : `Session: ${sessionId.slice(0, 12)}…`}
@@ -59,6 +61,7 @@ const App = () => {
             <Box flex overflow="auto" style={{ minHeight: 0 }}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
+                <Route path="/signals" element={<SignalBrowserPage />} />
                 <Route path="/workflow" element={<WorkflowPage />} />
               </Routes>
             </Box>
