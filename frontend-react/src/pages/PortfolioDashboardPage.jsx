@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box, Button, Heading, Page, PageContent, PageHeader,
   Spinner, Text, Notification, ResponsiveContext, Tip,
+  CheckBoxGroup, Select,
 } from 'grommet';
-import { Analytics, Home } from 'grommet-icons';
+import { Analytics, Home, Filter } from 'grommet-icons';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid,
   ReferenceLine, ResponsiveContainer, Tooltip, Cell, Label,
@@ -23,40 +24,81 @@ const dotColor = (entry) => {
   return COLOR_UNKNOWN;
 };
 
+// --- Deterministic jitter: hash session_id → small offset so overlapping dots spread ---
+const hashCode = (str) => {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  }
+  return h;
+};
+
+const JITTER_RANGE = 8; // ± points on the 0-100 scale
+
+const applyJitter = (entries) =>
+  entries.map((e) => {
+    const h = hashCode(e.session_id);
+    // Two independent pseudo-random channels from the same hash
+    const dx = ((h & 0xffff) / 0xffff - 0.5) * 2 * JITTER_RANGE;
+    const dy = (((h >>> 16) & 0xffff) / 0xffff - 0.5) * 2 * JITTER_RANGE;
+    return {
+      ...e,
+      risk_jittered: Math.max(0, Math.min(100, e.risk_score + dx)),
+      return_jittered: Math.max(0, Math.min(100, e.return_score + dy)),
+    };
+  });
+
+// --- Data maturity → dot radius (more steps / data = bigger dot) ---
+const DOT_MIN_R = 5;
+const DOT_MAX_R = 14;
+
+const maturityRadius = (entry) => {
+  const steps = entry.completed_steps_count ?? 0;
+  const assumptions = entry.assumption_count ?? 0;
+  const experiments = entry.experiment_count ?? 0;
+  // score: 0-9 steps + clamp(assumptions, 0, 10) + clamp(experiments, 0, 5) → 0-24
+  const raw = steps + Math.min(assumptions, 10) + Math.min(experiments, 5);
+  const t = Math.min(raw / 24, 1);
+  return DOT_MIN_R + t * (DOT_MAX_R - DOT_MIN_R);
+};
+
 // --- Custom dot renderer (inspired by The Invincible Company) ---
 const ProjectDot = ({ cx, cy, payload, isSelected, onClick }) => {
   if (cx == null || cy == null) return null;
   const selected = isSelected && isSelected(payload);
+  const r = maturityRadius(payload);
   return (
     <g
       onClick={(e) => { e.stopPropagation(); onClick?.(payload); }}
       style={{ cursor: 'pointer' }}
     >
-      {/* Dot */}
+      {/* Dot — radius scales with data maturity */}
       <circle
         cx={cx}
         cy={cy}
-        r={selected ? 8 : 6}
+        r={selected ? r + 2 : r}
         fill={dotColor(payload)}
         stroke={selected ? '#333' : 'white'}
         strokeWidth={selected ? 2 : 1}
-        opacity={0.9}
+        opacity={selected ? 1.0 : 0.75}
       />
-      {/* Label */}
-      <text
-        x={cx + 10}
-        y={cy - 10}
-        fill="#333"
-        fontSize={11}
-        fontWeight="bold"
-      >
-        {(payload.initiative_name || '').slice(0, 28)}
-      </text>
-      {/* Revenue / Cost sub-label */}
-      {(payload.expected_revenue || payload.testing_cost) && (
+      {/* Label — only shown for dots with enough data to avoid overlap */}
+      {(payload.initiative_name && r >= 8) && (
         <text
-          x={cx + 10}
-          y={cy + 4}
+          x={cx + r + 4}
+          y={cy - 4}
+          fill="#333"
+          fontSize={11}
+          fontWeight="bold"
+        >
+          {(payload.initiative_name || '').slice(0, 28)}
+        </text>
+      )}
+      {/* Revenue / Cost sub-label — only for labeled dots */}
+      {(r >= 8 && (payload.expected_revenue || payload.testing_cost)) && (
+        <text
+          x={cx + r + 4}
+          y={cy + 10}
           fill="#666"
           fontSize={9}
         >
@@ -116,6 +158,10 @@ const PortfolioDashboardPage = () => {
   const [error, setError] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
 
+  // Filter state
+  const [patternFilter, setPatternFilter] = useState(['invent', 'shift', 'unknown']);
+  const [maturityFilter, setMaturityFilter] = useState('all'); // 'all' | 'with-data' | 'early'
+
   const fetchData = useCallback(() => {
     setLoading(true);
     getPortfolio()
@@ -126,7 +172,31 @@ const PortfolioDashboardPage = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Summary metrics
+  // Apply filters + jitter
+  const chartData = useMemo(() => {
+    let filtered = entries;
+
+    // Pattern direction filter
+    filtered = filtered.filter((e) => {
+      const dir = e.pattern_direction || 'unknown';
+      return patternFilter.includes(dir);
+    });
+
+    // Maturity filter
+    if (maturityFilter === 'with-data') {
+      filtered = filtered.filter((e) =>
+        (e.assumption_count ?? 0) > 0 || (e.experiment_count ?? 0) > 0
+      );
+    } else if (maturityFilter === 'early') {
+      filtered = filtered.filter((e) =>
+        (e.assumption_count ?? 0) === 0 && (e.experiment_count ?? 0) === 0
+      );
+    }
+
+    return applyJitter(filtered);
+  }, [entries, patternFilter, maturityFilter]);
+
+  // Summary metrics (from unfiltered)
   const summary = useMemo(() => {
     const explore = entries.filter((e) => e.pattern_direction === 'invent').length;
     const exploit = entries.filter((e) => e.pattern_direction === 'shift').length;
@@ -200,12 +270,54 @@ const PortfolioDashboardPage = () => {
           gap="medium"
           pad={{ vertical: 'xsmall' }}
           flex={false}
+          wrap
+          align="center"
         >
           <Text size="xsmall" color="text-weak">
-            <strong>Dot</strong> = Initiative &nbsp; | &nbsp;
-            <strong>X-Axis</strong> = Innovation Risk (0–100) &nbsp; | &nbsp;
-            <strong>Y-Axis</strong> = Expected Return (0–100)
+            <strong>Dot size</strong> = data maturity &nbsp; | &nbsp;
+            <strong>X</strong> = Innovation Risk &nbsp; | &nbsp;
+            <strong>Y</strong> = Expected Return &nbsp; | &nbsp;
+            Showing <strong>{chartData.length}</strong> of {summary.total}
           </Text>
+        </Box>
+
+        {/* Filter controls */}
+        <Box
+          direction="row"
+          gap="medium"
+          pad={{ vertical: 'xsmall' }}
+          flex={false}
+          wrap
+          align="center"
+          border={{ side: 'bottom', color: 'border', size: 'xsmall' }}
+        >
+          <Box direction="row" gap="xsmall" align="center">
+            <Filter size="small" color="text-weak" />
+            <Text size="xsmall" weight="bold">Filter:</Text>
+          </Box>
+          <CheckBoxGroup
+            direction="row"
+            options={[
+              { label: 'Explore (Invent)', value: 'invent' },
+              { label: 'Exploit (Shift)', value: 'shift' },
+              { label: 'Unclassified', value: 'unknown' },
+            ]}
+            value={patternFilter}
+            onChange={({ value }) => setPatternFilter(value)}
+          />
+          <Box width="160px" flex={false}>
+            <Select
+              size="small"
+              options={['all', 'with-data', 'early']}
+              value={maturityFilter}
+              onChange={({ option }) => setMaturityFilter(option)}
+              labelKey={(o) =>
+                o === 'all' ? 'All stages' :
+                o === 'with-data' ? 'Has assumptions/experiments' :
+                'Early stage only'
+              }
+            />
+          </Box>
         </Box>
 
         {/* Quadrant Chart */}
@@ -226,7 +338,7 @@ const PortfolioDashboardPage = () => {
 
                 <XAxis
                   type="number"
-                  dataKey="risk_score"
+                  dataKey="risk_jittered"
                   domain={[0, 100]}
                   name="Innovation Risk"
                   tick={{ fontSize: 11 }}
@@ -242,7 +354,7 @@ const PortfolioDashboardPage = () => {
 
                 <YAxis
                   type="number"
-                  dataKey="return_score"
+                  dataKey="return_jittered"
                   domain={[0, 100]}
                   name="Expected Return"
                   tick={{ fontSize: 11 }}
@@ -272,7 +384,7 @@ const PortfolioDashboardPage = () => {
                 <Tooltip content={<ProjectTooltip />} />
 
                 <Scatter
-                  data={entries}
+                  data={chartData}
                   shape={(props) => (
                     <ProjectDot
                       {...props}
@@ -281,7 +393,7 @@ const PortfolioDashboardPage = () => {
                     />
                   )}
                 >
-                  {entries.map((entry) => (
+                  {chartData.map((entry) => (
                     <Cell key={entry.session_id} fill={dotColor(entry)} />
                   ))}
                 </Scatter>

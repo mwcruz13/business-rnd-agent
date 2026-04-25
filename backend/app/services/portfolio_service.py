@@ -210,6 +210,7 @@ def build_portfolio_entry(run: WorkflowRun) -> dict[str, Any]:
         "vp_count": len(state.get("vp_alternatives", [])),
         "assumption_count": _count_assumptions(state),
         "experiment_count": _count_experiments(state),
+        "completed_steps_count": len(state.get("completed_steps", [])),
         "notes": portfolio.get("notes"),
     }
 
