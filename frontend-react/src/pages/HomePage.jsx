@@ -192,7 +192,7 @@ const HomePage = () => {
   return (
     <Box align="center" pad={{ horizontal: isSmall ? 'medium' : 'large', vertical: 'medium' }} gap="medium" fill="horizontal" flex={false}>
       <Box width={{ max: 'xlarge' }} fill="horizontal" gap="medium">
-        <Heading level={2} margin="none">BMI Consultant Workflow</Heading>
+        <Heading level={2} margin="none">CXIF AI Coach</Heading>
         <Text color="text-weak">
           Start a new business model innovation workflow or resume an existing session.
         </Text>

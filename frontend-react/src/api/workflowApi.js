@@ -1,5 +1,5 @@
 /**
- * Backend API client for the BMI Consultant workflow.
+ * Backend API client for the CXIF AI Coach workflow.
  *
  * All requests go through the Vite proxy (/api -> backend:8000)
  * so the browser never needs to know the backend host.

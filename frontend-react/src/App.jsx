@@ -25,7 +25,7 @@ const AppHeader = () => {
     >
       <Box direction="row" align="center" gap="small">
         <Hpe color="brand" size="medium" />
-        {!isSmall && <Heading level={4} margin="none">BMI Consultant</Heading>}
+        {!isSmall && <Heading level={4} margin="none">CXIF AI Coach</Heading>}
       </Box>
       <Nav direction="row" gap="medium" align="center">
         <Anchor as={Link} to="/signals" label="Signals" size="small" />

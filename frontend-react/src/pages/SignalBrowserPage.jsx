@@ -1,20 +1,42 @@
-import { useState, useEffect, useCallback, useContext } from 'react';
+import { useState, useEffect, useCallback, useContext, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box, Button, Heading, Text, Select, DataTable, Layer, Card, CardBody,
-  CardHeader, Spinner, Notification, Tag, ResponsiveContext,
+  Box, Button, Heading, Text, TextInput, Select, DataTable, Layer,
+  Page, PageContent, PageHeader,
+  Spinner, Notification, Tag, ResponsiveContext,
 } from 'grommet';
-import { Analytics, Close, PlayFill } from 'grommet-icons';
+import {
+  Analytics, Close, Filter, FormClose, PlayFill, Search,
+  StatusCritical, StatusWarning, StatusGood, StatusUnknown,
+} from 'grommet-icons';
 import { useWorkflow } from '../context/WorkflowContext.jsx';
 import {
   getSignalSummary, getSignals, getSignalDetail, startRunFromSignal,
 } from '../api/workflowApi.js';
 
-const TIER_COLORS = {
-  Act: 'status-critical',
-  Investigate: 'status-warning',
-  Monitor: 'status-ok',
+// --- HPE Status Indicator pattern (icon + color + text = WCAG 3/4) ---
+const TIER_CONFIG = {
+  Act:               { icon: StatusCritical, color: 'status-critical', label: 'Act' },
+  'Sustaining — Act': { icon: StatusCritical, color: 'status-critical', label: 'Sustaining — Act' },
+  Investigate:       { icon: StatusWarning,  color: 'status-warning',  label: 'Investigate' },
+  Watch:             { icon: StatusWarning,  color: 'status-warning',  label: 'Watch' },
+  Monitor:           { icon: StatusGood,     color: 'status-ok',       label: 'Monitor' },
+  'Monitor (Positive — sustains competitive position)': { icon: StatusGood, color: 'status-ok', label: 'Monitor+' },
 };
+
+const TierIndicator = ({ tier }) => {
+  const cfg = TIER_CONFIG[tier] || { icon: StatusUnknown, color: 'text-weak', label: tier };
+  const Icon = cfg.icon;
+  return (
+    <Box direction="row" align="center" gap="xsmall">
+      <Icon size="small" color={cfg.color} />
+      <Text size="xsmall" weight="bold" color={cfg.color}>{cfg.label}</Text>
+    </Box>
+  );
+};
+
+// --- Active filter count badge ---
+const activeFilterCount = (...filters) => filters.filter(Boolean).length;
 
 const SignalBrowserPage = () => {
   const navigate = useNavigate();
@@ -32,8 +54,16 @@ const SignalBrowserPage = () => {
   const [selectedClassification, setSelectedClassification] = useState('');
   const [classificationOptions, setClassificationOptions] = useState([]);
 
+  // Search
+  const [searchText, setSearchText] = useState('');
+
+  // Filter drawer visibility
+  const [showFilters, setShowFilters] = useState(false);
+
   // Data state
+  const [allSignals, setAllSignals] = useState([]);  // unfiltered for total count
   const [signals, setSignals] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -44,7 +74,7 @@ const SignalBrowserPage = () => {
   // Workflow launch
   const [launching, setLaunching] = useState(false);
 
-  // Load BU summary for filter options + initial signals for tier options
+  // Load filter options + total count on mount
   useEffect(() => {
     getSignalSummary()
       .then((data) => {
@@ -54,9 +84,10 @@ const SignalBrowserPage = () => {
         setSourceOptions(sources);
       })
       .catch((err) => setError(err.message));
-    // Load all signals once to extract tier and classification options
     getSignals()
       .then((data) => {
+        setTotalCount(data.length);
+        setAllSignals(data);
         const tiers = [...new Set(data.map((d) => d.action_tier).filter(Boolean))].sort();
         setTierOptions(tiers);
         const classifications = [...new Set(data.map((d) => d.classification).filter(Boolean))].sort();
@@ -65,7 +96,7 @@ const SignalBrowserPage = () => {
       .catch(() => {});
   }, []);
 
-  // Load signals when filters change
+  // Load signals when server-side filters change
   const loadSignals = useCallback(() => {
     setLoading(true);
     setError(null);
@@ -81,6 +112,28 @@ const SignalBrowserPage = () => {
   }, [selectedBu, selectedSource, selectedTier, selectedClassification]);
 
   useEffect(() => { loadSignals(); }, [loadSignals]);
+
+  // Client-side search filter (HPE Filtering: search above data)
+  const filteredSignals = useMemo(() => {
+    if (!searchText.trim()) return signals;
+    const q = searchText.toLowerCase();
+    return signals.filter((s) =>
+      s.signal_title?.toLowerCase().includes(q) ||
+      s.bu?.toLowerCase().includes(q) ||
+      s.classification?.toLowerCase().includes(q) ||
+      s.signal_zone?.toLowerCase().includes(q)
+    );
+  }, [signals, searchText]);
+
+  const filtersActive = activeFilterCount(selectedBu, selectedSource, selectedTier, selectedClassification);
+
+  const clearAllFilters = () => {
+    setSelectedBu('');
+    setSelectedSource('');
+    setSelectedTier('');
+    setSelectedClassification('');
+    setSearchText('');
+  };
 
   // Open signal detail
   const openDetail = async (id) => {
@@ -118,6 +171,7 @@ const SignalBrowserPage = () => {
       property: 'signal_title',
       header: 'Signal',
       primary: true,
+      size: '50%',
       render: (datum) => (
         <Button plain onClick={() => openDetail(datum.id)}>
           <Text weight="bold" color="brand" style={{ wordBreak: 'break-word' }}>{datum.signal_title}</Text>
@@ -131,13 +185,7 @@ const SignalBrowserPage = () => {
       property: 'action_tier',
       header: 'Tier',
       size: 'xsmall',
-      render: (datum) => (
-        <Tag
-          value={datum.action_tier}
-          background={TIER_COLORS[datum.action_tier] || 'light-4'}
-          size="xsmall"
-        />
-      ),
+      render: (datum) => <TierIndicator tier={datum.action_tier} />,
     },
     {
       property: 'priority_score',
@@ -163,86 +211,159 @@ const SignalBrowserPage = () => {
   ];
 
   return (
-    <Box pad={isSmall ? 'small' : 'medium'} gap="medium" fill="horizontal">
-      {/* Page header */}
-      <Box direction="row" align="center" gap="small">
-        <Analytics color="brand" size="medium" />
-        <Heading level={2} margin="none">Signal Browser</Heading>
-      </Box>
-      <Text color="text-weak">
-        Browse ingested signals of change from SOC Radar analysis. Select a signal to view details or launch a CXIF workflow seeded with signal intelligence.
-      </Text>
+    <Page kind="full">
+      <PageContent>
+        <Box gap="medium" pad={{ vertical: 'medium' }}>
+          {/* Page header — HPE PageHeader pattern */}
+          <PageHeader
+            title="Signal Browser"
+            subtitle="Browse signals of change from SOC Radar analysis. Select a signal to view details or launch a CXIF workflow."
+            parent={
+              <Button plain onClick={() => navigate('/')}>
+                <Box direction="row" align="center" gap="xsmall">
+                  <Analytics color="brand" size="small" />
+                  <Text size="small" color="brand">Home</Text>
+                </Box>
+              </Button>
+            }
+          />
 
-      {error && (
-        <Notification status="critical" title="Error" message={error} onClose={() => setError(null)} />
-      )}
+          {error && (
+            <Notification status="critical" title="Error" message={error} onClose={() => setError(null)} />
+          )}
 
-      {/* Filters */}
-      <Box direction="row" gap="small" align="center">
-        <Box flex={{ grow: 3, shrink: 1 }} basis="0">
-          <Select
-            placeholder="Filter by Business Unit"
-            options={['', ...buOptions]}
-            value={selectedBu}
-            onChange={({ option }) => setSelectedBu(option)}
-            labelKey={(o) => o || 'All Business Units'}
-            valueKey={{ key: (o) => o, reduce: true }}
-            clear={{ position: 'top', label: 'All Business Units' }}
-          />
-        </Box>
-        <Box flex={{ grow: 3, shrink: 1 }} basis="0">
-          <Select
-            placeholder="Filter by Survey Source"
-            options={['', ...sourceOptions]}
-            value={selectedSource}
-            onChange={({ option }) => setSelectedSource(option)}
-            labelKey={(o) => o || 'All Sources'}
-            valueKey={{ key: (o) => o, reduce: true }}
-            clear={{ position: 'top', label: 'All Sources' }}
-          />
-        </Box>
-        <Box flex={{ grow: 2, shrink: 1 }} basis="0">
-          <Select
-            placeholder="Action Tier"
-            options={['', ...tierOptions]}
-            value={selectedTier}
-            onChange={({ option }) => setSelectedTier(option)}
-            labelKey={(o) => o || 'All Tiers'}
-            valueKey={{ key: (o) => o, reduce: true }}
-            clear={{ position: 'top', label: 'All Tiers' }}
-          />
-        </Box>
-        <Box flex={{ grow: 2, shrink: 1 }} basis="0">
-          <Select
-            placeholder="Classification"
-            options={['', ...classificationOptions]}
-            value={selectedClassification}
-            onChange={({ option }) => setSelectedClassification(option)}
-            labelKey={(o) => o || 'All Classifications'}
-            valueKey={{ key: (o) => o, reduce: true }}
-            clear={{ position: 'top', label: 'All Classifications' }}
-          />
-        </Box>
-        <Box flex={false}>
-          <Text size="small" color="text-weak" style={{ whiteSpace: 'nowrap' }}>
-            {signals.length} signal{signals.length !== 1 ? 's' : ''}
-          </Text>
-        </Box>
-      </Box>
+          {/* Toolbar — search + filter button + summary */}
+          <Box direction="row" gap="small" align="center">
+            <Box width="medium">
+              <TextInput
+                icon={<Search />}
+                placeholder="Search signals…"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                type="search"
+              />
+            </Box>
 
-      {/* Signals table */}
-      {loading ? (
-        <Box align="center" pad="large"><Spinner size="medium" /></Box>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={signals}
-          sortable
-          step={25}
-          paginate
-          border={{ body: { side: 'bottom', color: 'border' } }}
-          pad={{ body: { horizontal: 'small', vertical: 'xsmall' } }}
-        />
+            <Button
+              icon={<Filter />}
+              label={filtersActive > 0 ? `Filters (${filtersActive})` : 'Filters'}
+              onClick={() => setShowFilters(true)}
+            />
+
+            {(filtersActive > 0 || searchText) && (
+              <Button
+                icon={<FormClose />}
+                label="Clear all"
+                onClick={clearAllFilters}
+                size="small"
+              />
+            )}
+
+            <Box flex />
+            <Text size="small" color="text-weak">
+              {filtersActive > 0 || searchText
+                ? `${filteredSignals.length} results of ${totalCount} items`
+                : `${totalCount} items`}
+            </Text>
+          </Box>
+
+          {/* Signals table */}
+          {loading ? (
+            <Box align="center" pad="large"><Spinner size="medium" /></Box>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={filteredSignals}
+              sortable
+              step={25}
+              paginate
+              border={{ body: { side: 'bottom', color: 'border' } }}
+              pad={{ body: { horizontal: 'small', vertical: 'xsmall' } }}
+            />
+          )}
+        </Box>
+      </PageContent>
+
+      {/* Filter side-drawer */}
+      {showFilters && (
+        <Layer
+          position="right"
+          full="vertical"
+          onEsc={() => setShowFilters(false)}
+          onClickOutside={() => setShowFilters(false)}
+        >
+          <Box
+            width="medium"
+            fill="vertical"
+            pad="medium"
+            gap="medium"
+            overflow="auto"
+          >
+            <Box flex={false} direction="row" justify="between" align="center">
+              <Heading level={3} margin="none">Filters</Heading>
+              <Button icon={<Close />} onClick={() => setShowFilters(false)} plain />
+            </Box>
+
+            <Box gap="medium">
+              <Box gap="xsmall">
+                <Text size="small" weight="bold">Business Unit</Text>
+                <Select
+                  placeholder="All Business Units"
+                  options={['', ...buOptions]}
+                  value={selectedBu}
+                  onChange={({ option }) => setSelectedBu(option)}
+                  labelKey={(o) => o || 'All Business Units'}
+                  valueKey={{ key: (o) => o, reduce: true }}
+                  clear={{ position: 'top', label: 'All Business Units' }}
+                />
+              </Box>
+
+              <Box gap="xsmall">
+                <Text size="small" weight="bold">Survey Source</Text>
+                <Select
+                  placeholder="All Sources"
+                  options={['', ...sourceOptions]}
+                  value={selectedSource}
+                  onChange={({ option }) => setSelectedSource(option)}
+                  labelKey={(o) => o || 'All Sources'}
+                  valueKey={{ key: (o) => o, reduce: true }}
+                  clear={{ position: 'top', label: 'All Sources' }}
+                />
+              </Box>
+
+              <Box gap="xsmall">
+                <Text size="small" weight="bold">Action Tier</Text>
+                <Select
+                  placeholder="All Tiers"
+                  options={['', ...tierOptions]}
+                  value={selectedTier}
+                  onChange={({ option }) => setSelectedTier(option)}
+                  labelKey={(o) => o || 'All Tiers'}
+                  valueKey={{ key: (o) => o, reduce: true }}
+                  clear={{ position: 'top', label: 'All Tiers' }}
+                />
+              </Box>
+
+              <Box gap="xsmall">
+                <Text size="small" weight="bold">Classification</Text>
+                <Select
+                  placeholder="All Classifications"
+                  options={['', ...classificationOptions]}
+                  value={selectedClassification}
+                  onChange={({ option }) => setSelectedClassification(option)}
+                  labelKey={(o) => o || 'All Classifications'}
+                  valueKey={{ key: (o) => o, reduce: true }}
+                  clear={{ position: 'top', label: 'All Classifications' }}
+                />
+              </Box>
+            </Box>
+
+            <Box flex={false} direction="row" gap="small" margin={{ top: 'auto' }} border={{ side: 'top', color: 'border' }} pad={{ top: 'small' }}>
+              <Button label="Clear Filters" onClick={clearAllFilters} />
+              <Button label="Done" primary onClick={() => setShowFilters(false)} />
+            </Box>
+          </Box>
+        </Layer>
       )}
 
       {/* Detail modal */}
@@ -267,14 +388,11 @@ const SignalBrowserPage = () => {
 
                 {/* Scrollable content */}
                 <Box flex overflow="auto" gap="small">
-                  <Box direction="row" gap="small" wrap flex={false}>
+                  {/* Tags with HPE Status Indicator for tier */}
+                  <Box direction="row" gap="small" wrap flex={false} align="center">
                     <Tag value={detailSignal.bu} size="small" />
                     <Tag value={detailSignal.signal_zone} size="small" />
-                    <Tag
-                      value={detailSignal.action_tier}
-                      background={TIER_COLORS[detailSignal.action_tier] || 'light-4'}
-                      size="small"
-                    />
+                    <TierIndicator tier={detailSignal.action_tier} />
                     <Tag value={`Score: ${detailSignal.priority_score}`} size="small" />
                   </Box>
 
@@ -349,7 +467,7 @@ const SignalBrowserPage = () => {
           </Box>
         </Layer>
       )}
-    </Box>
+    </Page>
   );
 };
 
