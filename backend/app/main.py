@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from backend.app.config import get_settings
 from backend.app.db.session import DatabaseSchemaNotReadyError
+from backend.app.routes.signals import router as signals_router
 from backend.app.workflow import get_run_state
 from backend.app.workflow import get_step_output
 from backend.app.workflow import list_sessions
@@ -30,6 +31,8 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH"],
     allow_headers=["Content-Type"],
 )
+
+app.include_router(signals_router)
 
 
 class RunWorkflowRequest(BaseModel):

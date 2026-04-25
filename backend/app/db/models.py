@@ -62,3 +62,35 @@ class CheckpointRecord(Base):
     state_after_json: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class SignalReport(Base):
+    __tablename__ = "signal_reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    bu: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    survey_source: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    report_date: Mapped[str | None] = mapped_column(String, nullable=True)
+    input_stats: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
+    reinforcement_map: Mapped[dict[str, object] | None] = mapped_column(JSON, nullable=True)
+    source_file: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SignalRecord(Base):
+    __tablename__ = "signal_records"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    report_id: Mapped[int] = mapped_column(ForeignKey("signal_reports.id"), nullable=False, index=True)
+    signal_id: Mapped[str] = mapped_column(String, nullable=False)
+    signal_title: Mapped[str] = mapped_column(String, nullable=False)
+    bu: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    survey_source: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    signal_zone: Mapped[str] = mapped_column(String, nullable=False)
+    classification: Mapped[str | None] = mapped_column(String, nullable=True)
+    action_tier: Mapped[str | None] = mapped_column(String, nullable=True)
+    priority_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    observable_behavior: Mapped[str | None] = mapped_column(Text, nullable=True)
+    full_analysis: Mapped[dict[str, object]] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

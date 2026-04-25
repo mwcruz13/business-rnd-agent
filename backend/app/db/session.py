@@ -8,7 +8,7 @@ from backend.app.config import get_settings
 settings = get_settings()
 engine = create_engine(settings.database_url, future=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
-REQUIRED_RUNTIME_TABLES = frozenset({"runs", "step_outputs", "checkpoints"})
+REQUIRED_RUNTIME_TABLES = frozenset({"runs", "step_outputs", "checkpoints", "signal_reports", "signal_records"})
 _schema_validated = False
 
 
