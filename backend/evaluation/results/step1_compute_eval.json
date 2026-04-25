@@ -1,0 +1,544 @@
+{
+  "signals": [
+    {
+      "signal_id": "service_dissatisfaction",
+      "signal": "Recurring service quality issues leading to transitions away from HPE services.",
+      "zone": "Overserved Customers",
+      "source_type": "Internal VoC",
+      "observable_behavior": "Customers report subpar service experiences and actively switch to other providers after warranties expire.",
+      "evidence": [
+        "The continuous issues with the <PERSON> engineers is unacceptable.",
+        "As the equipment ages out from HPE warranty we move off of HPE services as quickly as possible."
+      ],
+      "supporting_comments": [
+        1
+      ]
+    },
+    {
+      "signal_id": "firmware_paywall",
+      "signal": "Restrictions on firmware access drive switching behavior.",
+      "zone": "Nonconsumption",
+      "source_type": "Internal VoC",
+      "observable_behavior": "Customers cite inability to access firmware without expensive support contracts as a reason for switching to competitors.",
+      "evidence": [
+        "the paywall of firmware updates contributed to switching to Dell.",
+        "HPE became lower level vendor of choice after preventing access to bios and other firmware and drivers for Gen 9 systems without support."
+      ],
+      "supporting_comments": [
+        3,
+        12
+      ]
+    },
+    {
+      "signal_id": "portal_issues",
+      "signal": "Poor portal performance and usability impacts customer satisfaction.",
+      "zone": "Overserved Customers",
+      "source_type": "Internal VoC",
+      "observable_behavior": "Customers highlight slow loading times, lack of function mapping, and poor software quality as pain points.",
+      "evidence": [
+        "The portal performance is often extremely poor (slow loading, timeouts).",
+        "The constant migration of resources from one portal to the next without mapping the entire scope of functions/resources is frustrating."
+      ],
+      "supporting_comments": [
+        7,
+        13
+      ]
+    },
+    {
+      "signal_id": "ilo_subscription_backlash",
+      "signal": "Pushback against iLO Advanced subscription model.",
+      "zone": "Business Model Anomaly",
+      "source_type": "Internal VoC",
+      "observable_behavior": "Customers express dissatisfaction with essential features being locked behind a paywall.",
+      "evidence": [
+        "Simply because you wanted to charge, to make money, for an ESSENTIAL and FUNDAMENTAL service that a server provides: iLO => Email-Based Alerting.",
+        "ILO license not included in server purchase is just extra money grabbing on already expensive products."
+      ],
+      "supporting_comments": [
+        5,
+        14
+      ]
+    },
+    {
+      "signal_id": "zerto_support_decline",
+      "signal": "Decline in support quality for Zerto post-acquisition.",
+      "zone": "Overserved Customers",
+      "source_type": "Internal VoC",
+      "observable_behavior": "Customers perceive reduced support quality and overbooked engineers since HPE's acquisition of Zerto.",
+      "evidence": [
+        "Since HPE has taken over Zerto, the support is poor at best.",
+        "It is not the engineers fault. it is HPEs fault not putting money in the right places."
+      ],
+      "supporting_comments": [
+        10
+      ]
+    },
+    {
+      "signal_id": "competitor_innovation",
+      "signal": "Competitor offerings seen as more innovative and cost-effective.",
+      "zone": "New-Market Foothold",
+      "source_type": "Internal VoC",
+      "observable_behavior": "Customers compare HPE unfavorably to Dell and Lenovo in terms of innovation, pricing, and ease of access.",
+      "evidence": [
+        "Dell has more innovation and now even better quality in its PowerEdge servers.",
+        "Dell only provides us with servers, and in Azure we have some VMs and some services."
+      ],
+      "supporting_comments": [
+        4,
+        18
+      ]
+    },
+    {
+      "signal_id": "support_complexity",
+      "signal": "Complex and unintuitive support processes deter usage.",
+      "zone": "Overserved Customers",
+      "source_type": "Internal VoC",
+      "observable_behavior": "Customers describe support processes as overly complex, leading to reliance on alternative solutions like AI.",
+      "evidence": [
+        "The complexity and lack of easily found instructions on how to use the tools made the process take so long.",
+        "I used AI to figure it all out instead of calling HP."
+      ],
+      "supporting_comments": [
+        15
+      ]
+    }
+  ],
+  "interpreted_signals": [
+    {
+      "signal_id": "service_dissatisfaction",
+      "signal": "Recurring service quality issues leading to transitions away from HPE services.",
+      "zone": "Overserved Customers",
+      "classification": "Sustaining",
+      "confidence": "High",
+      "sustaining_rationale": "The signal indicates an execution gap where existing customers are not receiving the service quality they expect, rather than a fundamentally different value proposition.",
+      "competitive_implication": "Incumbents can address the issue by improving service delivery processes, retaining customers at risk of switching.",
+      "litmus_test": "",
+      "filters": [],
+      "filters_passed": 0,
+      "disruptive_potential": "",
+      "value_network_insight": "",
+      "alternative_explanation": "",
+      "key_evidence_gap": ""
+    },
+    {
+      "signal_id": "firmware_paywall",
+      "signal": "Restrictions on firmware access drive switching behavior.",
+      "zone": "Nonconsumption",
+      "classification": "Disruptive — Low-End",
+      "confidence": "High",
+      "sustaining_rationale": "",
+      "competitive_implication": "",
+      "litmus_test": "Pass — Customers who cannot justify full support costs are switching to competitors offering simpler, more affordable alternatives.",
+      "filters": [
+        {
+          "filter_name": "Asymmetric Motivation",
+          "result": "Yes",
+          "confidence": "High",
+          "rationale": "Incumbents prioritize high-margin support contracts, making low-cost firmware access unattractive."
+        },
+        {
+          "filter_name": "Asymmetric Skills",
+          "result": "Yes",
+          "confidence": "Medium",
+          "rationale": "Entrants like Dell have streamlined processes for free firmware access, while HPE relies on legacy revenue models."
+        },
+        {
+          "filter_name": "Trajectory",
+          "result": "Yes",
+          "confidence": "Medium",
+          "rationale": "OpenManage and similar tools are improving steadily, meeting more customer needs over time."
+        },
+        {
+          "filter_name": "Performance Overshoot",
+          "result": "Yes",
+          "confidence": "High",
+          "rationale": "HPE's high-cost support contracts exceed what many customers value for aging equipment."
+        },
+        {
+          "filter_name": "Barrier Removal",
+          "result": "Yes",
+          "confidence": "High",
+          "rationale": "Eliminates cost barriers for accessing essential updates."
+        },
+        {
+          "filter_name": "Business Model Conflict",
+          "result": "Yes",
+          "confidence": "High",
+          "rationale": "Providing free firmware would cannibalize existing support revenue."
+        }
+      ],
+      "filters_passed": 6,
+      "disruptive_potential": "High",
+      "value_network_insight": "HPE's reliance on high-margin support contracts blinds it to low-end defections.",
+      "alternative_explanation": "Dell's tools may only appeal to a niche segment rather than indicating broader disruption.",
+      "key_evidence_gap": "Data on Dell's market share growth in this segment would clarify scale of impact."
+    },
+    {
+      "signal_id": "portal_issues",
+      "signal": "Poor portal performance and usability impacts customer satisfaction.",
+      "zone": "Overserved Customers",
+      "classification": "Sustaining",
+      "confidence": "Medium",
+      "sustaining_rationale": "The issues reflect suboptimal execution in digital experience, not a fundamentally new approach to solving customer problems.",
+      "competitive_implication": "Incumbents can address by investing in portal improvements to meet customer expectations.",
+      "litmus_test": "",
+      "filters": [],
+      "filters_passed": 0,
+      "disruptive_potential": "",
+      "value_network_insight": "",
+      "alternative_explanation": "",
+      "key_evidence_gap": ""
+    },
+    {
+      "signal_id": "ilo_subscription_backlash",
+      "signal": "Pushback against iLO Advanced subscription model.",
+      "zone": "Business Model Anomaly",
+      "classification": "Disruptive — Low-End",
+      "confidence": "Medium",
+      "sustaining_rationale": "",
+      "competitive_implication": "",
+      "litmus_test": "Pass — Customers are rejecting high-cost subscriptions in favor of competitors offering included features.",
+      "filters": [
+        {
+          "filter_name": "Asymmetric Motivation",
+          "result": "Yes",
+          "confidence": "High",
+          "rationale": "HPE's subscription model prioritizes recurring revenue, discouraging feature inclusion."
+        },
+        {
+          "filter_name": "Asymmetric Skills",
+          "result": "Yes",
+          "confidence": "Medium",
+          "rationale": "Competitors like Dell include these features as standard, leveraging different cost structures."
+        },
+        {
+          "filter_name": "Trajectory",
+          "result": "Yes",
+          "confidence": "Medium",
+          "rationale": "Competitors have consistently improved their included management tools."
+        },
+        {
+          "filter_name": "Performance Overshoot",
+          "result": "Yes",
+          "confidence": "High",
+          "rationale": "HPE's subscription model exceeds what customers value for basic server management."
+        },
+        {
+          "filter_name": "Barrier Removal",
+          "result": "Yes",
+          "confidence": "High",
+          "rationale": "Eliminates cost barriers for essential server management features."
+        },
+        {
+          "filter_name": "Business Model Conflict",
+          "result": "Yes",
+          "confidence": "High",
+          "rationale": "Including these features would undermine HPE's subscription revenue."
+        }
+      ],
+      "filters_passed": 6,
+      "disruptive_potential": "High",
+      "value_network_insight": "HPE's focus on subscription revenue aligns poorly with customer willingness to pay.",
+      "alternative_explanation": "Pushback may be limited to price-sensitive segments rather than a widespread issue.",
+      "key_evidence_gap": "Data on overall customer retention rates for iLO Advanced users would help assess impact."
+    },
+    {
+      "signal_id": "zerto_support_decline",
+      "signal": "Decline in support quality for Zerto post-acquisition.",
+      "zone": "Overserved Customers",
+      "classification": "Sustaining",
+      "confidence": "Medium",
+      "sustaining_rationale": "This reflects a decline in perceived support quality for an existing product, not a disruptive entrant addressing unmet needs.",
+      "competitive_implication": "Incumbents can address by reallocating resources to support acquired products effectively.",
+      "litmus_test": "",
+      "filters": [],
+      "filters_passed": 0,
+      "disruptive_potential": "",
+      "value_network_insight": "",
+      "alternative_explanation": "",
+      "key_evidence_gap": ""
+    },
+    {
+      "signal_id": "competitor_innovation",
+      "signal": "Competitor offerings seen as more innovative and cost-effective.",
+      "zone": "New-Market Foothold",
+      "classification": "Disruptive — New-Market",
+      "confidence": "Medium",
+      "sustaining_rationale": "",
+      "competitive_implication": "",
+      "litmus_test": "Pass — Customers highlight innovation and simplicity as enabling new use cases and adoption.",
+      "filters": [
+        {
+          "filter_name": "Asymmetric Motivation",
+          "result": "Yes",
+          "confidence": "Medium",
+          "rationale": "HPE focuses on existing enterprise markets while competitors target new segments."
+        },
+        {
+          "filter_name": "Asymmetric Skills",
+          "result": "Yes",
+          "confidence": "Medium",
+          "rationale": "Competitors have developed streamlined processes and cost structures for new market entry."
+        },
+        {
+          "filter_name": "Trajectory",
+          "result": "Yes",
+          "confidence": "Medium",
+          "rationale": "Competitors show steady improvement in innovation and cost-effectiveness."
+        },
+        {
+          "filter_name": "Performance Overshoot",
+          "result": "No",
+          "confidence": "Medium",
+          "rationale": "HPE's offerings may not yet exceed customer needs in these new markets."
+        },
+        {
+          "filter_name": "Barrier Removal",
+          "result": "Yes",
+          "confidence": "Medium",
+          "rationale": "Lower costs and simplicity enable access for new customers."
+        },
+        {
+          "filter_name": "Business Model Conflict",
+          "result": "No",
+          "confidence": "Medium",
+          "rationale": "Competing in these new segments does not directly conflict with HPE's enterprise focus."
+        }
+      ],
+      "filters_passed": 4,
+      "disruptive_potential": "Medium",
+      "value_network_insight": "HPE's enterprise focus limits its awareness of new-market opportunities.",
+      "alternative_explanation": "Competitor claims may be overstated or limited to niche applications.",
+      "key_evidence_gap": "Detailed data on adoption rates for competitor solutions in targeted new markets."
+    },
+    {
+      "signal_id": "support_complexity",
+      "signal": "Complex and unintuitive support processes deter usage.",
+      "zone": "Overserved Customers",
+      "classification": "Sustaining",
+      "confidence": "Medium",
+      "sustaining_rationale": "The issue reflects a need for better support process design rather than a disruptive shift in value delivery.",
+      "competitive_implication": "Incumbents can address by simplifying and improving support processes.",
+      "litmus_test": "",
+      "filters": [],
+      "filters_passed": 0,
+      "disruptive_potential": "",
+      "value_network_insight": "",
+      "alternative_explanation": "",
+      "key_evidence_gap": ""
+    }
+  ],
+  "coverage_gaps": [
+    {
+      "zone": "Enabling Technology",
+      "note": "No direct evidence found in this input; treat as an intelligence blind spot rather than proof of absence."
+    },
+    {
+      "zone": "Low-End Foothold",
+      "note": "No direct evidence found in this input; treat as an intelligence blind spot rather than proof of absence."
+    },
+    {
+      "zone": "Regulatory / Policy Shift",
+      "note": "No direct evidence found in this input; treat as an intelligence blind spot rather than proof of absence."
+    }
+  ],
+  "priority_matrix": [
+    {
+      "signal_id": "service_dissatisfaction",
+      "signal": "Recurring service quality issues leading to transitions away from HPE services.",
+      "classification": "Sustaining",
+      "impact": 3,
+      "speed": 3,
+      "score": 9,
+      "tier": "Sustaining — Act",
+      "rationale": "The signal reflects a critical execution gap in service quality, with customers explicitly switching away from HPE services post-warranty. Multiple independent comments highlight its importance, making this a high-priority sustaining issue."
+    },
+    {
+      "signal_id": "firmware_paywall",
+      "signal": "Restrictions on firmware access drive switching behavior.",
+      "classification": "Disruptive — Low-End",
+      "impact": 3,
+      "speed": 3,
+      "score": 9,
+      "tier": "Act",
+      "rationale": "Firmware paywalls are directly contributing to customer switches to competitors like Dell, as confirmed by multiple comments. The speed of behavior change and impact on core revenue streams make this a top-priority disruptive signal."
+    },
+    {
+      "signal_id": "portal_issues",
+      "signal": "Poor portal performance and usability impacts customer satisfaction.",
+      "classification": "Sustaining",
+      "impact": 2,
+      "speed": 2,
+      "score": 4,
+      "tier": "Sustaining — Investigate",
+      "rationale": "Portal issues reflect suboptimal execution and frustrate users, but the impact is currently limited to adjacent experiences rather than core revenue. Improvement is needed but not critical."
+    },
+    {
+      "signal_id": "ilo_subscription_backlash",
+      "signal": "Pushback against iLO Advanced subscription model.",
+      "classification": "Disruptive — Low-End",
+      "impact": 3,
+      "speed": 2,
+      "score": 6,
+      "tier": "Investigate",
+      "rationale": "Customer dissatisfaction with iLO subscriptions is eroding loyalty and driving some switches to competitors. While the speed is moderate, the impact on revenue and market positioning justifies investigation."
+    },
+    {
+      "signal_id": "zerto_support_decline",
+      "signal": "Decline in support quality for Zerto post-acquisition.",
+      "classification": "Sustaining",
+      "impact": 2,
+      "speed": 2,
+      "score": 4,
+      "tier": "Sustaining — Investigate",
+      "rationale": "The decline in Zerto support quality reflects execution issues that could damage HPE’s reputation, but the impact is currently limited to a specific product line."
+    },
+    {
+      "signal_id": "competitor_innovation",
+      "signal": "Competitor offerings seen as more innovative and cost-effective.",
+      "classification": "Disruptive — New-Market",
+      "impact": 3,
+      "speed": 2,
+      "score": 6,
+      "tier": "Investigate",
+      "rationale": "Competitors are gaining traction in new markets through innovation and cost-effectiveness. The impact could grow as these markets mature, warranting focused investigation."
+    },
+    {
+      "signal_id": "support_complexity",
+      "signal": "Complex and unintuitive support processes deter usage.",
+      "classification": "Sustaining",
+      "impact": 1,
+      "speed": 2,
+      "score": 2,
+      "tier": "Sustaining — Monitor",
+      "rationale": "Support complexity frustrates customers but has not yet shown significant impact on core revenue. Monitoring is appropriate for now."
+    }
+  ],
+  "reinforcement_map": {
+    "chain": [
+      "firmware_paywall",
+      "ilo_subscription_backlash",
+      "competitor_innovation"
+    ],
+    "strategic_insight": "Addressing the firmware paywall issue could weaken competitor traction and reduce the urgency of iLO backlash and new-market incursions.",
+    "accelerants": [
+      "service_dissatisfaction"
+    ]
+  },
+  "signal_recommendations": [
+    {
+      "signal_id": "firmware_paywall",
+      "action_tier": "Act",
+      "what_we_know": "Customers are switching to competitors like Dell due to restrictions on firmware access without expensive support contracts. Dell’s OpenManage ecosystem is cited as a superior alternative.",
+      "what_we_dont_know": [
+        "Dell's market share growth among defecting customers.",
+        "Cost-benefit analysis of offering free firmware access."
+      ],
+      "rpv_assessment": {
+        "resources": "HPE has the technical capability but may lack the financial flexibility to absorb revenue loss.",
+        "processes": "Processes are optimized for high-margin support contracts, limiting adaptability.",
+        "values": "HPE values recurring revenue, making free firmware access unattractive.",
+        "assessment": "Cannot respond without structural change"
+      },
+      "next_steps": [
+        {
+          "action": "Conduct a cost-benefit analysis of offering free firmware access to reduce defections.",
+          "owner": "Finance Lead",
+          "timeframe": "30 days"
+        },
+        {
+          "action": "Pilot a limited free firmware program for non-critical updates to assess customer retention impact.",
+          "owner": "Product Manager",
+          "timeframe": "60 days"
+        }
+      ],
+      "experiment_candidate": {
+        "assumption": "We believe that offering free firmware access will significantly reduce customer defection to Dell.",
+        "experiment_type": "Smoke Test",
+        "success": "Retention rates increase among pilot customers.",
+        "failure": "No significant change in retention rates."
+      }
+    },
+    {
+      "signal_id": "ilo_subscription_backlash",
+      "action_tier": "Investigate",
+      "what_we_know": "Customers are rejecting the iLO subscription model and switching to competitors offering included features. This dissatisfaction is eroding loyalty.",
+      "what_we_dont_know": [
+        "Retention rates of iLO Advanced users versus defectors.",
+        "Customer willingness to pay for alternative subscription models."
+      ],
+      "rpv_assessment": {
+        "resources": "HPE has the resources to evaluate alternative models.",
+        "processes": "Processes are aligned to maximize subscription revenue, limiting flexibility.",
+        "values": "Recurring revenue focus conflicts with customer value perception.",
+        "assessment": "Would choose not to respond"
+      },
+      "next_steps": [
+        {
+          "action": "Survey current iLO Advanced users to assess retention drivers.",
+          "owner": "Customer Insights Team",
+          "timeframe": "30 days"
+        },
+        {
+          "action": "Explore alternative subscription models that align better with customer expectations.",
+          "owner": "Business Strategy Lead",
+          "timeframe": "60 days"
+        }
+      ],
+      "experiment_candidate": {
+        "assumption": "We believe that bundling iLO Advanced features into hardware purchases will improve customer satisfaction and retention.",
+        "experiment_type": "Customer Interview",
+        "success": "Positive feedback from current and potential customers.",
+        "failure": "No significant interest in bundled features."
+      }
+    },
+    {
+      "signal_id": "competitor_innovation",
+      "action_tier": "Investigate",
+      "what_we_know": "Competitors are leveraging innovation and cost-effectiveness to capture new-market footholds. Customers highlight Dell as a preferred alternative in these segments.",
+      "what_we_dont_know": [
+        "Adoption rates of competitor solutions in targeted markets.",
+        "Specific use cases driving new-market growth."
+      ],
+      "rpv_assessment": {
+        "resources": "HPE has R&D resources but may lack focus on these markets.",
+        "processes": "Processes are enterprise-centric, not optimized for new-market entry.",
+        "values": "Enterprise focus limits motivation to pursue new markets.",
+        "assessment": "Would choose not to respond"
+      },
+      "next_steps": [
+        {
+          "action": "Map competitor offerings and identify gaps in HPE’s product portfolio.",
+          "owner": "Competitive Intelligence Team",
+          "timeframe": "45 days"
+        },
+        {
+          "action": "Conduct 10 customer interviews in new-market segments to understand unmet needs.",
+          "owner": "Market Research Lead",
+          "timeframe": "60 days"
+        }
+      ],
+      "experiment_candidate": {
+        "assumption": "We believe that targeting cost-sensitive new markets with simplified offerings will capture market share.",
+        "experiment_type": "Prototype",
+        "success": "High interest in simplified offerings from target segments.",
+        "failure": "Low interest or adoption from target segments."
+      }
+    }
+  ],
+  "watching_briefs": [
+    {
+      "signal_id": "support_complexity",
+      "signal": "Complex and unintuitive support processes deter usage.",
+      "review_frequency": "Quarterly",
+      "key_indicator": "Customer complaints about support process complexity.",
+      "escalation_trigger": "Significant increase in complaints or evidence of switching due to complexity."
+    }
+  ],
+  "agent_recommendation": "Focus immediate efforts on addressing the firmware paywall to reduce customer defections and weaken competitor momentum. Investigate iLO subscription backlash and competitor innovation to prevent further erosion of market share. Monitor support complexity for escalation potential.",
+  "_meta": {
+    "input_file": "backend/scripts/data/soc_extracts/soc_voc_compute.txt",
+    "step": "step1_signal_scan (1a+1b)",
+    "llm_backend": "azure"
+  }
+}
