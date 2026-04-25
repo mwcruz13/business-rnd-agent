@@ -15,6 +15,9 @@ logs:
 test:
 	docker compose up -d bmi-postgres $(BACKEND_SERVICE)
 	docker compose exec -T $(BACKEND_SERVICE) alembic -c backend/migrations/alembic.ini upgrade head
+	docker compose exec -T bmi-postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname='bmi_test'" | grep -q 1 || \
+		docker compose exec -T bmi-postgres psql -U postgres -c "CREATE DATABASE bmi_test"
+	docker compose exec -T bmi-postgres psql -U postgres -d bmi_test -c "CREATE EXTENSION IF NOT EXISTS vector" 2>/dev/null || true
 	docker compose exec -T $(BACKEND_SERVICE) pytest
 
 test-smoke:
