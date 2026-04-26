@@ -39,6 +39,8 @@ const ProjectDetailPanel = ({ sessionId, onClose, onUpdate }) => {
           initiative_name: data.initiative_name || '',
           expected_revenue: data.expected_revenue || '',
           testing_cost: data.testing_cost || '',
+          risk_score_override: data.risk_score_override ?? '',
+          return_score_override: data.return_score_override ?? '',
           notes: data.notes || '',
         });
       })
@@ -49,7 +51,11 @@ const ProjectDetailPanel = ({ sessionId, onClose, onUpdate }) => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updatePortfolio(sessionId, form);
+      // Only send overrides if they contain a valid number; send null to clear
+      const payload = { ...form };
+      payload.risk_score_override = payload.risk_score_override !== '' ? Number(payload.risk_score_override) : null;
+      payload.return_score_override = payload.return_score_override !== '' ? Number(payload.return_score_override) : null;
+      await updatePortfolio(sessionId, payload);
       setEditing(false);
       // Refresh detail
       const data = await getPortfolioDetail(sessionId);
@@ -299,6 +305,14 @@ const ProjectDetailPanel = ({ sessionId, onClose, onUpdate }) => {
                         <Text size="small">{detail.testing_cost || '—'}</Text>
                       </Box>
                       <Box gap="xsmall">
+                        <Text size="small" weight="bold">Risk Score Override</Text>
+                        <Text size="small">{detail.risk_score_override != null ? detail.risk_score_override : 'Auto'}</Text>
+                      </Box>
+                      <Box gap="xsmall">
+                        <Text size="small" weight="bold">Return Score Override</Text>
+                        <Text size="small">{detail.return_score_override != null ? detail.return_score_override : 'Auto'}</Text>
+                      </Box>
+                      <Box gap="xsmall">
                         <Text size="small" weight="bold">Notes</Text>
                         <Text size="small">{detail.notes || '—'}</Text>
                       </Box>
@@ -336,6 +350,26 @@ const ProjectDetailPanel = ({ sessionId, onClose, onUpdate }) => {
                           value={form.testing_cost}
                           onChange={(e) => setForm({ ...form, testing_cost: e.target.value })}
                           placeholder="e.g. $5,800"
+                        />
+                      </Box>
+                      <Box gap="xsmall">
+                        <Text size="small" weight="bold">Risk Score Override</Text>
+                        <TextInput
+                          size="small"
+                          type="number"
+                          value={form.risk_score_override}
+                          onChange={(e) => setForm({ ...form, risk_score_override: e.target.value })}
+                          placeholder="Leave empty for auto-computed"
+                        />
+                      </Box>
+                      <Box gap="xsmall">
+                        <Text size="small" weight="bold">Return Score Override</Text>
+                        <TextInput
+                          size="small"
+                          type="number"
+                          value={form.return_score_override}
+                          onChange={(e) => setForm({ ...form, return_score_override: e.target.value })}
+                          placeholder="Leave empty for auto-computed"
                         />
                       </Box>
                       <Box gap="xsmall">

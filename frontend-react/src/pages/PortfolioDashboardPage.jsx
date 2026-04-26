@@ -220,7 +220,7 @@ const PortfolioDashboardPage = () => {
   return (
     <Page kind="full">
       <PageHeader
-        title="Business Model Portfolio"
+        title="Business R&amp;D Portfolio"
         subtitle="Innovation Hedge Fund — Explore vs Exploit"
         parent={
           <Button

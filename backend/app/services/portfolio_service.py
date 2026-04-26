@@ -217,6 +217,8 @@ def build_portfolio_entry(run: WorkflowRun) -> dict[str, Any]:
         "assumption_count": _count_assumptions(state),
         "experiment_count": _count_experiments(state),
         "completed_steps_count": len(state.get("completed_steps", [])),
+        "risk_score_override": portfolio.get("risk_score_override"),
+        "return_score_override": portfolio.get("return_score_override"),
         "notes": portfolio.get("notes"),
     }
 
