@@ -3,6 +3,7 @@ import { Box, Text, TextArea, DataTable, Tab } from 'grommet';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import StepCard from '../components/StepCard.jsx';
+import EditableTextArea from '../components/EditableTextArea.jsx';
 
 const SIGNAL_COLUMNS = [
   { property: 'signal_id', header: 'ID', size: 'xsmall' },
@@ -33,12 +34,12 @@ const Step1SignalScan = ({ runState, editMode, editState, onEditChange, sessionI
 
   useEffect(() => {
     if (editMode && Object.keys(editState).length === 0) {
-      onEditChange({
+      onEditChange(() => ({
         agent_recommendation: agent_recommendation || '',
         signals: signals || [],
         interpreted_signals: interpreted_signals || [],
         priority_matrix: priority_matrix || [],
-      });
+      }));
     }
   }, [editMode]);
 
@@ -46,16 +47,16 @@ const Step1SignalScan = ({ runState, editMode, editState, onEditChange, sessionI
     return <Text color="text-weak">Step 1 has not run yet.</Text>;
   }
 
-  const handleImport = (fields) => onEditChange({ ...editState, ...fields });
+  const handleImport = (fields) => onEditChange(prev => ({ ...prev, ...fields }));
 
   return (
     <StepCard stepIndex={0} stepLabel="Signal Scan" runState={runState} sessionId={sessionId} onImport={handleImport}>
       <Tab title="Recommendation">
         <Box pad="medium" overflow="auto">
           {editMode ? (
-            <TextArea
+            <EditableTextArea
               value={editState.agent_recommendation ?? agent_recommendation ?? ''}
-              onChange={(e) => onEditChange({ ...editState, agent_recommendation: e.target.value })}
+              onChange={(e) => { const v = e.target.value; onEditChange(prev => ({ ...prev, agent_recommendation: v })); }}
               rows={6}
               resize="vertical"
             />

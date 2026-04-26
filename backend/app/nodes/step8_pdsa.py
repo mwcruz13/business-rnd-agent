@@ -196,9 +196,14 @@ def _extract_top_assumptions(assumptions: str, step7_structured: dict[str, objec
         if not stripped.startswith("|"):
             continue
         cells = [cell.strip() for cell in stripped.split("|")[1:-1]]
-        if len(cells) != 3:
+        if len(cells) == 4:
+            # New format: Assumption | Category | VoC Evidence | Quadrant
+            assumption, category, _evidence, quadrant = cells
+        elif len(cells) == 3:
+            # Legacy format: Assumption | Category | Quadrant
+            assumption, category, quadrant = cells
+        else:
             continue
-        assumption, category, quadrant = cells
         if assumption == "Assumption" or assumption.startswith("------------"):
             continue
         if quadrant == "Test first":

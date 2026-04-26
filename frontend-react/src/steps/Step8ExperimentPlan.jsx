@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import StepCard from '../components/StepCard.jsx';
 import ExperimentCardDeck from '../components/ExperimentCardDeck.jsx';
 import { downloadExport } from '../api/workflowApi.js';
+import EditableTextArea from '../components/EditableTextArea.jsx';
 
 const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sessionId }) => {
   const [exporting, setExporting] = useState(null); // 'md' | 'pptx' | null
@@ -14,15 +15,16 @@ const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sess
 
   const {
     experiment_selections, experiment_plans, experiment_worksheets, experiment_cards,
+    artifact_designs,
   } = runState;
 
   useEffect(() => {
     if (editMode && Object.keys(editState).length === 0) {
-      onEditChange({
+      onEditChange(() => ({
         experiment_selections: experiment_selections || '',
         experiment_plans: experiment_plans || '',
         experiment_worksheets: experiment_worksheets || '',
-      });
+      }));
     }
   }, [editMode]);
 
@@ -30,7 +32,7 @@ const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sess
     return <Text color="text-weak">Step 8 has not run yet.</Text>;
   }
 
-  const handleImport = (fields) => onEditChange({ ...editState, ...fields });
+  const handleImport = (fields) => onEditChange(prev => ({ ...prev, ...fields }));
 
   const handleExport = async (format) => {
     setExporting(format);
@@ -89,9 +91,9 @@ const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sess
       <Tab title="Selections">
         <Box pad="medium" overflow="auto">
           {editMode ? (
-            <TextArea
+            <EditableTextArea
               value={editState.experiment_selections ?? experiment_selections ?? ''}
-              onChange={(e) => onEditChange({ ...editState, experiment_selections: e.target.value })}
+              onChange={(e) => { const v = e.target.value; onEditChange(prev => ({ ...prev, experiment_selections: v })); }}
               rows={8}
               resize="vertical"
             />
@@ -110,9 +112,9 @@ const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sess
       <Tab title="Plans">
         <Box pad="medium" overflow="auto">
           {editMode ? (
-            <TextArea
+            <EditableTextArea
               value={editState.experiment_plans ?? experiment_plans ?? ''}
-              onChange={(e) => onEditChange({ ...editState, experiment_plans: e.target.value })}
+              onChange={(e) => { const v = e.target.value; onEditChange(prev => ({ ...prev, experiment_plans: v })); }}
               rows={10}
               resize="vertical"
             />
@@ -131,9 +133,9 @@ const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sess
       <Tab title="Worksheets">
         <Box pad="medium" overflow="auto">
           {editMode ? (
-            <TextArea
+            <EditableTextArea
               value={editState.experiment_worksheets ?? experiment_worksheets ?? ''}
-              onChange={(e) => onEditChange({ ...editState, experiment_worksheets: e.target.value })}
+              onChange={(e) => { const v = e.target.value; onEditChange(prev => ({ ...prev, experiment_worksheets: v })); }}
               rows={10}
               resize="vertical"
             />
@@ -148,6 +150,52 @@ const Step8ExperimentPlan = ({ runState, editMode, editState, onEditChange, sess
           )}
         </Box>
       </Tab>
+
+      {artifact_designs?.length > 0 && (
+        <Tab title={`Artifacts (${artifact_designs.length})`}>
+          <Box pad="medium" overflow="auto" gap="small">
+            <Text size="xsmall" color="text-weak">
+              Build-ready artifact packages for each selected experiment card.
+            </Text>
+            {artifact_designs.map((art, i) => (
+              <Box
+                key={art.card_id || i}
+                border={{ color: 'border', size: '1px' }}
+                round="small"
+                pad="medium"
+                background="background-front"
+                gap="xsmall"
+              >
+                <Box direction="row" gap="small" align="center">
+                  <Text weight="bold" size="small">{art.card_name}</Text>
+                  <Text size="xsmall" color="text-weak">({art.artifact_type})</Text>
+                </Box>
+                <Text size="small"><strong>Artifact:</strong> {art.artifact_name}</Text>
+                <Text size="small"><strong>Assumption:</strong> {art.assumption}</Text>
+                {art.artifact_objective && (
+                  <Text size="small"><strong>Objective:</strong> {art.artifact_objective}</Text>
+                )}
+                {art.artifact_scope && (
+                  <Text size="small"><strong>Scope:</strong> {art.artifact_scope}</Text>
+                )}
+                {art.acceptance_criteria && (
+                  <Text size="small"><strong>Acceptance:</strong> {art.acceptance_criteria}</Text>
+                )}
+                {art.deliverable_checklist?.length > 0 && (
+                  <Box margin={{ top: 'xsmall' }}>
+                    <Text size="xsmall" weight="bold" color="text-weak">Deliverables:</Text>
+                    <Box as="ul" margin={{ left: 'small', top: 'xxsmall' }} gap="xxsmall">
+                      {art.deliverable_checklist.map((item, j) => (
+                        <Text key={j} as="li" size="small">{item}</Text>
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+            ))}
+          </Box>
+        </Tab>
+      )}
     </StepCard>
   );
 };

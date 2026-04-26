@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useCallback, useEffect, useRef } from 'react';
 import { Box, Text, Notification, Spinner, Button, ResponsiveContext } from 'grommet';
 import { Revert } from 'grommet-icons';
 import { useWorkflow } from '../context/WorkflowContext.jsx';
@@ -32,10 +32,34 @@ const StepWizard = () => {
     resumeWorkflow, restartFromStep, goToStep, setError,
   } = useWorkflow();
 
-  const [editMode, setEditMode] = useState(false);
-  const [editState, setEditState] = useState({});
+  const [editMode, setEditMode] = useState(() => {
+    try { return sessionStorage.getItem('bmi_edit_mode') === 'true'; } catch { return false; }
+  });
+  const [editState, setEditState] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem('bmi_edit_state') || '{}'); } catch { return {}; }
+  });
   const size = useContext(ResponsiveContext);
   const isSmall = size === 'small';
+
+  // Persist edit state to sessionStorage so HMR remounts don't lose edits.
+  const editStateRef = useRef(editState);
+  editStateRef.current = editState;
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('bmi_edit_mode', editMode ? 'true' : 'false');
+      sessionStorage.setItem('bmi_edit_state', JSON.stringify(editState));
+    } catch { /* quota exceeded — non-critical */ }
+  }, [editMode, editState]);
+
+  // Wrap setEditState so children can pass either an object or a functional updater.
+  // This eliminates stale-closure bugs when typing quickly in TextAreas.
+  const handleEditChange = useCallback((valueOrFn) => {
+    if (typeof valueOrFn === 'function') {
+      setEditState(valueOrFn);
+    } else {
+      setEditState(valueOrFn);
+    }
+  }, []);
 
   const currentCheckpoint = runState?.pending_checkpoint || null;
   const completedSteps = runState?.completed_steps || [];
@@ -56,12 +80,20 @@ const StepWizard = () => {
   // Determine which step component to render
   const StepComponent = STEP_COMPONENTS[activeStep] ?? null;
 
+  const clearEditSession = useCallback(() => {
+    setEditMode(false);
+    setEditState({});
+    try {
+      sessionStorage.removeItem('bmi_edit_mode');
+      sessionStorage.removeItem('bmi_edit_state');
+    } catch { /* non-critical */ }
+  }, []);
+
   const handleApprove = async () => {
     try {
       if (editMode) {
         await resumeWorkflow('edit', editState);
-        setEditMode(false);
-        setEditState({});
+        clearEditSession();
       } else {
         await resumeWorkflow('approve');
       }
@@ -75,8 +107,7 @@ const StepWizard = () => {
   };
 
   const handleCancel = () => {
-    setEditMode(false);
-    setEditState({});
+    clearEditSession();
   };
 
   const handleRestartFromHere = async () => {
@@ -84,8 +115,7 @@ const StepWizard = () => {
       const stepNumber = activeStep + 1; // 1-based
       if (editMode) {
         await restartFromStep(stepNumber, editState);
-        setEditMode(false);
-        setEditState({});
+        clearEditSession();
       } else {
         await restartFromStep(stepNumber);
       }
@@ -142,7 +172,7 @@ const StepWizard = () => {
               runState={runState}
               editMode={editMode}
               editState={editState}
-              onEditChange={setEditState}
+              onEditChange={handleEditChange}
               sessionId={sessionId}
             />
           ) : (

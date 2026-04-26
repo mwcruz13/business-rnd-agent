@@ -111,8 +111,12 @@ def _build_messages(state: BMIWorkflowState) -> list[SystemMessage | HumanMessag
         "- Every assumption MUST start with 'I believe'.\n"
         "- Assign each assumption a quadrant: Test first, Monitor, Deprioritize, or Safe zone.\n"
         "- Your quadrant assignments are SUGGESTIONS. Label them as such.\n"
-        "- You cannot objectively assess what evidence the organization has. Err toward\n"
-        "  'Test first' for high-impact assumptions where evidence strength is ambiguous.\n"
+        "- Use voc_evidence_strength to inform quadrant placement:\n"
+        "    * If voc_evidence_strength is 'Medium' AND the assumption is observable in VoC,\n"
+        "      prefer 'Monitor' or 'Safe zone' over 'Test first'.\n"
+        "    * If voc_evidence_strength is 'None' or 'Weak' AND the assumption is high-impact,\n"
+        "      prefer 'Test first'.\n"
+        "    * When in doubt, err toward 'Test first'.\n"
         "- At least 1 assumption per category should be 'Test first'.\n"
         "- For each assumption, also set voc_evidence_strength based on what the\n"
         "  upstream VoC / signal context already contains for that specific assumption:\n"
@@ -126,11 +130,30 @@ def _build_messages(state: BMIWorkflowState) -> list[SystemMessage | HumanMessag
         "- Do not fabricate assumptions unrelated to the business model."
     )
 
+    # Include VoC and signals so the LLM can ground evidence assessments
+    voc = str(state.get("voc_data", "")).strip()
+    signals = state.get("signals") or []
+    interpreted = state.get("interpreted_signals") or []
+
+    voc_block = ""
+    if voc:
+        voc_block = f"\n\nVoice-of-Customer (raw):\n{voc[:6000]}"
+    signal_block = ""
+    if signals:
+        signal_block = "\n\nSignals (Step 1):\n" + "\n".join(
+            f"- {s.get('summary') or s.get('text') or s}" for s in signals[:20]
+        )
+    if interpreted:
+        signal_block += "\n\nInterpreted Signals:\n" + "\n".join(
+            f"- {s.get('summary') or s.get('text') or s}" for s in interpreted[:10]
+        )
+
     user_prompt = (
         f"Selected patterns: {selected_patterns}\n\n"
         f"Business Model Canvas:\n{bmc}\n\n"
         f"Fit Assessment:\n{fit}\n\n"
         f"Customer Profile:\n{state.get('customer_profile', '')}"
+        f"{voc_block}{signal_block}"
     )
     return [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
 
@@ -178,13 +201,13 @@ def _render_assumptions(output: Step7Output, selected_patterns: list[str]) -> st
         "should review and adjust based on organizational knowledge about what evidence",
         "actually exists and which assumptions are truly vital to the business model.",
         "",
-        "| Assumption | Category | Suggested Quadrant |",
-        "|------------|----------|--------------------|",
+        "| Assumption | Category | VoC Evidence | Suggested Quadrant |",
+        "|------------|----------|--------------|--------------------|",
     ])
     for cat in output.categories:
         for assumption in cat.assumptions:
             text = assumption.assumption if assumption.assumption.startswith("I believe") else f"I believe {assumption.assumption}"
-            lines.append(f"| {text} | {cat.category} | {assumption.suggested_quadrant} |")
+            lines.append(f"| {text} | {cat.category} | {assumption.voc_evidence_strength} | {assumption.suggested_quadrant} |")
 
     return "\n".join(lines)
 

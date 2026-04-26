@@ -145,11 +145,11 @@ def assert_valid_quadrants(step7_result: BMIWorkflowState, valid_quadrants: str)
     assumptions = step7_result["assumptions"]
     # Parse the Importance × Evidence Map table rows
     matrix_section = assumptions.split("## Importance × Evidence Map")[1] if "## Importance × Evidence Map" in assumptions else ""
-    rows = re.findall(r"^\|([^|]+)\|([^|]+)\|([^|]+)\|$", matrix_section, re.MULTILINE)
+    rows = re.findall(r"^\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|$", matrix_section, re.MULTILINE)
     # Skip the header and separator rows
     data_rows = [row for row in rows if "---" not in row[0] and "Assumption" not in row[0].strip()]
-    assert len(data_rows) == 9, f"Expected 9 assumption rows, found {len(data_rows)}"
-    for assumption_text, category, quadrant in data_rows:
+    assert 6 <= len(data_rows) <= 15, f"Expected 6-15 assumption rows, found {len(data_rows)}"
+    for assumption_text, category, _evidence, quadrant in data_rows:
         q = quadrant.strip()
         assert q in allowed, f"Invalid quadrant '{q}' for assumption '{assumption_text.strip()}'. Allowed: {allowed}"
 

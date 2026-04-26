@@ -42,7 +42,7 @@ def test_step7_rendering_has_suggested_quadrant_header():
     output = _make_step7_output()
     rendered = _render_assumptions(output, ["Cost Differentiators"])
     assert "## Importance × Evidence Map (Suggested — Review Required)" in rendered
-    assert "| Assumption | Category | Suggested Quadrant |" in rendered
+    assert "| Assumption | Category | VoC Evidence | Suggested Quadrant |" in rendered
 
 
 def test_step7_rendering_has_structured_tensions():

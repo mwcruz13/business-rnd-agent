@@ -3,6 +3,7 @@ import { Box, Text, Tag, Select, TextArea, CheckBox, Tab } from 'grommet';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import StepCard from '../components/StepCard.jsx';
+import EditableTextArea from '../components/EditableTextArea.jsx';
 
 const INVENT_PATTERNS = [
   'Market Explorers',
@@ -32,11 +33,11 @@ const Step2PatternDirection = ({ runState, editMode, editState, onEditChange, se
 
   useEffect(() => {
     if (editMode && Object.keys(editState).length === 0) {
-      onEditChange({
+      onEditChange(() => ({
         pattern_direction: pattern_direction || '',
         selected_patterns: selected_patterns || [],
         pattern_rationale: pattern_rationale || '',
-      });
+      }));
     }
   }, [editMode]);
 
@@ -44,7 +45,7 @@ const Step2PatternDirection = ({ runState, editMode, editState, onEditChange, se
     return <Text color="text-weak">Step 2 has not run yet.</Text>;
   }
 
-  const handleImport = (fields) => onEditChange({ ...editState, ...fields });
+  const handleImport = (fields) => onEditChange(prev => ({ ...prev, ...fields }));
 
   const currentDirection = editState.pattern_direction ?? pattern_direction ?? '';
   const currentPatterns = editState.selected_patterns ?? selected_patterns ?? [];
@@ -54,7 +55,7 @@ const Step2PatternDirection = ({ runState, editMode, editState, onEditChange, se
     const updated = currentPatterns.includes(pattern)
       ? currentPatterns.filter((p) => p !== pattern)
       : [...currentPatterns, pattern];
-    onEditChange({ ...editState, selected_patterns: updated });
+    onEditChange(prev => ({ ...prev, selected_patterns: updated }));
   };
 
   return (
@@ -68,7 +69,7 @@ const Step2PatternDirection = ({ runState, editMode, editState, onEditChange, se
                 options={['invent', 'shift']}
                 value={currentDirection}
                 onChange={({ option }) =>
-                  onEditChange({ ...editState, pattern_direction: option, selected_patterns: [] })
+                  onEditChange(prev => ({ ...prev, pattern_direction: option, selected_patterns: [] }))
                 }
               />
             </Box>
@@ -112,9 +113,9 @@ const Step2PatternDirection = ({ runState, editMode, editState, onEditChange, se
       <Tab title="Rationale">
         <Box pad="medium" overflow="auto">
           {editMode ? (
-            <TextArea
+            <EditableTextArea
               value={editState.pattern_rationale ?? pattern_rationale ?? ''}
-              onChange={(e) => onEditChange({ ...editState, pattern_rationale: e.target.value })}
+              onChange={(e) => { const v = e.target.value; onEditChange(prev => ({ ...prev, pattern_rationale: v })); }}
               rows={4}
               resize="vertical"
             />

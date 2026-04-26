@@ -87,11 +87,11 @@ def _build_artifact_design(card: dict[str, object]) -> dict[str, object]:
 
 
 def run_step(state: BMIWorkflowState) -> BMIWorkflowState:
-    cards = state.get("experiment_cards") or []
-    artifact_designs = [_build_artifact_design(card) for card in cards]
+    """Run Step 9. Uses LLM when available, deterministic fallback otherwise."""
+    from backend.app.config import get_settings
+    from backend.app.llm.factory import get_chat_model
+    from backend.app.nodes.step9_artifact_designer_llm import run_step9_llm
 
-    return {
-        **state,
-        "current_step": "pdsa_plan",
-        "artifact_designs": artifact_designs,
-    }
+    backend = state.get("llm_backend")
+    llm = get_chat_model(get_settings(), backend) if backend else None
+    return run_step9_llm(state, llm)

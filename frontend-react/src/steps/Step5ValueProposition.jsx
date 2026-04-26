@@ -4,6 +4,7 @@ import { Star } from 'grommet-icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import StepCard from '../components/StepCard.jsx';
+import EditableTextArea from '../components/EditableTextArea.jsx';
 
 /**
  * Renders a single VP Alternative card (collapsed/expanded).
@@ -83,14 +84,14 @@ const Step5ValueProposition = ({ runState, editMode, editState, onEditChange, se
   useEffect(() => {
     if (editMode && pending_checkpoint === 'checkpoint_5b' && Object.keys(editState).length === 0) {
       const selection = selected_vp_indices?.length ? selected_vp_indices : (vp_recommended || []);
-      onEditChange({ selected_vp_indices: selection });
+      onEditChange(() => ({ selected_vp_indices: selection }));
       setLocalSelection(selection);
     } else if (editMode && pending_checkpoint !== 'checkpoint_5b' && Object.keys(editState).length === 0) {
       // Fallback for non-5b edit mode (e.g., editing the canvas text)
-      onEditChange({
+      onEditChange(() => ({
         value_proposition_canvas: value_proposition_canvas || '',
         fit_assessment: fit_assessment || '',
-      });
+      }));
     }
   }, [editMode]);
 
@@ -99,7 +100,7 @@ const Step5ValueProposition = ({ runState, editMode, editState, onEditChange, se
       ? localSelection.filter(i => i !== index)
       : [...localSelection, index].sort((a, b) => a - b);
     setLocalSelection(updated);
-    onEditChange({ ...editState, selected_vp_indices: updated });
+    onEditChange(prev => ({ ...prev, selected_vp_indices: updated }));
   };
 
   // No VP data at all — step hasn't run
@@ -107,7 +108,7 @@ const Step5ValueProposition = ({ runState, editMode, editState, onEditChange, se
     return <Text color="text-weak">Step 5 has not run yet.</Text>;
   }
 
-  const handleImport = (fields) => onEditChange({ ...editState, ...fields });
+  const handleImport = (fields) => onEditChange(prev => ({ ...prev, ...fields }));
   const isAt5b = pending_checkpoint === 'checkpoint_5b';
   const isAt5a = pending_checkpoint === 'checkpoint_5a';
 
@@ -192,9 +193,9 @@ const Step5ValueProposition = ({ runState, editMode, editState, onEditChange, se
       <Tab title="VP Canvas">
         <Box pad="medium" overflow="auto">
           {editMode && !isAt5b ? (
-            <TextArea
+            <EditableTextArea
               value={editState.value_proposition_canvas ?? value_proposition_canvas ?? ''}
-              onChange={(e) => onEditChange({ ...editState, value_proposition_canvas: e.target.value })}
+              onChange={(e) => { const v = e.target.value; onEditChange(prev => ({ ...prev, value_proposition_canvas: v })); }}
               rows={14}
               resize="vertical"
             />
@@ -215,9 +216,9 @@ const Step5ValueProposition = ({ runState, editMode, editState, onEditChange, se
         <Tab title="Fit Assessment">
           <Box pad="medium" overflow="auto">
             {editMode && !isAt5b ? (
-              <TextArea
+              <EditableTextArea
                 value={editState.fit_assessment ?? fit_assessment ?? ''}
-                onChange={(e) => onEditChange({ ...editState, fit_assessment: e.target.value })}
+                onChange={(e) => { const v = e.target.value; onEditChange(prev => ({ ...prev, fit_assessment: v })); }}
                 rows={6}
                 resize="vertical"
               />

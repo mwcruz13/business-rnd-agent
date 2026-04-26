@@ -28,7 +28,11 @@ Convert those failure points into assumptions starting with "I believe..." Do no
 ### Rules
 
 - Generate EXACTLY 3 categories: Desirability, Viability, Feasibility
-- Generate EXACTLY 3 assumptions per category (9 total)
+- Generate between 2 and 5 assumptions per category based on VoC complexity. Use fewer when the VoC is narrow and surfaces limited risks; use more when it reveals multiple distinct uncertainties. Do not pad with filler assumptions to reach a count — every assumption must represent a genuine, distinct risk.
+- For each assumption, assess `voc_evidence_strength` based on the upstream VoC context:
+  - "None" — the VoC is silent on this assumption
+  - "Weak" — anecdotal references or isolated mentions in the VoC
+  - "Medium" — direct behavioral observations or multiple corroborating signals
 - Each assumption must start with "I believe..."
 - Never put financial assumptions in Desirability
 - Never put user-need assumptions in Viability
@@ -36,7 +40,10 @@ Convert those failure points into assumptions starting with "I believe..." Do no
 - Prefer assumptions about observable behavior rather than opinions
 - Each assumption should represent a distinct risk — do not repeat the same idea across categories
 - Your quadrant assignments are SUGGESTIONS — you cannot objectively assess what evidence the organization has
-- Err toward "Test first" for high-impact assumptions where evidence strength is ambiguous
+- Use voc_evidence_strength to inform quadrant placement:
+  - If evidence is "Medium" and the assumption is directly observable in VoC, prefer "Monitor" or "Safe zone"
+  - If evidence is "None" or "Weak" and the assumption is high-impact, prefer "Test first"
+  - When in doubt, err toward "Test first"
 - At least 1 assumption per category should be "Test first"
 
 ## DVF Tension Check

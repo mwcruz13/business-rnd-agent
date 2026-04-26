@@ -3,6 +3,7 @@ import { Box, Text, TextArea, Tab } from 'grommet';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import StepCard from '../components/StepCard.jsx';
+import EditableTextArea from '../components/EditableTextArea.jsx';
 
 const Step3CustomerProfile = ({ runState, editMode, editState, onEditChange, sessionId }) => {
   if (!runState) return <Text color="text-weak">Waiting for workflow to start…</Text>;
@@ -11,10 +12,10 @@ const Step3CustomerProfile = ({ runState, editMode, editState, onEditChange, ses
 
   useEffect(() => {
     if (editMode && Object.keys(editState).length === 0) {
-      onEditChange({
+      onEditChange(() => ({
         customer_profile: customer_profile || '',
         supplemental_voc: supplemental_voc || '',
-      });
+      }));
     }
   }, [editMode]);
 
@@ -22,16 +23,16 @@ const Step3CustomerProfile = ({ runState, editMode, editState, onEditChange, ses
     return <Text color="text-weak">Step 3 has not run yet.</Text>;
   }
 
-  const handleImport = (fields) => onEditChange({ ...editState, ...fields });
+  const handleImport = (fields) => onEditChange(prev => ({ ...prev, ...fields }));
 
   return (
     <StepCard stepIndex={2} stepLabel="Customer Profile" runState={runState} sessionId={sessionId} onImport={handleImport}>
       <Tab title="Profile">
         <Box pad="medium" overflow="auto">
           {editMode ? (
-            <TextArea
+            <EditableTextArea
               value={editState.customer_profile ?? customer_profile ?? ''}
-              onChange={(e) => onEditChange({ ...editState, customer_profile: e.target.value })}
+              onChange={(e) => { const v = e.target.value; onEditChange(prev => ({ ...prev, customer_profile: v })); }}
               rows={12}
               resize="vertical"
             />
@@ -66,9 +67,9 @@ const Step3CustomerProfile = ({ runState, editMode, editState, onEditChange, ses
               <Text size="xsmall" color="text-weak">
                 Add additional customer insights to strengthen the profile.
               </Text>
-              <TextArea
+              <EditableTextArea
                 value={editState.supplemental_voc ?? supplemental_voc ?? ''}
-                onChange={(e) => onEditChange({ ...editState, supplemental_voc: e.target.value })}
+                onChange={(e) => { const v = e.target.value; onEditChange(prev => ({ ...prev, supplemental_voc: v })); }}
                 rows={6}
                 resize="vertical"
                 placeholder="Paste additional interview notes, survey results, or observations…"
