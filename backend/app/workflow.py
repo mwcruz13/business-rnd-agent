@@ -509,6 +509,48 @@ def resume_workflow(
         )
 
 
+def regenerate_step1b(
+    session_id: str,
+    *,
+    edit_state: dict[str, Any] | None = None,
+) -> BMIWorkflowState:
+    """Re-run Step 1b (prioritize + recommend) with optional field overrides.
+
+    This is a lightweight re-execution that only calls the Step 1b LLM node
+    without restarting the full orchestration pipeline.  The caller typically
+    supplies edited ``signals`` and/or ``interpreted_signals`` so that the
+    priority matrix and recommendation are regenerated accordingly.
+    """
+    from backend.app.config import get_settings
+    from backend.app.llm.factory import get_chat_model
+    from backend.app.nodes.step1b_signal_recommend_llm import run_step1b_llm
+
+    ensure_database_schema()
+
+    with SessionLocal() as session:
+        run = session.get(WorkflowRun, session_id)
+        if run is None:
+            raise ValueError(f"Unknown workflow session: {session_id}")
+
+        current = BMIWorkflowState(copy.deepcopy(run.state_json))
+
+        # Apply user edits (edited signals, interpreted_signals, etc.)
+        if edit_state:
+            for key, value in edit_state.items():
+                current[key] = value
+
+        # Re-run Step 1b only
+        llm = get_chat_model(get_settings(), current.get("llm_backend"))
+        updated = run_step1b_llm(current, llm)
+
+        # Persist the updated fields back to the run
+        run.state_json = dict(updated)
+        run.current_step = str(updated.get("current_step", run.current_step))
+        session.commit()
+
+        return updated
+
+
 def restart_from_step(
     session_id: str,
     step_number: int,

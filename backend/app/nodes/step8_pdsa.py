@@ -1,10 +1,19 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+from pydantic import BaseModel, Field
 
 from backend.app.patterns.loader import PatternLibraryLoader
 from backend.app.skills.loader import PromptAssetLoader
 from backend.app.state import BMIWorkflowState
+
+if TYPE_CHECKING:
+    from langchain_core.language_models.chat_models import BaseChatModel
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -81,6 +90,142 @@ EXPERIMENT_MATRIX = {
         ],
     },
 }
+
+# ---------------------------------------------------------------------------
+# LLM-generated experiment success / failure criteria
+# ---------------------------------------------------------------------------
+
+FALLBACK_CRITERIA = {
+    "success_looks_like": "The result clearly strengthens confidence and justifies moving to the next experiment.",
+    "failure_looks_like": "The result clearly lowers confidence or exposes a more important risk.",
+    "ambiguous_looks_like": "The signal is mixed and leaves the assumption unresolved.",
+}
+
+
+class CardCriteria(BaseModel):
+    """Success/failure/ambiguous criteria for a single experiment card."""
+    card_index: int = Field(description="1-based index matching the input order.")
+    success_looks_like: str = Field(
+        description=(
+            "A specific, measurable outcome that would increase confidence in the "
+            "assumption and justify escalating to the next experiment. Reference the "
+            "actual metric, audience, and threshold."
+        )
+    )
+    failure_looks_like: str = Field(
+        description=(
+            "A specific, measurable outcome that would decrease confidence in the "
+            "assumption or reveal a more critical risk. Reference the actual metric "
+            "and what pattern of evidence would trigger a stop or pivot."
+        )
+    )
+    ambiguous_looks_like: str = Field(
+        description=(
+            "A specific description of a mixed-signal outcome that leaves the "
+            "assumption unresolved, including what would need to change before "
+            "rerunning or escalating."
+        )
+    )
+
+
+class CardCriteriaList(BaseModel):
+    criteria: list[CardCriteria] = Field(
+        description="One criteria block per experiment card, in the same order as input.",
+    )
+
+
+def _build_criteria_prompt(
+    assumptions_and_cards: list[tuple[TopAssumption, ExperimentCard]],
+    voc_summary: str,
+) -> tuple[str, str]:
+    """Return (system_prompt, user_prompt) for the criteria-generation LLM call."""
+    system_prompt = (
+        "You are an experiment design specialist for the BMI (Business Model Innovation) "
+        "consultant workflow.\n\n"
+        "Your task: for each experiment card, generate specific, measurable success, "
+        "failure, and ambiguous criteria that are grounded in the assumption being "
+        "tested, the experiment type, and the customer context.\n\n"
+        "RULES:\n"
+        "- NEVER produce generic boilerplate like 'The result clearly strengthens "
+        "confidence.' Every criterion must reference the specific assumption, metric, "
+        "audience, or experiment method.\n"
+        "- Success criteria must define a concrete observable threshold (e.g., '6 of 8 "
+        "interviewees independently describe firmware update complexity as a top-3 pain "
+        "point').\n"
+        "- Failure criteria must define a concrete observable pattern that triggers a "
+        "stop or pivot (e.g., 'Fewer than 2 of 8 participants mention the problem "
+        "without prompting').\n"
+        "- Ambiguous criteria must describe what a mixed signal looks like and what "
+        "the team should do next (e.g., 'Half of participants mention the pain but "
+        "only in prompted follow-ups — rerun with a refined screener before escalating').\n"
+        "- Tailor each criterion to the DVF category:\n"
+        "  - Desirability: focus on problem frequency, pain intensity, willingness to act\n"
+        "  - Feasibility: focus on workflow completion, technical blockers, delivery effort\n"
+        "  - Viability: focus on purchase intent, pricing acceptance, commercial commitment\n"
+        "- Keep each criterion to 1-2 sentences. Be precise, not verbose.\n"
+    )
+
+    card_blocks = []
+    for i, (assumption, card) in enumerate(assumptions_and_cards, start=1):
+        card_blocks.append(
+            f"### Card {i}\n"
+            f"- **Assumption:** {assumption.assumption}\n"
+            f"- **Category:** {assumption.category}\n"
+            f"- **Experiment type:** {card.name}\n"
+            f"- **What it tests:** {card.what_it_tests}\n"
+            f"- **Primary metric:** {PRIMARY_METRICS[assumption.category]}\n"
+            f"- **Secondary metrics:** {SECONDARY_METRICS[assumption.category]}"
+        )
+
+    user_prompt = (
+        f"## Experiment cards needing success/failure criteria\n\n"
+        + "\n\n".join(card_blocks)
+        + f"\n\n## VoC Context (first 3000 chars)\n{voc_summary[:3000] if voc_summary else '(empty)'}"
+    )
+
+    return system_prompt, user_prompt
+
+
+def _generate_criteria_via_llm(
+    assumptions_and_cards: list[tuple[TopAssumption, ExperimentCard]],
+    voc_summary: str,
+    llm: BaseChatModel,
+) -> list[dict[str, str]]:
+    """Call the LLM to generate specific criteria for each card.
+
+    Returns a list of dicts (one per card) with keys:
+    success_looks_like, failure_looks_like, ambiguous_looks_like.
+    Falls back to generic criteria on error.
+    """
+    from langchain_core.messages import HumanMessage, SystemMessage
+    from backend.app.llm.retry import invoke_with_retry
+
+    system_prompt, user_prompt = _build_criteria_prompt(assumptions_and_cards, voc_summary)
+    messages = [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
+    structured_llm = llm.with_structured_output(CardCriteriaList)
+
+    try:
+        result: CardCriteriaList = invoke_with_retry(
+            structured_llm, messages, step_name="step8_criteria",
+        )
+        # Build index-ordered list, filling gaps with fallback
+        criteria_by_index = {c.card_index: c for c in result.criteria}
+        output = []
+        for i in range(1, len(assumptions_and_cards) + 1):
+            if i in criteria_by_index:
+                c = criteria_by_index[i]
+                output.append({
+                    "success_looks_like": c.success_looks_like,
+                    "failure_looks_like": c.failure_looks_like,
+                    "ambiguous_looks_like": c.ambiguous_looks_like,
+                })
+            else:
+                output.append(dict(FALLBACK_CRITERIA))
+        return output
+    except Exception:
+        logger.warning("LLM criteria generation failed; using deterministic fallback", exc_info=True)
+        return [dict(FALLBACK_CRITERIA) for _ in assumptions_and_cards]
+
 
 ASSET_BLUEPRINTS = {
     "Problem Interviews": {
@@ -468,10 +613,11 @@ def _asset_blueprint(card: ExperimentCard) -> dict[str, str]:
     }
 
 
-def _format_worksheet(assumption: TopAssumption, primary_card: ExperimentCard, next_card: ExperimentCard | None) -> str:
+def _format_worksheet(assumption: TopAssumption, primary_card: ExperimentCard, next_card: ExperimentCard | None, criteria: dict[str, str] | None = None) -> str:
     next_if_mixed = next_card.name if next_card else "Refine the same experiment"
     next_if_positive = next_card.name if next_card else "Summarize the evidence and decide whether to stop"
     asset = _asset_blueprint(primary_card)
+    crit = criteria or FALLBACK_CRITERIA
     return "\n".join(
         [
             "## Experiment Worksheet",
@@ -508,9 +654,9 @@ def _format_worksheet(assumption: TopAssumption, primary_card: ExperimentCard, n
             "### Success And Failure Criteria",
             f"- **Primary metric:** {PRIMARY_METRICS[assumption.category]}",
             f"- **Secondary metrics:** {SECONDARY_METRICS[assumption.category]}",
-            "- **Success looks like:** The result clearly strengthens confidence and justifies moving to the next experiment.",
-            "- **Failure looks like:** The result clearly lowers confidence or exposes a more important risk.",
-            "- **Ambiguous result looks like:** The signal is mixed and leaves the assumption unresolved.",
+            f"- **Success looks like:** {crit['success_looks_like']}",
+            f"- **Failure looks like:** {crit['failure_looks_like']}",
+            f"- **Ambiguous result looks like:** {crit['ambiguous_looks_like']}",
             "",
             "### Execution Plan",
             "1. **Prepare:** Finalize the artifact, audience list, and threshold definitions.",
@@ -544,9 +690,11 @@ def _build_card_object(
     primary_card: ExperimentCard,
     path: list[ExperimentCard],
     card_index: int,
+    criteria: dict[str, str] | None = None,
 ) -> dict[str, object]:
     next_card = path[1] if len(path) > 1 else None
     asset = _asset_blueprint(primary_card)
+    crit = criteria or FALLBACK_CRITERIA
     return {
         "id": f"exp-{card_index:03d}",
         "assumption": assumption.assumption,
@@ -563,9 +711,9 @@ def _build_card_object(
         "asset_acceptance_criteria": asset["acceptance_criteria"],
         "primary_metric": PRIMARY_METRICS[assumption.category],
         "secondary_metrics": SECONDARY_METRICS[assumption.category],
-        "success_looks_like": "The result clearly strengthens confidence and justifies moving to the next experiment.",
-        "failure_looks_like": "The result clearly lowers confidence or exposes a more important risk.",
-        "ambiguous_looks_like": "The signal is mixed and leaves the assumption unresolved.",
+        "success_looks_like": crit["success_looks_like"],
+        "failure_looks_like": crit["failure_looks_like"],
+        "ambiguous_looks_like": crit["ambiguous_looks_like"],
         "sequencing": {
             "usually_runs_after": list(primary_card.usually_runs_after),
             "next_if_positive": next_card.name if next_card else None,
@@ -684,7 +832,10 @@ def _path_from_step8c(
     return None
 
 
-def _build_outputs(state: BMIWorkflowState) -> tuple[str, str, str, list[dict[str, object]]]:
+def _build_outputs(
+    state: BMIWorkflowState,
+    llm: BaseChatModel | None = None,
+) -> tuple[str, str, str, list[dict[str, object]]]:
     cards, precoil_library = _load_assets()
     if "step_8_behavior" not in precoil_library.get("agent_usage_guidance", {}):
         raise ValueError("Unexpected Precoil step 8 guidance")
@@ -695,19 +846,35 @@ def _build_outputs(state: BMIWorkflowState) -> tuple[str, str, str, list[dict[st
     )
     step8c_paths = state.get("experiment_paths") or []
     pattern_context = ", ".join(state.get("selected_patterns", [])) or "approved patterns"
+
+    # Resolve experiment paths first so we can batch-generate criteria
+    resolved: list[tuple[TopAssumption, list[ExperimentCard]]] = []
+    for assumption in top_assumptions:
+        path = _path_from_step8c(assumption, cards, step8c_paths) or _select_experiment_path(assumption, cards)
+        resolved.append((assumption, path))
+
+    # Generate LLM criteria for all cards in a single batch call
+    if llm and resolved:
+        criteria_list = _generate_criteria_via_llm(
+            [(a, path[0]) for a, path in resolved],
+            str(state.get("voc_data", "")),
+            llm,
+        )
+    else:
+        criteria_list = [None] * len(resolved)
+
     selections: list[str] = []
     plans: list[str] = []
     worksheets: list[str] = []
     card_objects: list[dict[str, object]] = []
 
-    for assumption in top_assumptions:
-        path = _path_from_step8c(assumption, cards, step8c_paths) or _select_experiment_path(assumption, cards)
+    for (assumption, path), criteria in zip(resolved, criteria_list):
         selections.append(_format_selection(assumption, path))
         plans.append(_format_precoil_brief(assumption, path[0]))
         plans.append(_format_implementation_plan(assumption, path[0]))
         plans.append(_format_evidence_sequence(assumption, path))
-        worksheets.append(_format_worksheet(assumption, path[0], path[1] if len(path) > 1 else None))
-        card_objects.append(_build_card_object(assumption, path[0], path, len(card_objects) + 1))
+        worksheets.append(_format_worksheet(assumption, path[0], path[1] if len(path) > 1 else None, criteria))
+        card_objects.append(_build_card_object(assumption, path[0], path, len(card_objects) + 1, criteria))
 
     if not top_assumptions:
         return "", "", "", []
@@ -732,7 +899,17 @@ def _build_outputs(state: BMIWorkflowState) -> tuple[str, str, str, list[dict[st
 
 
 def run_step(state: BMIWorkflowState) -> BMIWorkflowState:
-    experiment_selections, experiment_plans, experiment_worksheets, experiment_cards = _build_outputs(state)
+    from backend.app.config import get_settings
+    from backend.app.llm.factory import get_chat_model
+
+    backend = state.get("llm_backend")
+    try:
+        llm = get_chat_model(get_settings(), backend) if backend else None
+    except Exception:
+        logger.warning("Could not create LLM for step8 criteria; using fallback", exc_info=True)
+        llm = None
+
+    experiment_selections, experiment_plans, experiment_worksheets, experiment_cards = _build_outputs(state, llm=llm)
     return {
         **state,
         "current_step": "pdsa_plan",

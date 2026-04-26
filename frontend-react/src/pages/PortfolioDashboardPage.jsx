@@ -14,11 +14,15 @@ import { getPortfolio } from '../api/workflowApi.js';
 import ProjectDetailPanel from '../components/ProjectDetailPanel.jsx';
 
 // --- Colour palette (HPE-aligned) ---
-const COLOR_INVENT = '#01a982';   // HPE green  (Explore / Invent)
-const COLOR_SHIFT  = '#0d5265';   // HPE teal   (Exploit / Shift)
-const COLOR_UNKNOWN = '#999999';  // neutral
+const COLOR_INVENT      = '#01a982';   // HPE green  (Explore / Invent)
+const COLOR_SHIFT       = '#0d5265';   // HPE teal   (Exploit / Shift)
+const COLOR_NOT_STARTED = '#cccccc';   // light gray (Not Started)
+const COLOR_UNKNOWN     = '#999999';   // neutral
+
+const isNotStarted = (entry) => (entry.completed_steps_count ?? 0) === 0;
 
 const dotColor = (entry) => {
+  if (isNotStarted(entry)) return COLOR_NOT_STARTED;
   if (entry.pattern_direction === 'invent') return COLOR_INVENT;
   if (entry.pattern_direction === 'shift') return COLOR_SHIFT;
   return COLOR_UNKNOWN;
@@ -82,8 +86,8 @@ const ProjectDot = ({ cx, cy, payload, isSelected, onClick }) => {
         strokeWidth={selected ? 2 : 1}
         opacity={selected ? 1.0 : 0.75}
       />
-      {/* Label — only shown for dots with enough data to avoid overlap */}
-      {(payload.initiative_name && r >= 8) && (
+      {/* Label — suppress for not-started projects; otherwise show when big enough */}
+      {(!isNotStarted(payload) && payload.initiative_name && r >= 8) && (
         <text
           x={cx + r + 4}
           y={cy - 4}
@@ -94,8 +98,8 @@ const ProjectDot = ({ cx, cy, payload, isSelected, onClick }) => {
           {(payload.initiative_name || '').slice(0, 28)}
         </text>
       )}
-      {/* Revenue / Cost sub-label — only for labeled dots */}
-      {(r >= 8 && (payload.expected_revenue || payload.testing_cost)) && (
+      {/* Revenue / Cost sub-label — only for labeled, started dots */}
+      {(!isNotStarted(payload) && r >= 8 && (payload.expected_revenue || payload.testing_cost)) && (
         <text
           x={cx + r + 4}
           y={cy + 10}
@@ -159,7 +163,7 @@ const PortfolioDashboardPage = () => {
   const [selectedId, setSelectedId] = useState(null);
 
   // Filter state
-  const [patternFilter, setPatternFilter] = useState(['invent', 'shift', 'unknown']);
+  const [patternFilter, setPatternFilter] = useState(['invent', 'shift', 'unknown', 'not-started']);
   const [maturityFilter, setMaturityFilter] = useState('all'); // 'all' | 'with-data' | 'early'
 
   const fetchData = useCallback(() => {
@@ -176,8 +180,9 @@ const PortfolioDashboardPage = () => {
   const chartData = useMemo(() => {
     let filtered = entries;
 
-    // Pattern direction filter
+    // Pattern direction filter (not-started is a virtual category)
     filtered = filtered.filter((e) => {
+      if (isNotStarted(e)) return patternFilter.includes('not-started');
       const dir = e.pattern_direction || 'unknown';
       return patternFilter.includes(dir);
     });
@@ -198,9 +203,12 @@ const PortfolioDashboardPage = () => {
 
   // Summary metrics (from unfiltered)
   const summary = useMemo(() => {
-    const explore = entries.filter((e) => e.pattern_direction === 'invent').length;
-    const exploit = entries.filter((e) => e.pattern_direction === 'shift').length;
-    return { total: entries.length, explore, exploit, unknown: entries.length - explore - exploit };
+    const notStarted = entries.filter((e) => isNotStarted(e)).length;
+    const started = entries.filter((e) => !isNotStarted(e));
+    const explore = started.filter((e) => e.pattern_direction === 'invent').length;
+    const exploit = started.filter((e) => e.pattern_direction === 'shift').length;
+    const unknown = started.length - explore - exploit;
+    return { total: entries.length, explore, exploit, unknown, notStarted };
   }, [entries]);
 
   const handleDotClick = (entry) => {
@@ -262,6 +270,12 @@ const PortfolioDashboardPage = () => {
               <Text size="small">{summary.unknown} Unclassified</Text>
             </Box>
           )}
+          {summary.notStarted > 0 && (
+            <Box direction="row" gap="xsmall" align="center">
+              <Box width="12px" height="12px" round="full" background={COLOR_NOT_STARTED} flex={false} />
+              <Text size="small">{summary.notStarted} Not Started</Text>
+            </Box>
+          )}
         </Box>
 
         {/* Legend */}
@@ -275,7 +289,7 @@ const PortfolioDashboardPage = () => {
         >
           <Text size="xsmall" color="text-weak">
             <strong>Dot size</strong> = data maturity &nbsp; | &nbsp;
-            <strong>X</strong> = Innovation Risk &nbsp; | &nbsp;
+            <strong>X</strong> = Innovation Risk (high ← → low) &nbsp; | &nbsp;
             <strong>Y</strong> = Expected Return &nbsp; | &nbsp;
             Showing <strong>{chartData.length}</strong> of {summary.total}
           </Text>
@@ -301,6 +315,7 @@ const PortfolioDashboardPage = () => {
               { label: 'Explore (Invent)', value: 'invent' },
               { label: 'Exploit (Shift)', value: 'shift' },
               { label: 'Unclassified', value: 'unknown' },
+              { label: 'Not Started', value: 'not-started' },
             ]}
             value={patternFilter}
             onChange={({ value }) => setPatternFilter(value)}
@@ -340,12 +355,15 @@ const PortfolioDashboardPage = () => {
                   type="number"
                   dataKey="risk_jittered"
                   domain={[0, 100]}
+                  ticks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
                   name="Innovation Risk"
                   tick={{ fontSize: 11 }}
                   tickLine={false}
+                  reversed
+                  allowDataOverflow
                 >
                   <Label
-                    value="Innovation Risk →"
+                    value="← Innovation Risk"
                     position="insideBottomRight"
                     offset={-5}
                     style={{ fontSize: 12, fill: '#666' }}
@@ -379,6 +397,9 @@ const PortfolioDashboardPage = () => {
                 </text>
                 <text x="78%" y="25%" textAnchor="middle" fill="#e0e0e0" fontSize={28} fontWeight="bold">
                   Exploit
+                </text>
+                <text x="12%" y="50%" textAnchor="middle" fill="#e8e8e8" fontSize={14} fontStyle="italic">
+                  Not Started
                 </text>
 
                 <Tooltip content={<ProjectTooltip />} />

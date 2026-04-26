@@ -16,6 +16,7 @@ from backend.app.workflow import get_step_output
 from backend.app.workflow import list_sessions
 from backend.app.workflow import rename_session
 from backend.app.workflow import restart_from_step
+from backend.app.workflow import regenerate_step1b
 from backend.app.workflow import update_experiment_card
 from backend.app.workflow import resume_workflow
 from backend.app.workflow import run_workflow_from_csv_text
@@ -60,6 +61,10 @@ class RestartFromStepRequest(BaseModel):
 
 class UpdateExperimentCardRequest(BaseModel):
     updates: dict[str, Any]
+
+
+class RegenerateStep1bRequest(BaseModel):
+    edit_state: dict[str, Any] | None = None
 
 
 class StartFromStepRequest(BaseModel):
@@ -177,6 +182,20 @@ def restart_workflow_from_step(session_id: str, request: RestartFromStepRequest)
             request.step_number,
             edit_state=request.edit_state,
         )
+    except ValueError as error:
+        message = str(error)
+        if message.startswith("Unknown workflow session"):
+            raise HTTPException(status_code=404, detail=message) from error
+        raise HTTPException(status_code=422, detail=message) from error
+    except DatabaseSchemaNotReadyError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    return dict(result)
+
+
+@app.post("/runs/{session_id}/regenerate-step1b")
+def regenerate_step1b_endpoint(session_id: str, request: RegenerateStep1bRequest) -> dict[str, Any]:
+    try:
+        result = regenerate_step1b(session_id, edit_state=request.edit_state)
     except ValueError as error:
         message = str(error)
         if message.startswith("Unknown workflow session"):

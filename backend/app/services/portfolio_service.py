@@ -140,13 +140,19 @@ def compute_return_score(state: dict[str, Any] | None) -> float:
 # ---------------------------------------------------------------------------
 
 def _quadrant_label(risk: float, ret: float) -> str:
-    if risk <= 50 and ret <= 50:
+    """Assign quadrant per The Invincible Company portfolio map.
+
+    X-axis is *risk* (100 on the left, 0 on the right).  A project with
+    risk > 50 is still in the high-risk EXPLORE zone; once experiments
+    de-risk it below 50 it moves into the EXPLOIT zone.
+    """
+    if risk > 50 and ret <= 50:
         return "explore"
-    if risk > 50 and ret > 50:
-        return "exploit"
     if risk <= 50 and ret > 50:
+        return "exploit"
+    if risk > 50 and ret > 50:
         return "explore-high-return"
-    return "exploit-high-risk"
+    return "exploit-low-return"
 
 
 # ---------------------------------------------------------------------------

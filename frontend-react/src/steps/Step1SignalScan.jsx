@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
-import { Box, Text, TextArea, DataTable, Tab } from 'grommet';
+import { useEffect, useState } from 'react';
+import { Box, Text, DataTable, Tab, TextInput, Button, Spinner } from 'grommet';
+import { Update } from 'grommet-icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import StepCard from '../components/StepCard.jsx';
-import EditableTextArea from '../components/EditableTextArea.jsx';
+import { regenerateStep1b } from '../api/workflowApi.js';
 
 const SIGNAL_COLUMNS = [
   { property: 'signal_id', header: 'ID', size: 'xsmall' },
@@ -27,8 +28,39 @@ const PRIORITY_COLUMNS = [
   { property: 'tier', header: 'Tier', size: 'xsmall' },
 ];
 
+/**
+ * Build editable column defs: each cell becomes a TextInput in edit mode.
+ * `stateKey` is the editState field name (e.g. 'signals').
+ */
+const editableColumns = (cols, stateKey, data, onEditChange) =>
+  cols.map(col => ({
+    ...col,
+    render: (datum) => {
+      const idx = data.indexOf(datum);
+      return (
+        <TextInput
+          plain
+          size="small"
+          value={String(datum[col.property] ?? '')}
+          onChange={(e) => {
+            if (idx < 0) return;
+            const val = e.target.value;
+            onEditChange(prev => {
+              const arr = [...(prev[stateKey] || data)];
+              arr[idx] = { ...arr[idx], [col.property]: val };
+              return { ...prev, [stateKey]: arr };
+            });
+          }}
+        />
+      );
+    },
+  }));
+
 const Step1SignalScan = ({ runState, editMode, editState, onEditChange, sessionId }) => {
   if (!runState) return <Text color="text-weak">Waiting for workflow to start…</Text>;
+
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenError, setRegenError] = useState(null);
 
   const { agent_recommendation, signals, interpreted_signals, priority_matrix, coverage_gaps } = runState;
 
@@ -49,21 +81,50 @@ const Step1SignalScan = ({ runState, editMode, editState, onEditChange, sessionI
 
   const handleImport = (fields) => onEditChange(prev => ({ ...prev, ...fields }));
 
+  const handleRegenerate = async () => {
+    setRegenerating(true);
+    setRegenError(null);
+    try {
+      const result = await regenerateStep1b(sessionId, {
+        signals: editState.signals ?? signals,
+        interpreted_signals: editState.interpreted_signals ?? interpreted_signals,
+      });
+      // Update editState with regenerated fields from the LLM
+      onEditChange(prev => ({
+        ...prev,
+        priority_matrix: result.priority_matrix ?? prev.priority_matrix,
+        agent_recommendation: result.agent_recommendation ?? prev.agent_recommendation,
+        signal_recommendations: result.signal_recommendations ?? prev.signal_recommendations,
+        watching_briefs: result.watching_briefs ?? prev.watching_briefs,
+        reinforcement_map: result.reinforcement_map ?? prev.reinforcement_map,
+      }));
+    } catch (err) {
+      setRegenError(err.message || 'Regeneration failed');
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   return (
     <StepCard stepIndex={0} stepLabel="Signal Scan" runState={runState} sessionId={sessionId} onImport={handleImport}>
       <Tab title="Recommendation">
-        <Box pad="medium" overflow="auto">
-          {editMode ? (
-            <EditableTextArea
-              value={editState.agent_recommendation ?? agent_recommendation ?? ''}
-              onChange={(e) => { const v = e.target.value; onEditChange(prev => ({ ...prev, agent_recommendation: v })); }}
-              rows={6}
-              resize="vertical"
-            />
-          ) : agent_recommendation ? (
+        <Box pad="medium" overflow="auto" gap="medium">
+          {editMode && (
+            <Box direction="row" align="center" gap="small">
+              <Button
+                label={regenerating ? 'Regenerating…' : 'Regenerate Recommendation'}
+                icon={regenerating ? <Spinner size="xsmall" /> : <Update size="small" />}
+                onClick={handleRegenerate}
+                disabled={regenerating}
+                secondary
+              />
+              {regenError && <Text color="status-critical" size="small">{regenError}</Text>}
+            </Box>
+          )}
+          {(editState.agent_recommendation ?? agent_recommendation) ? (
             <Box background="background-front" pad="medium" round="small" className="markdown-body">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {agent_recommendation}
+                {editState.agent_recommendation ?? agent_recommendation}
               </ReactMarkdown>
             </Box>
           ) : (
@@ -76,7 +137,7 @@ const Step1SignalScan = ({ runState, editMode, editState, onEditChange, sessionI
         <Box pad="medium" overflow="auto">
           {(editState.signals ?? signals)?.length > 0 ? (
             <DataTable
-              columns={SIGNAL_COLUMNS}
+              columns={editMode ? editableColumns(SIGNAL_COLUMNS, 'signals', editState.signals ?? signals ?? [], onEditChange) : SIGNAL_COLUMNS}
               data={editState.signals ?? signals}
               size="medium"
             />
@@ -90,7 +151,7 @@ const Step1SignalScan = ({ runState, editMode, editState, onEditChange, sessionI
         <Box pad="medium" overflow="auto">
           {(editState.interpreted_signals ?? interpreted_signals)?.length > 0 ? (
             <DataTable
-              columns={INTERPRETED_COLUMNS}
+              columns={editMode ? editableColumns(INTERPRETED_COLUMNS, 'interpreted_signals', editState.interpreted_signals ?? interpreted_signals ?? [], onEditChange) : INTERPRETED_COLUMNS}
               data={editState.interpreted_signals ?? interpreted_signals}
               size="medium"
             />
@@ -104,7 +165,7 @@ const Step1SignalScan = ({ runState, editMode, editState, onEditChange, sessionI
         <Box pad="medium" overflow="auto">
           {(editState.priority_matrix ?? priority_matrix)?.length > 0 ? (
             <DataTable
-              columns={PRIORITY_COLUMNS}
+              columns={editMode ? editableColumns(PRIORITY_COLUMNS, 'priority_matrix', editState.priority_matrix ?? priority_matrix ?? [], onEditChange) : PRIORITY_COLUMNS}
               data={editState.priority_matrix ?? priority_matrix}
               size="medium"
             />

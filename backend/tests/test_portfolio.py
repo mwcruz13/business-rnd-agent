@@ -140,16 +140,20 @@ class TestComputeReturnScore:
 
 class TestQuadrantLabel:
     def test_explore(self):
-        assert _quadrant_label(30, 30) == "explore"
+        # High risk (>50) + low return → Explore (bottom-left on reversed axis)
+        assert _quadrant_label(70, 30) == "explore"
 
     def test_exploit(self):
-        assert _quadrant_label(60, 60) == "exploit"
+        # Low risk (≤50) + high return → Exploit (top-right on reversed axis)
+        assert _quadrant_label(30, 70) == "exploit"
 
     def test_explore_high_return(self):
-        assert _quadrant_label(30, 70) == "explore-high-return"
+        # High risk + high return → Explore with promising ROI
+        assert _quadrant_label(60, 60) == "explore-high-return"
 
-    def test_exploit_high_risk(self):
-        assert _quadrant_label(70, 30) == "exploit-high-risk"
+    def test_exploit_low_return(self):
+        # Low risk + low return → validated but low ROI
+        assert _quadrant_label(30, 30) == "exploit-low-return"
 
 
 # ---------------------------------------------------------------------------

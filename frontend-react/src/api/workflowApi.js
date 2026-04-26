@@ -115,6 +115,15 @@ export async function restartFromStep(sessionId, { stepNumber, editState }) {
   });
 }
 
+export async function regenerateStep1b(sessionId, editState) {
+  const body = {};
+  if (editState) body.edit_state = editState;
+  return request('POST', `/runs/${encodeURIComponent(sessionId)}/regenerate-step1b`, {
+    body,
+    timeout: 900000,
+  });
+}
+
 export async function getStepOutput(sessionId, stepNumber) {
   return request('GET', `/runs/${encodeURIComponent(sessionId)}/step/${stepNumber}`);
 }
