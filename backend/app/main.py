@@ -301,11 +301,11 @@ def export_pptx(session_id: str):
     from backend.app.db.session import SessionLocal
     from backend.cli.generate_report_pptx import generate_report_pptx
 
-    TEMPLATE = "hpe_dark_template.pptx"
+    TEMPLATE = "assets/hpe_dark_template.pptx"
     if not Path(TEMPLATE).exists():
         raise HTTPException(
             status_code=500,
-            detail="PowerPoint template not found. Copy the HPE template to the container.",
+            detail="PowerPoint template not found. Place it in backend/assets/.",
         )
 
     sess = SessionLocal()

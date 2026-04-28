@@ -46,8 +46,8 @@ FADED_NUM   = RGBColor(0x44, 0x4C, 0x5A)
 FH = "HPE Graphik Semibold"
 FB = "HPE Graphik"
 
-TEMPLATE = "hpe_dark_template.pptx"
-ILLUSTRATIONS_PPTX = "hpe_spot_illustrations.pptx"
+TEMPLATE = "assets/hpe_dark_template.pptx"
+ILLUSTRATIONS_PPTX = "assets/hpe_spot_illustrations.pptx"
 BLANK_LAYOUT = 37
 
 TIER_COLORS = {"Act": HPE_GREEN, "Investigate": HPE_BLUE, "Monitor": HPE_YELLOW, "Ignore": MID_GRAY}
