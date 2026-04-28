@@ -10,6 +10,7 @@ from typing import Callable
 
 from backend.app.state import BMIWorkflowState
 from backend.app.workers.base import BaseWorker
+from backend.app.workers.preprocess_worker import PreprocessWorker
 from backend.app.workers.steps import (
     ArtifactDesignerWorker,
     BusinessModelWorker,
@@ -38,6 +39,7 @@ class WorkerRegistry:
     def __init__(self) -> None:
         # Workers in workflow execution order
         workers: list[BaseWorker] = [
+            PreprocessWorker(),
             SignalScanWorker(),
             SignalRecommendWorker(),
             PatternMatcherWorker(),

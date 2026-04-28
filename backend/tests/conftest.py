@@ -37,3 +37,19 @@ _sess_mod._schema_validated = False                   # force re-check on test D
 # Create all tables in the test database (idempotent).
 from backend.app.db.models import Base                # noqa: E402
 Base.metadata.create_all(_test_engine)
+
+# Ensure columns added after initial table creation are present.
+from sqlalchemy import inspect as _sa_inspect, text as _sa_text  # noqa: E402
+_insp = _sa_inspect(_test_engine)
+for _table in Base.metadata.sorted_tables:
+    if _table.name not in _insp.get_table_names():
+        continue
+    _existing_cols = {c["name"] for c in _insp.get_columns(_table.name)}
+    for _col in _table.columns:
+        if _col.name not in _existing_cols:
+            _col_type = _col.type.compile(dialect=_test_engine.dialect)
+            with _test_engine.connect() as _conn:
+                _conn.execute(_sa_text(
+                    f'ALTER TABLE {_table.name} ADD COLUMN {_col.name} {_col_type}'
+                ))
+                _conn.commit()

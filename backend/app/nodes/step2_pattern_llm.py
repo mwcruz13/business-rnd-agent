@@ -196,11 +196,17 @@ def _build_phase2_messages(
 
     zone = signal.get("zone", "")
     classification = signal.get("classification", "")
-    filters = signal.get("filters", [])
+    raw_filters = signal.get("filters", [])
     signal_desc = signal.get("signal", "")
     observable = signal.get("observable_behavior", "")
     score = priority.get("score", "")
     tier = priority.get("tier", "")
+
+    # Normalize filters: support both list[str] (legacy) and list[dict] (new schema)
+    filter_labels = [
+        f["filter_name"] if isinstance(f, dict) else str(f)
+        for f in raw_filters
+    ]
 
     user_prompt = (
         f"## Signal Details\n"
@@ -208,7 +214,7 @@ def _build_phase2_messages(
         f"- Classification: {classification}\n"
         f"- Description: {signal_desc}\n"
         f"- Observable behavior: {observable}\n"
-        f"- Disruption filters: {', '.join(filters) if filters else 'none'}\n"
+        f"- Disruption filters: {', '.join(filter_labels) if filter_labels else 'none'}\n"
         f"- Priority score: {score} (tier: {tier})\n\n"
         f"## Direction: {direction}\n\n"
         f"## Candidate Patterns (select 1–2)\n\n"

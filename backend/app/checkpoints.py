@@ -84,6 +84,7 @@ CHECKPOINTS_BY_NAME = {definition.name: definition for definition in CHECKPOINTS
 # Fields that must be present in initial_state to start execution at a given step.
 # Step 1 only needs voc_data (the universal input).
 REQUIRED_UPSTREAM_STATE: dict[str, tuple[str, ...]] = {
+    "step0_preprocess": ("voc_data",),
     "step1a_signal_scan": ("voc_data",),
     "step1b_signal_recommend": ("voc_data", "signals", "interpreted_signals"),
     "step2_pattern": ("voc_data", "signals"),

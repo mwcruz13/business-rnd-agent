@@ -45,6 +45,10 @@ class BMIWorkflowState(TypedDict, total=False):
     experiment_worksheets: str
     experiment_cards: list[dict[str, object]]
     artifact_designs: list[dict[str, object]]
+    # Preprocessing fields (Step 0)
+    preprocessed_voc_data: str
+    preprocessing_metadata: dict[str, object]
+    observation_index: list[dict[str, object]]
     # Orchestration fields (Phase 1)
     next_step: str
     completed_steps: list[str]

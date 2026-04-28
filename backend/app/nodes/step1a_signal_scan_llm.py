@@ -131,7 +131,7 @@ def _build_coverage_gaps(signals: list[DetectedSignal]) -> list[dict[str, str]]:
 # Prompt construction
 # ---------------------------------------------------------------------------
 
-def _build_messages(voc_data: str) -> list[SystemMessage | HumanMessage]:
+def _build_messages(voc_data: str, *, is_preprocessed: bool = False) -> list[SystemMessage | HumanMessage]:
     normalized = voc_data.strip()
     if not normalized:
         raise ValueError("Workflow input cannot be empty")
@@ -161,11 +161,21 @@ def _build_messages(voc_data: str) -> list[SystemMessage | HumanMessage]:
         "Performance Overshoot, Barrier Removal, Business Model Conflict.\n"
     ).format(skill_body=skill_asset.body)
 
-    user_prompt = (
-        "Analyze the following Voice of Customer material.\n"
-        "Execute Phase 1 (Scan) and Phase 2 (Interpret) only.\n\n"
-        "{voc}"
-    ).format(voc=normalized)
+    if is_preprocessed:
+        user_prompt = (
+            "Analyze the following preprocessed Voice of Customer material.\n"
+            "Each observation is numbered [N] with metadata tags "
+            "(Product, Theater, BU, JTBD).\n"
+            "Use these numbers as supporting_comments when citing evidence.\n"
+            "Use the Source Type tags to set source_type accurately.\n\n"
+            "{voc}"
+        ).format(voc=normalized)
+    else:
+        user_prompt = (
+            "Analyze the following Voice of Customer material.\n"
+            "Execute Phase 1 (Scan) and Phase 2 (Interpret) only.\n\n"
+            "{voc}"
+        ).format(voc=normalized)
 
     return [SystemMessage(content=system_prompt), HumanMessage(content=user_prompt)]
 
@@ -176,8 +186,14 @@ def _build_messages(voc_data: str) -> list[SystemMessage | HumanMessage]:
 
 def run_step1a_llm(state: BMIWorkflowState, llm: BaseChatModel) -> BMIWorkflowState:
     """Run Step 1a signal scan + interpretation via the LLM and return updated state."""
-    voc_data = str(state.get("voc_data", ""))
-    messages = _build_messages(voc_data)
+    preprocessed = state.get("preprocessed_voc_data")
+    if preprocessed:
+        voc_input = str(preprocessed)
+        is_preprocessed = True
+    else:
+        voc_input = str(state.get("voc_data", ""))
+        is_preprocessed = False
+    messages = _build_messages(voc_input, is_preprocessed=is_preprocessed)
 
     structured_llm = llm.with_structured_output(ScanInterpretResult)
     result: ScanInterpretResult = invoke_with_retry(structured_llm, messages, step_name="step1a_signal_scan")
