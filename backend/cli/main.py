@@ -107,7 +107,7 @@ def export_pptx_cmd(
     session_id: str | None = typer.Option(None, "--session-id"),
     output: str | None = typer.Option(None, "--output", "-o"),
     template: str = typer.Option(
-        "assets/hpe_dark_template.pptx",
+        "backend/assets/hpe_dark_template.pptx",
         "--template",
     ),
 ) -> None:

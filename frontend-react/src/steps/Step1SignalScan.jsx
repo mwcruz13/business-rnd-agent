@@ -62,7 +62,7 @@ const Step1SignalScan = ({ runState, editMode, editState, onEditChange, sessionI
   const [regenerating, setRegenerating] = useState(false);
   const [regenError, setRegenError] = useState(null);
 
-  const { agent_recommendation, signals, interpreted_signals, priority_matrix, coverage_gaps } = runState;
+  const { agent_recommendation, signals, interpreted_signals, priority_matrix, coverage_gaps, voc_data } = runState;
 
   useEffect(() => {
     if (editMode && Object.keys(editState).length === 0) {
@@ -185,6 +185,20 @@ const Step1SignalScan = ({ runState, editMode, editState, onEditChange, sessionI
             </Box>
           ) : (
             <Text color="text-weak">No coverage gaps identified.</Text>
+          )}
+        </Box>
+      </Tab>
+
+      <Tab title="Source Input">
+        <Box pad="medium" overflow="auto">
+          {voc_data ? (
+            <Box background="background-front" pad="medium" round="small">
+              <pre style={{ fontSize: '13px', whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
+                {voc_data}
+              </pre>
+            </Box>
+          ) : (
+            <Text color="text-weak">No source input recorded.</Text>
           )}
         </Box>
       </Tab>

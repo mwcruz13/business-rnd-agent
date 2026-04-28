@@ -20,7 +20,6 @@ services:
       - ./backend/.env
     volumes:
       - ./backend:/app/backend
-      - ./backend/assets:/app/assets:ro
     working_dir: /app
     command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:

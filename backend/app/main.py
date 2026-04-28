@@ -301,7 +301,7 @@ def export_pptx(session_id: str):
     from backend.app.db.session import SessionLocal
     from backend.cli.generate_report_pptx import generate_report_pptx
 
-    TEMPLATE = "assets/hpe_dark_template.pptx"
+    TEMPLATE = "backend/assets/hpe_dark_template.pptx"
     if not Path(TEMPLATE).exists():
         raise HTTPException(
             status_code=500,
